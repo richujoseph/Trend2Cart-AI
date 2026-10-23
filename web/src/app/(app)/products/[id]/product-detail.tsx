@@ -133,7 +133,7 @@ export default function ProductDetail() {
       </section>
 
       <dl className="mt-3 grid grid-cols-2 gap-2 text-xs">
-        <Fact label="Trend (Kerala + TN)" value={sim.trend_score} />
+        <Fact label="Search trend" value={sim.trend_score} />
         <Fact label="Competition" value={sim.competition_score} />
       </dl>
 
@@ -194,6 +194,10 @@ export default function ProductDetail() {
           <details className="mt-4 text-xs text-neutral-600">
             <summary className="cursor-pointer font-medium">Where these numbers come from</summary>
             {sim.selling_price_source && <p className="mt-2">Market price: {sim.selling_price_source}.</p>}
+            <p className="mt-2">
+              Search trend: Google Trends over the last 90 days (Kerala + Tamil Nadu, or all of India when there
+              are too few local searches). Competition: number of different sellers on Google Shopping India.
+            </p>
             <p className="mt-2">{sim.estimates.source}</p>
             <p className="mt-2">
               Supplier price is a real wholesale listing including 18% GST. Shipping and COD fees use

@@ -44,6 +44,7 @@ FIELD_MESSAGES = {
     "audience": "Describe who the Reel is for in 3–80 characters, for example \"college girls in Kochi\".",
     "language": "Please pick Malayalam, Hindi or English.",
     "template_id": "Please pick one of the 3 Reel styles.",
+    "photo_paths": "You can add up to 4 photos.",
     "views": "Views must be a whole number (0 or more).",
     "clicks": "Clicks/DMs must be a whole number (0 or more).",
     "orders": "Orders must be a whole number (0 or more).",

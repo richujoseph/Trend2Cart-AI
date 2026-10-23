@@ -5,7 +5,9 @@ Run from api/:
   uv run python scripts/enrich.py --only charger   # one product (name contains "charger")
   uv run python scripts/enrich.py --limit 5 --dry-run
 
-Each product costs 2 SerpApi searches (free plan: 250/month).
+Each product costs 2–3 SerpApi searches (free plan: 250/month).
+search_keyword: the specific product phrase (Google Shopping price + sellers).
+trend_keyword (optional): what buyers actually type into Google (Google Trends); defaults to search_keyword.
 Updates selling_price_paise (market median), trend_score, competition_score, and
 image_urls when empty. Supplier price and shipping come from real supplier quotes in the CSV;
 fees are computed by seed.py from the courier COD rate card.
@@ -48,12 +50,12 @@ def main() -> None:
     ][: args.limit]
     if not todo:
         sys.exit("Nothing to update. Every product was refreshed in the last 7 days (use --force to refetch).")
-    print(f"Fetching market data for {len(todo)} products ({len(todo) * 2} SerpApi searches)...\n")
+    print(f"Fetching market data for {len(todo)} products (2–3 SerpApi searches each)...\n")
 
     failures = 0
     for row in todo:
         try:
-            snap = fetch_market_snapshot(row["search_keyword"])
+            snap = fetch_market_snapshot(row["search_keyword"], (row.get("trend_keyword") or "").strip() or None)
         except RuntimeError as e:
             if "SERPAPI_API_KEY" in str(e):
                 sys.exit(str(e))
@@ -79,7 +81,7 @@ def main() -> None:
             if snap.market_price_paise is not None
             else f"unchanged (only {snap.listings} listings)"
         )
-        print(f"  ✓ {row['name']}: price {price}, trend {snap.trend_score}, "
+        print(f"  ✓ {row['name']}: price {price}, trend {snap.trend_score} ({snap.trend_region}), "
               f"competition {snap.competition_score} ({snap.sellers} sellers)")
 
     if args.dry_run:

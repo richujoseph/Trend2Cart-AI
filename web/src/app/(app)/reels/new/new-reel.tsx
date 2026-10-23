@@ -7,6 +7,9 @@ import { ApiError, apiFetch } from "@/lib/api";
 import { type ProductListItem, formatRupees } from "@/lib/products";
 import { LANGUAGES, type Language, type Me, TEMPLATES, reelsLeftText } from "@/lib/reels";
 import { ErrorState } from "@/components/states";
+import { deleteSellerPhoto, uploadSellerPhoto } from "@/lib/photos";
+
+const MAX_PHOTOS = 4;
 
 const AUDIENCE_IDEAS = ["college girls in Kochi", "working women in Thiruvananthapuram", "young moms in Chennai", "students in Coimbatore"];
 
@@ -21,6 +24,9 @@ export default function NewReel() {
   const [audience, setAudience] = useState("");
   const [language, setLanguage] = useState<Language | null>(null);
   const [templateId, setTemplateId] = useState(1);
+  const [photos, setPhotos] = useState<{ path: string; preview: string }[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const [photoError, setPhotoError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<{ message: string; limit: boolean } | null>(null);
 
@@ -37,6 +43,26 @@ export default function NewReel() {
   const product = products?.find((p) => p.id === productId);
   const outOfReels = me?.reels.left === 0;
 
+  async function addPhotos(files: FileList | null) {
+    if (!files?.length) return;
+    setPhotoError(null);
+    setUploading(true);
+    for (const file of Array.from(files).slice(0, MAX_PHOTOS - photos.length)) {
+      try {
+        const uploaded = await uploadSellerPhoto(file);
+        setPhotos((p) => [...p, uploaded]);
+      } catch (err) {
+        setPhotoError((err as Error).message);
+      }
+    }
+    setUploading(false);
+  }
+
+  function removePhoto(path: string) {
+    setPhotos((p) => p.filter((x) => x.path !== path));
+    deleteSellerPhoto(path).catch(() => {});
+  }
+
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!productId) return setError({ message: "Pick a product for your Reel.", limit: false });
@@ -48,7 +74,10 @@ export default function NewReel() {
     try {
       const reel = await apiFetch<{ id: string }>("/reels", {
         method: "POST",
-        body: JSON.stringify({ product_id: productId, audience: audience.trim(), language: lang, template_id: templateId }),
+        body: JSON.stringify({
+          product_id: productId, audience: audience.trim(), language: lang, template_id: templateId,
+          photo_paths: photos.map((p) => p.path),
+        }),
       });
       router.push(`/reels/${reel.id}`);
     } catch (err) {
@@ -90,6 +119,48 @@ export default function NewReel() {
           <span className="text-xs text-red-700">⚠ This product loses money at its usual price. Check its profit first.</span>
         )}
       </label>
+
+      <div className="flex flex-col gap-2">
+        <span className="text-sm font-medium">Your photos <span className="font-normal text-neutral-500">(recommended)</span></span>
+        <p className="text-xs text-neutral-500">
+          Clear photos of the real product look far better than store thumbnails. Up to {MAX_PHOTOS}.
+        </p>
+        <div className="grid grid-cols-4 gap-2">
+          {photos.map((p) => (
+            <div key={p.path} className="relative aspect-square overflow-hidden rounded-lg bg-neutral-100">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={p.preview} alt="Your product photo" className="h-full w-full object-cover" />
+              <button
+                type="button"
+                onClick={() => removePhoto(p.path)}
+                aria-label="Remove photo"
+                className="absolute right-1 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-black/70 text-xs text-white"
+              >
+                ✕
+              </button>
+            </div>
+          ))}
+          {photos.length < MAX_PHOTOS && (
+            <label className="flex aspect-square cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-neutral-300 text-xs text-neutral-500">
+              <span className="text-2xl leading-none">{uploading ? "…" : "+"}</span>
+              {uploading ? "Uploading" : "Add"}
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                disabled={uploading}
+                onChange={(e) => {
+                  addPhotos(e.target.files);
+                  e.target.value = "";
+                }}
+                className="sr-only"
+              />
+            </label>
+          )}
+        </div>
+        {photos.length === 0 && <p className="text-xs text-neutral-500">No photos? We&apos;ll use the product&apos;s market photo.</p>}
+        {photoError && <p role="alert" className="text-xs text-red-700">{photoError}</p>}
+      </div>
 
       <label className="flex flex-col gap-2">
         <span className="text-sm font-medium">Who is it for?</span>
@@ -160,7 +231,7 @@ export default function NewReel() {
         </div>
       )}
 
-      <button disabled={busy || outOfReels} className="h-12 rounded-lg bg-neutral-900 font-medium text-white disabled:opacity-50">
+      <button disabled={busy || outOfReels || uploading} className="h-12 rounded-lg bg-neutral-900 font-medium text-white disabled:opacity-50">
         {busy ? "Starting…" : outOfReels ? "No free Reels left this month" : "Make my Reel"}
       </button>
       {outOfReels && (

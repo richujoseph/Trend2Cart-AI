@@ -21,7 +21,7 @@ from PIL import Image, ImageDraw
 
 from core.reels.captions import build_ass
 from core.reels.pipeline import END_CARD, costs_paise, reel_length
-from core.reels.render import render_reel
+from core.reels.render import load_photo, render_reel
 from core.reels.script import generate_script, rupees
 from core.reels.templates import TEMPLATES
 from core.reels.voice import build_voiceover
@@ -30,16 +30,13 @@ OUT = Path(__file__).resolve().parent / "out"
 PRODUCT = {"name": "Rechargeable Lint Remover", "category": "home_gadgets", "selling_price_paise": 45900}
 
 
-def test_cards(workdir: Path, box: tuple[int, int]) -> list[Path]:
-    paths = []
-    for i, colour in enumerate(["#3B82F6", "#10B981"]):
-        img = Image.new("RGB", (round(box[0] * 1.25), round(box[1] * 1.25)), colour)
-        d = ImageDraw.Draw(img)
-        d.ellipse((img.width * 0.25, img.height * 0.3, img.width * 0.75, img.height * 0.6), fill="#FFFFFF")
-        path = workdir / f"card_{i}.jpg"
-        img.save(path)
-        paths.append(path)
-    return paths
+def test_cards() -> list[Image.Image]:
+    cards = []
+    for colour in ["#3B82F6", "#10B981"]:
+        img = Image.new("RGB", (800, 800), colour)
+        ImageDraw.Draw(img).ellipse((200, 240, 600, 560), fill="#FFFFFF")
+        cards.append(img)
+    return cards
 
 
 def tone(workdir: Path) -> Path:
@@ -79,7 +76,7 @@ def main() -> None:
 
         for tid in args.templates:
             template = TEMPLATES[tid]
-            photos = [Path(p) for p in args.photos] or (test_cards(workdir, template.image_box[2:]) if args.test_photos else [])
+            photos = [load_photo(Path(p).read_bytes()) for p in args.photos] or (test_cards() if args.test_photos else [])
             ass_file = workdir / f"captions_{tid}.ass"
             ass_file.write_text(build_ass(
                 template=template, language=args.language, sentences=script.sentences, timings=voice.timings,

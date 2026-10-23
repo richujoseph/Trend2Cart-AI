@@ -39,7 +39,8 @@ Tests: `cd api && uv run pytest` and `cd worker && uv run --with pytest pytest -
 ## 3. Product data
 
 - `data/products.csv` is the source of truth. Edit it, then load it: `cd api && uv run python scripts/seed.py`
-- Real market data (Google Shopping India price + sellers, Google Trends for Kerala/Tamil Nadu) via SerpApi:
+- Real market data (Google Shopping India price + sellers, Google Trends for Kerala/Tamil Nadu, falling back to
+  all of India when local searches are too sparse; set `trend_keyword` to what buyers type) via SerpApi:
   add `SERPAPI_API_KEY` to `api/.env`, then `uv run python scripts/enrich.py` (2 searches per product;
   free plan = 250/month). It updates the CSV and re-seeds. Commit the CSV so the team shares the data.
 - Supplier price (incl. GST), shipping and supplier rating come from real supplier listings, with `source_url`
@@ -59,6 +60,13 @@ Tests: `cd api && uv run pytest` and `cd worker && uv run --with pytest pytest -
   docker run --rm --env-file api/.env t2c-api python /app/worker/main.py
   ```
   (or `brew tap homebrew-ffmpeg/ffmpeg && brew install homebrew-ffmpeg/ffmpeg/ffmpeg`, then `cd worker && uv run python main.py`).
+- Photos: sellers can upload up to 4 of their own photos in the New Reel form (private `seller-photos` bucket,
+  each seller can only read/write their own folder). Without them, the product's market photo is used.
+  Each photo is shown whole on a card over a blurred backdrop, so small store thumbnails don't get stretched.
+- Captions highlight word by word as they're spoken (ASS karaoke), with a bigger hook, a bouncing price badge,
+  a progress bar and an end-card button. Generative AI video was evaluated and rejected: no free API exists
+  (Veo has no free tier; free web tools are watermarked, non-commercial and have no API), and invented product
+  footage would mislead COD buyers.
 - Try the stages without the database: `worker/experiments/render_sample.py` (usage in its docstring).
 - Fonts (OFL, in `worker/assets/fonts`): Noto Sans Malayalam, Mukta (Hindi + Latin), Noto Sans (English, ₹).
   Optional music: see `worker/assets/music/README.md`.

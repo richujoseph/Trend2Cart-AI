@@ -79,3 +79,64 @@ def test_fetch_market_snapshot_parses_serpapi(monkeypatch):
     assert snap.competition_score == 15
     assert snap.trend_score == 50
     assert snap.image_url == "https://img/1.jpg"
+
+
+def _shopping():
+    return {"shopping_results": [{"extracted_price": p, "source": f"s{p}"} for p in (399, 449, 499)]}
+
+
+def test_trends_falls_back_to_india_when_states_have_no_data(monkeypatch):
+    geos = []
+
+    def fake(params):
+        if params["engine"] == "google_shopping":
+            return _shopping()
+        geos.append(params["geo"])
+        if params["geo"] == "IN-KL,IN-TN":
+            raise RuntimeError("SerpApi error (200): Google Trends hasn't returned any results for this query.")
+        return {"interest_over_time": {"timeline_data": [{"values": [{"query_index": 0, "extracted_value": 40}]}] * 10}}
+
+    monkeypatch.setattr(market_data, "_serpapi", fake)
+    snap = market_data.fetch_market_snapshot("lint remover")
+    assert geos == ["IN-KL,IN-TN", "IN"] and snap.trend_region == "India" and snap.trend_score == 50
+
+
+def test_no_trends_data_anywhere_means_trend_zero(monkeypatch):
+    def fake(params):
+        if params["engine"] == "google_shopping":
+            return _shopping()
+        raise RuntimeError("SerpApi error (200): Google Trends hasn't returned any results for this query.")
+
+    monkeypatch.setattr(market_data, "_serpapi", fake)
+    snap = market_data.fetch_market_snapshot("very niche thing")
+    assert snap.trend_score == 0 and snap.trend_region == "none" and snap.market_price_paise == 44900
+
+
+def test_other_serpapi_errors_still_fail(monkeypatch):
+    def fake(params):
+        if params["engine"] == "google_shopping":
+            return _shopping()
+        raise RuntimeError("SerpApi error (401): Invalid API key")
+
+    monkeypatch.setattr(market_data, "_serpapi", fake)
+    with pytest.raises(RuntimeError, match="Invalid API key"):
+        market_data.fetch_market_snapshot("x")
+
+
+def test_sparse_state_data_falls_back_to_india_and_uses_trend_keyword(monkeypatch):
+    calls = []
+    one_spike = [{"values": [{"query_index": 0, "extracted_value": 100 if i == 5 else 0},
+                             {"query_index": 1, "extracted_value": 0}]} for i in range(90)]
+    steady = [{"values": [{"query_index": 0, "extracted_value": 50}]} for _ in range(90)]
+
+    def fake(params):
+        if params["engine"] == "google_shopping":
+            assert params["q"] == "pull string vegetable chopper"
+            return _shopping()
+        calls.append((params["q"], params["geo"]))
+        return {"interest_over_time": {"timeline_data": one_spike if params["geo"] == "IN-KL,IN-TN" else steady}}
+
+    monkeypatch.setattr(market_data, "_serpapi", fake)
+    snap = market_data.fetch_market_snapshot("pull string vegetable chopper", "vegetable chopper")
+    assert calls == [("vegetable chopper,vegetable chopper", "IN-KL,IN-TN"), ("vegetable chopper", "IN")]
+    assert snap.trend_region == "India" and snap.trend_score == 50

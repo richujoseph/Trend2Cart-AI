@@ -27,6 +27,27 @@ def ass_text(text: str) -> str:
     return " ".join(text.replace("\\", "/").replace("{", "(").replace("}", ")").split())
 
 
+def karaoke(line: str, start: float, end: float) -> str:
+    """Word-by-word highlight: each word gets a \\k duration proportional to its length (spoken time is
+    only measured per sentence, and longer words take longer to say)."""
+    words = line.split()
+    total = max(round((end - start) * 100), len(words))
+    weights = [len(w) + 1 for w in words]
+    durations = [max(1, total * w // sum(weights)) for w in weights]
+    durations[-1] = max(1, total - sum(durations[:-1]))
+    return " ".join(f"{{\\k{d}}}{ass_text(w)}" for d, w in zip(durations, words))
+
+
+def _readable_on(background: str) -> str:
+    """Black or white text, whichever reads better on `background` (perceived luminance)."""
+    r, g, b = (int(background[i:i + 2], 16) for i in (1, 3, 5))
+    return "#111111" if 0.299 * r + 0.587 * g + 0.114 * b > 150 else "#FFFFFF"
+
+
+POP_IN = "\\fad(120,60)\\fscx88\\fscy88\\t(0,160,\\fscx100\\fscy100)"
+BOUNCE_IN = "\\fad(80,0)\\fscx30\\fscy30\\t(0,200,\\fscx118\\fscy118)\\t(200,340,\\fscx100\\fscy100)"
+
+
 def build_ass(
     *,
     template: Template,
@@ -41,22 +62,28 @@ def build_ass(
 ) -> str:
     t = template
     font = FONTS[language]
-    size = {name: round(base * FONT_SCALE[language]) for name, base in {"caption": 72, "cta": 92, "title": 96}.items()}
+    bases = {"caption": 72, "hook": 86, "cta": 76, "title": 100}
+    size = {name: round(base * FONT_SCALE[language]) for name, base in bases.items()}
     border_style = 3 if t.caption_box else 1
     caption_back = ass_colour(t.caption_outline) if t.caption_box else ass_colour("#000000", 0.5)
+    # Karaoke: SecondaryColour before a word is spoken, PrimaryColour (highlight) after.
+    caption_colours = f"{ass_colour(t.caption_highlight)},{ass_colour(t.caption_text)},{ass_colour(t.caption_outline)},{caption_back}"
+    button_text = _readable_on(t.accent)
     styles = [
         # Name, Font, Size, Primary, Secondary, Outline, Back, Bold, Italic, Underline, Strike,
         # ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
-        f"Style: Caption,{font},{size['caption']},{ass_colour(t.caption_text)},{ass_colour(t.caption_text)},"
-        f"{ass_colour(t.caption_outline)},{caption_back},-1,0,0,0,100,100,0,0,{border_style},"
+        f"Style: Caption,{font},{size['caption']},{caption_colours},-1,0,0,0,100,100,0,0,{border_style},"
         f"{t.caption_outline_px},0,2,80,140,400,1",
+        f"Style: Hook,{font},{size['hook']},{caption_colours},-1,0,0,0,100,100,0,0,{border_style},"
+        f"{t.caption_outline_px + (2 if not t.caption_box else 0)},0,2,70,130,400,1",
         f"Style: Price,{LATIN_FONT},120,{ass_colour(t.badge_text)},{ass_colour(t.badge_text)},"
         f"{ass_colour(t.badge_bg)},{ass_colour(t.badge_bg)},-1,0,0,0,100,100,0,0,3,26,0,8,80,140,230,1",
-        f"Style: EndCTA,{font},{size['cta']},{ass_colour(t.end_text)},{ass_colour(t.end_text)},"
+        f"Style: EndPrice,{LATIN_FONT},150,{ass_colour(t.end_text)},{ass_colour(t.end_text)},"
         f"{ass_colour(t.end_bg)},{ass_colour(t.end_bg)},-1,0,0,0,100,100,0,0,1,0,0,5,100,100,0,1",
-        f"Style: EndPrice,{LATIN_FONT},140,{ass_colour(t.end_text)},{ass_colour(t.end_text)},"
-        f"{ass_colour(t.end_bg)},{ass_colour(t.end_bg)},-1,0,0,0,100,100,0,0,1,0,0,8,100,100,520,1",
-        f"Style: Title,{font},{size['title']},{ass_colour(t.caption_text)},{ass_colour(t.caption_text)},"
+        # A filled "button": opaque box (BorderStyle 3) in the accent colour, padded by the outline width.
+        f"Style: EndCTA,{font},{size['cta']},{ass_colour(button_text)},{ass_colour(button_text)},"
+        f"{ass_colour(t.accent)},{ass_colour(t.accent)},-1,0,0,0,100,100,0,0,3,30,0,5,120,120,0,1",
+        f"Style: Title,{font},{size['title']},{ass_colour('#FFFFFF')},{ass_colour('#FFFFFF')},"
         f"{ass_colour('#000000')},{ass_colour('#000000', 0.5)},-1,0,0,0,100,100,0,0,1,4,0,5,100,100,0,1",
     ]
 
@@ -64,14 +91,17 @@ def build_ass(
     price_index = len(sentences) - 2  # order is [hook, b1, b2, b3, price_line, cta]
     for i, ((start, end), line) in enumerate(zip(timings, sentences)):
         if i == len(sentences) - 1:
-            continue  # the CTA is shown big on the end card instead
+            continue  # the CTA is shown as a button on the end card instead
         next_start = timings[i + 1][0] if i + 1 < len(timings) else end
-        events.append(("Caption", start, min(max(end, next_start), end_card_start), line))
-    events.append(("Price", timings[price_index][0], end_card_start, price_text))
-    events.append(("EndPrice", end_card_start, duration, price_text))
-    events.append(("EndCTA", end_card_start, duration, cta))
+        events.append(("Hook" if i == 0 else "Caption", start, min(max(end, next_start), end_card_start),
+                       f"{{{POP_IN}}}" + karaoke(line, start, end)))
+    events.append(("Price", timings[price_index][0], end_card_start, f"{{{BOUNCE_IN}}}{ass_text(price_text)}"))
+    events.append(("EndPrice", end_card_start, duration,
+                   f"{{\\move(540,700,540,640,0,300)\\fad(150,0)}}{ass_text(price_text)}"))
+    events.append(("EndCTA", end_card_start, duration,
+                   f"{{\\move(540,1040,540,960,120,420)\\fad(250,0)}}{ass_text(cta)}"))
     if product_name:
-        events.append(("Title", 0, end_card_start, product_name))
+        events.append(("Title", 0, end_card_start, f"{{\\pos(540,760)\\fad(300,0)}}{ass_text(product_name)}"))
 
     lines = [
         "[Script Info]", "ScriptType: v4.00+", "PlayResX: 1080", "PlayResY: 1920", "WrapStyle: 0",
@@ -86,5 +116,5 @@ def build_ass(
     ]
     for style, start, end, text in events:
         if end > start:
-            lines.append(f"Dialogue: 0,{ass_time(start)},{ass_time(end)},{style},,0,0,0,,{ass_text(text)}")
+            lines.append(f"Dialogue: 0,{ass_time(start)},{ass_time(end)},{style},,0,0,0,,{text}")
     return "\n".join(lines) + "\n"

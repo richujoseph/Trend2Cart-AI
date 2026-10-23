@@ -14,7 +14,7 @@ from core.reels.render import download_photos, pick_music, render_reel
 from core.reels.script import generate_script, rupees
 from core.reels.templates import TEMPLATES
 from core.reels.voice import build_voiceover
-from core.supabase import service_get, storage_upload
+from core.supabase import service_get, storage_download, storage_upload
 
 log = logging.getLogger("trend2cart.reels")
 
@@ -67,7 +67,11 @@ def run_reel_job(reel: dict, music: bool = True) -> dict:
         end_card_start = round(min(cta_start, duration - END_CARD), 3)
         price = rupees(product["selling_price_paise"])
         with _timed(stats, "photos"):
-            photos = download_photos(product.get("image_urls") or [], workdir, template.image_box[2:])
+            # The seller's own photos win; otherwise the product's market photos.
+            if reel.get("photo_paths"):
+                photos = download_photos(reel["photo_paths"], fetch=lambda p: storage_download("seller-photos", p))
+            else:
+                photos = download_photos(product.get("image_urls") or [])
         with _timed(stats, "captions"):
             ass_file = workdir / "captions.ass"
             ass_file.write_text(build_ass(
@@ -86,7 +90,8 @@ def run_reel_job(reel: dict, music: bool = True) -> dict:
     stats.update(
         cost_paise=costs_paise(llm_usage, voice.characters),
         llm=llm_usage, tts_characters=voice.characters, video_seconds=duration,
-        voice_tempo=voice.tempo, photos=len(photos), template_id=template.id,
+        voice_tempo=voice.tempo, photos=len(photos), seller_photos=bool(reel.get("photo_paths")),
+        template_id=template.id,
     )
     log.info("reel %s done %s", reel["id"], json.dumps(stats, ensure_ascii=False))
     return {

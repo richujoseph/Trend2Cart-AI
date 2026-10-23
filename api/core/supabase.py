@@ -111,6 +111,12 @@ def storage_upload(bucket: str, path: str, data: bytes, content_type: str) -> st
     return f"{_base()}/storage/v1/object/public/{bucket}/{path}"
 
 
+def storage_download(bucket: str, path: str) -> bytes:
+    """Read a file from a private Storage bucket with the service-role key."""
+    resp = _idempotent("GET", f"{_base()}/storage/v1/object/{bucket}/{path}", headers=_service_headers(), timeout=30)
+    return _check(resp, f"Downloading from storage bucket {bucket}").content
+
+
 def service_upsert(table: str, rows: list[dict], on_conflict: str) -> None:
     """Insert or update rows with the service-role key (bypasses RLS). Server-side only."""
     resp = _http().post(

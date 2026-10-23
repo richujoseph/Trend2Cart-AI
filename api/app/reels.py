@@ -1,3 +1,4 @@
+import re
 from datetime import datetime
 from typing import Literal
 from uuid import UUID
@@ -21,6 +22,11 @@ class NewReel(BaseModel):
     audience: str = Field(min_length=3, max_length=80)
     language: Literal["ml", "hi", "en"]
     template_id: int = Field(1, ge=1, le=3)
+    # Optional seller photos already uploaded to the private seller-photos bucket ("<user id>/<file>").
+    photo_paths: list[str] = Field(default_factory=list, max_length=4)
+
+
+PHOTO_FILE = re.compile(r"[A-Za-z0-9_-]{1,64}\.(jpg|jpeg|png|webp)")
 
 
 def _reset_date(iso: str) -> str:
@@ -32,6 +38,11 @@ def _reset_date(iso: str) -> str:
 @router.post("", status_code=201)
 def create_reel(body: NewReel, request: Request, user: dict = Depends(current_user)):
     token = request.state.token
+    # Only files in the seller's own folder: stops one seller pointing a job at another seller's photos.
+    for path in body.photo_paths:
+        folder, _, name = path.partition("/")
+        if folder != user["sub"] or not PHOTO_FILE.fullmatch(name):
+            raise HTTPException(422, "One of the photos couldn't be used. Please remove it and upload it again.")
     try:
         products = rest_get("products", token, {"id": f"eq.{body.product_id}", "select": "id"} | READY)
         profiles = rest_get("profiles", token, {"id": f"eq.{user['sub']}", "select": "plan"})
@@ -61,6 +72,7 @@ def create_reel(body: NewReel, request: Request, user: dict = Depends(current_us
             "audience": " ".join(body.audience.split()),
             "language": body.language,
             "template_id": body.template_id,
+            "photo_paths": body.photo_paths,
             "status": "queued",
         })
     except SupabaseError:

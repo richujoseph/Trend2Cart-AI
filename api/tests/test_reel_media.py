@@ -42,26 +42,43 @@ def test_ass_helpers():
     assert ass_text("₹459 {\\pos(1,1)} ok\\N") == "₹459 (/pos(1,1)) ok/N"
 
 
+def test_karaoke_splits_spoken_time_by_word_length():
+    from core.reels.captions import karaoke
+
+    assert karaoke("ab abcd", 1.0, 2.0) == "{\\k37}ab {\\k63}abcd"  # 100 cs split 3:5 (length + 1)
+    assert karaoke("x {evil}", 0, 1).endswith("(evil)")
+
+
 def test_build_ass_events():
     timings = [(0.3, 2.0), (2.25, 5.0), (5.25, 8.0), (8.25, 11.0), (11.25, 14.0), (14.25, 16.0)]
     ass = build_ass(template=TEMPLATES[1], language="ml", sentences=SENTENCES, timings=timings,
                     duration=16.8, end_card_start=13.8, price_text="₹459", cta="DM now")
     dialogue = [line for line in ass.splitlines() if line.startswith("Dialogue")]
-    captions = [d for d in dialogue if ",Caption," in d]
-    assert len(captions) == 5  # CTA is not a caption; it's on the end card
-    assert captions[0].startswith("Dialogue: 0,0:00:00.30,0:00:02.25,Caption")  # held until next line starts
-    assert captions[-1].endswith("price (/b1)") and ",0:00:13.80,Caption" in captions[-1]  # clipped at end card
+    spoken = [d for d in dialogue if ",Caption," in d or ",Hook," in d]
+    assert len(spoken) == 5  # CTA is not a caption; it's the end-card button
+    assert spoken[0].startswith("Dialogue: 0,0:00:00.30,0:00:02.25,Hook")  # bigger hook, held until next line
+    assert "\\k" in spoken[0] and "\\fad(120,60)" in spoken[0]  # word highlight + pop-in
+    assert spoken[-1].endswith("(/b1)") and "{\\b1}" not in spoken[-1]  # seller/LLM override tags neutralised
+    assert ",0:00:13.80,Caption" in spoken[-1]  # clipped at the end card
     assert any(",Price,," in d and d.startswith("Dialogue: 0,0:00:11.25,0:00:13.80") for d in dialogue)
     assert any(",EndCTA,," in d and d.endswith("DM now") for d in dialogue)
-    assert "Style: Caption,Noto Sans Malayalam,72" in ass
+    # Caption: highlight colour (yellow) after a word is spoken, white before
+    assert "Style: Caption,Noto Sans Malayalam,72,&H000AD6FF,&H00FFFFFF" in ass
     assert not any(",Title,," in d for d in dialogue)
 
 
 def test_title_card_when_no_photos():
     ass = build_ass(template=TEMPLATES[2], language="hi", sentences=SENTENCES, timings=[(0, 1)] * 6,
                     duration=15, end_card_start=12, price_text="₹99", cta="cta", product_name="Ice Roller")
-    assert "Dialogue: 0,0:00:00.00,0:00:12.00,Title,,0,0,0,,Ice Roller" in ass
+    assert any(line.startswith("Dialogue: 0,0:00:00.00,0:00:12.00,Title") and line.endswith("Ice Roller")
+               for line in ass.splitlines())
     assert "Style: Caption,Mukta," in ass
+
+
+def test_end_button_text_contrasts_with_accent():
+    from core.reels.captions import _readable_on
+
+    assert _readable_on("#FFD60A") == "#111111" and _readable_on("#0F766E") == "#FFFFFF"
 
 
 def test_costs(monkeypatch):
@@ -73,3 +90,17 @@ def test_costs(monkeypatch):
     # Sarvam ₹30 / 10k chars → 300 chars = 900 paise... no: 300 * 3000 / 10000 = 90 paise
     assert costs_paise({"prompt_tokens": 900, "completion_tokens": 400}, 300) == {"llm": 0, "tts": 90, "total": 90}
     get_settings.cache_clear()
+
+
+def test_compose_scene_keeps_whole_photo_on_card():
+    from PIL import Image
+
+    from core.reels.render import H, W, compose_scene
+
+    tall = Image.new("RGB", (260, 344), "#2266FF")  # a small supplier thumbnail
+    for t in TEMPLATES.values():
+        scene = compose_scene(tall, t)
+        assert scene.size == (W, H)
+        x, y, bw, bh = t.card_box
+        assert scene.getpixel((x + bw // 2, y + bh // 2))[2] > 200  # photo (blue) is at the card's centre
+    assert compose_scene(None, TEMPLATES[1]).size == (W, H)  # title-card scene

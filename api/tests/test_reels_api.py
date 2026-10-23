@@ -42,7 +42,7 @@ def test_create_reel_queues_job(client, auth_headers, fake):
     assert r.status_code == 201
     assert r.json() == {"id": REEL_ID, "status": "queued", "reels_left_this_month": 2}
     assert fake["inserted"][0] == {"user_id": "u1", "product_id": PRODUCT_ID, "audience": "college girls in Kochi",
-                                   "language": "ml", "template_id": 2, "status": "queued"}
+                                   "language": "ml", "template_id": 2, "photo_paths": [], "status": "queued"}
     assert fake["rpc"] == [("use_reel_quota", {"p_user": "u1", "p_limit": 3})]
 
 
@@ -80,3 +80,20 @@ def test_get_reel_status(client, auth_headers, fake):
     fake["reels"].append({"id": REEL_ID, "status": "processing"})
     assert client.get(f"/reels/{REEL_ID}", headers=auth_headers).json()["status"] == "processing"
     assert client.get("/reels/33333333-3333-3333-3333-333333333333", headers=auth_headers).status_code == 404
+
+
+def test_accepts_own_photos(client, auth_headers, fake):
+    r = client.post("/reels", headers=auth_headers, json=BODY | {"photo_paths": ["u1/3f2a-photo.jpg", "u1/b.webp"]})
+    assert r.status_code == 201 and fake["inserted"][0]["photo_paths"] == ["u1/3f2a-photo.jpg", "u1/b.webp"]
+
+
+@pytest.mark.parametrize("path", ["someone-else/a.jpg", "u1/../x.jpg", "u1/a.exe", "u1/sub/a.jpg", "https://evil/x.jpg"])
+def test_rejects_photos_outside_own_folder(client, auth_headers, fake, path):
+    r = client.post("/reels", headers=auth_headers, json=BODY | {"photo_paths": [path]})
+    assert r.status_code == 422 and "couldn't be used" in r.json()["detail"]
+    assert fake["inserted"] == [] and fake["rpc"] == []
+
+
+def test_at_most_four_photos(client, auth_headers, fake):
+    r = client.post("/reels", headers=auth_headers, json=BODY | {"photo_paths": [f"u1/{i}.jpg" for i in range(5)]})
+    assert r.status_code == 422

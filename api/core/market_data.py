@@ -17,6 +17,10 @@ SERPAPI_URL = "https://serpapi.com/search.json"
 TREND_GEOS = ["IN-KL", "IN-TN"]  # Kerala, Tamil Nadu
 SELLERS_FOR_MAX_COMPETITION = 20
 MIN_PRICES = 3
+MIN_ACTIVE_SHARE = 0.2  # a region needs searches on ≥20% of days to be a trend signal, not noise
+
+
+NO_TRENDS_DATA = "hasn't returned any results"  # SerpApi's error when Google Trends has too little data
 
 
 @dataclass(frozen=True)
@@ -25,6 +29,7 @@ class MarketSnapshot:
     competition_score: int
     trend_score: int
     image_url: str | None
+    trend_region: str  # "Kerala + Tamil Nadu", "India", or "none" (too few searches anywhere → trend 0)
     listings: int
     sellers: int
     fetched_at: datetime
@@ -86,7 +91,10 @@ def _serpapi(params: dict) -> dict:
     return data
 
 
-def fetch_market_snapshot(keyword: str) -> MarketSnapshot:
+def fetch_market_snapshot(keyword: str, trend_keyword: str | None = None) -> MarketSnapshot:
+    """keyword: specific product phrase for Shopping prices. trend_keyword: what people actually type
+    into Google (usually broader, e.g. "vegetable chopper"); defaults to keyword."""
+    trend_keyword = trend_keyword or keyword
     shopping = _serpapi({
         "engine": "google_shopping",
         "q": keyword,
@@ -95,19 +103,33 @@ def fetch_market_snapshot(keyword: str) -> MarketSnapshot:
         "google_domain": "google.co.in",
     }).get("shopping_results", [])
 
-    trends = _serpapi({
-        "engine": "google_trends",
-        "q": ",".join([keyword] * len(TREND_GEOS)),
-        "geo": ",".join(TREND_GEOS),
-        "date": "today 3-m",
-        "data_type": "TIMESERIES",
-    })
-    series_by_geo: list[list[float]] = [[] for _ in TREND_GEOS]
-    for point in trends.get("interest_over_time", {}).get("timeline_data", []):
-        for v in point.get("values", []):
-            idx = v.get("query_index", 0)
-            if idx < len(series_by_geo):
-                series_by_geo[idx].append(float(v.get("extracted_value") or 0))
+    # Kerala + Tamil Nadu first; niche products often have too few state-level searches (a single spike in
+    # 90 days is noise), so fall back to all of India. If India is sparse too, use it anyway: low interest is real.
+    series_by_geo, trend_region = [], "none"
+    for geos, region in [(TREND_GEOS, "Kerala + Tamil Nadu"), (["IN"], "India")]:
+        try:
+            trends = _serpapi({
+                "engine": "google_trends",
+                "q": ",".join([trend_keyword] * len(geos)),
+                "geo": ",".join(geos),
+                "date": "today 3-m",
+                "data_type": "TIMESERIES",
+            })
+        except RuntimeError as e:
+            if NO_TRENDS_DATA in str(e):
+                continue
+            raise
+        series_by_geo = [[] for _ in geos]
+        for point in trends.get("interest_over_time", {}).get("timeline_data", []):
+            for v in point.get("values", []):
+                idx = v.get("query_index", 0)
+                if idx < len(series_by_geo):
+                    series_by_geo[idx].append(float(v.get("extracted_value") or 0))
+        points = [v for s in series_by_geo for v in s]
+        if any(points):
+            trend_region = region
+            if sum(v > 0 for v in points) / len(points) >= MIN_ACTIVE_SHARE:
+                break
 
     sellers = [r.get("source", "") for r in shopping]
     return MarketSnapshot(
@@ -115,6 +137,7 @@ def fetch_market_snapshot(keyword: str) -> MarketSnapshot:
         competition_score=competition_score(sellers),
         trend_score=trend_score(series_by_geo),
         image_url=next((r["thumbnail"] for r in shopping if r.get("thumbnail")), None),
+        trend_region=trend_region,
         listings=len(shopping),
         sellers=len({s.strip().lower() for s in sellers if s}),
         fetched_at=datetime.now(UTC),

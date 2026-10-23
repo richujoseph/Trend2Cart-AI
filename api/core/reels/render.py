@@ -1,4 +1,5 @@
-"""FFmpeg render: product photos with slow zoom/pan and cross-fades, template overlays, ASS text, audio mix."""
+"""Reel render: Pillow composes one polished scene per product photo; FFmpeg adds motion, cross-fades,
+a progress bar, the end card, animated ASS text and the audio mix."""
 
 import io
 import random
@@ -7,7 +8,7 @@ from functools import lru_cache
 from pathlib import Path
 
 import httpx
-from PIL import Image, ImageOps
+from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageOps
 
 from core.config import get_settings
 from core.reels.templates import Template
@@ -17,6 +18,7 @@ XFADE = 0.6  # cross-fade seconds between photos
 MAX_PHOTOS = 4
 MAX_PHOTO_BYTES = 10 * 1024 * 1024
 MUSIC_VOLUME = 0.18  # under the voice; the sidechain compressor ducks it further while speaking
+CARD_RADIUS = 36
 
 
 def assets_dir() -> Path:
@@ -30,50 +32,109 @@ def ffmpeg_has_libass() -> bool:
     return any(line.split()[1:2] == ["ass"] for line in out.stdout.splitlines())
 
 
-def download_photos(urls: list[str], workdir: Path, box: tuple[int, int]) -> list[Path]:
-    """Fetch up to MAX_PHOTOS product photos, cover-crop to the template's photo box. Skips broken ones."""
-    # 1.25x the box so the zoom/pan has pixels to move into without upscaling blur.
-    target = (round(box[0] * 1.25 / 2) * 2, round(box[1] * 1.25 / 2) * 2)
+def load_photo(data: bytes) -> Image.Image | None:
+    try:
+        return ImageOps.exif_transpose(Image.open(io.BytesIO(data))).convert("RGB")
+    except OSError:
+        return None
+
+
+def download_photos(urls: list[str], fetch=None) -> list[Image.Image]:
+    """Fetch up to MAX_PHOTOS product photos (https only), skipping broken ones.
+    `fetch(url) -> bytes` lets callers read private storage; defaults to a plain GET."""
     photos = []
-    for i, url in enumerate(urls[:MAX_PHOTOS]):
-        if not url.startswith("https://"):
-            continue
+    for url in urls[:MAX_PHOTOS]:
         try:
-            resp = httpx.get(url, timeout=15, follow_redirects=True)
-            if resp.is_error or len(resp.content) > MAX_PHOTO_BYTES:
-                continue
-            img = ImageOps.exif_transpose(Image.open(io.BytesIO(resp.content))).convert("RGB")
-        except (httpx.HTTPError, OSError):
+            if fetch:
+                data = fetch(url)
+            else:
+                if not url.startswith("https://"):
+                    continue
+                resp = httpx.get(url, timeout=15, follow_redirects=True)
+                if resp.is_error:
+                    continue
+                data = resp.content
+        except (httpx.HTTPError, RuntimeError):
             continue
-        path = workdir / f"photo_{i}.jpg"
-        ImageOps.fit(img, target, Image.LANCZOS).save(path, quality=92)
-        photos.append(path)
+        if len(data) <= MAX_PHOTO_BYTES and (img := load_photo(data)):
+            photos.append(img)
     return photos
 
 
-def _photo_segments(photos: list[Path], box: tuple[int, int, int, int], duration: float) -> tuple[list[str], list[str], str]:
-    """Inputs + filter lines turning N photos into one zoom/pan stream of `duration` seconds, labelled [photos]."""
-    _, _, bw, bh = box
-    n = len(photos)
+def _hex_rgb(colour: str) -> tuple[int, int, int]:
+    return tuple(int(colour[i:i + 2], 16) for i in (1, 3, 5))
+
+
+def compose_scene(photo: Image.Image | None, t: Template) -> Image.Image:
+    """One 1080x1920 still: backdrop + (photo on a rounded card with shadow) + caption panel/fade."""
+    canvas = Image.new("RGB", (W, H), t.background)
+    if photo is None:
+        # Title-card scene (no photos): vertical gradient from the template colour to near-black.
+        top, bottom = _hex_rgb(t.background), (12, 12, 12)
+        grad = Image.linear_gradient("L").resize((W, H))
+        canvas = Image.composite(Image.new("RGB", (W, H), bottom), Image.new("RGB", (W, H), top), grad)
+    elif t.backdrop in ("blur_dark", "blur_light"):
+        # Blur at quarter size, then scale up: same look, ~16x less work.
+        small = ImageOps.fit(photo, (W // 4, H // 4), Image.BILINEAR).filter(ImageFilter.GaussianBlur(14))
+        bg = small.resize((W, H), Image.BICUBIC)
+        if t.backdrop == "blur_dark":
+            bg = ImageEnhance.Brightness(bg).enhance(0.42)
+        else:
+            bg = Image.blend(bg, Image.new("RGB", (W, H), t.background), 0.55)
+        canvas.paste(bg)
+
+    if t.panel:
+        px, py, pw, ph, colour = t.panel
+        ImageDraw.Draw(canvas).rectangle((px, py, px + pw, py + ph), fill=colour)
+    if t.bottom_fade:
+        fade = Image.linear_gradient("L").resize((W, 820))  # transparent → dark, top to bottom
+        canvas.paste(Image.new("RGB", (W, 820), (0, 0, 0)), (0, H - 820), fade.point(lambda v: int(v * 0.85)))
+
+    if photo is not None:
+        x, y, bw, bh = t.card_box
+        b = t.card_border
+        img = ImageOps.contain(photo, (bw - 2 * b, bh - 2 * b), Image.LANCZOS)
+        if img.width > photo.width:  # upscaled small supplier photo: restore some edge crispness
+            img = img.filter(ImageFilter.UnsharpMask(radius=2, percent=80, threshold=2))
+        card = Image.new("RGB", (img.width + 2 * b, img.height + 2 * b), "white")
+        card.paste(img, (b, b))
+        mask = Image.new("L", card.size, 0)
+        ImageDraw.Draw(mask).rounded_rectangle((0, 0, card.width - 1, card.height - 1), CARD_RADIUS, fill=255)
+        card = card.convert("RGBA")
+        card.putalpha(mask)
+        if t.card_tilt:
+            card = card.rotate(t.card_tilt, resample=Image.BICUBIC, expand=True)
+        cx, cy = x + (bw - card.width) // 2, y + (bh - card.height) // 2
+        shadow = Image.new("RGBA", (card.width + 120, card.height + 120), (0, 0, 0, 0))
+        shadow.paste((0, 0, 0, 150), (60, 60), card.getchannel("A"))
+        shadow = shadow.filter(ImageFilter.GaussianBlur(28))
+        canvas.paste(shadow, (cx - 60, cy - 40), shadow)
+        canvas.paste(card, (cx, cy), card)
+    return canvas
+
+
+def _scene_streams(scenes: list[Path], duration: float) -> tuple[list[str], list[str]]:
+    """Inputs + filter lines turning N scenes into one moving stream of `duration` seconds, labelled [scenes]."""
+    n = len(scenes)
     seg = (duration + (n - 1) * XFADE) / n
     frames = round(seg * FPS) + 1
     inputs, lines = [], []
-    for i, p in enumerate(photos):
+    for i, p in enumerate(scenes):
         inputs += ["-i", str(p)]
-        if i % 2 == 0:  # slow push-in to the centre
-            motion = (f"z='min(1+0.10*on/{frames},1.10)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)'")
-        else:  # gentle pan left → right at a fixed zoom
-            motion = f"z=1.10:x='(iw-iw/zoom)*on/{frames}':y='ih/2-(ih/zoom/2)'"
-        lines.append(f"[{i}:v]zoompan={motion}:d={frames}:s={bw}x{bh}:fps={FPS},setsar=1,format=yuv420p[p{i}]")
+        if i % 2 == 0:  # slow push-in
+            motion = f"z='1+0.06*on/{frames}':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)'"
+        else:  # slow drift down at a fixed zoom
+            motion = f"z=1.06:x='iw/2-(iw/zoom/2)':y='(ih-ih/zoom)*on/{frames}'"
+        lines.append(f"[{i}:v]zoompan={motion}:d={frames}:s={W}x{H}:fps={FPS},setsar=1,format=yuv420p[s{i}]")
     if n == 1:
-        lines.append(f"[p0]trim=duration={duration}[photos]")
-        return inputs, lines, "[photos]"
-    prev = "[p0]"
+        lines.append(f"[s0]trim=duration={duration}[scenes]")
+        return inputs, lines
+    prev = "[s0]"
     for i in range(1, n):
-        out = "[photos]" if i == n - 1 else f"[x{i}]"
-        lines.append(f"{prev}[p{i}]xfade=transition=fade:duration={XFADE}:offset={round(i * (seg - XFADE), 3)}{out}")
+        out = "[scenes]" if i == n - 1 else f"[x{i}]"
+        lines.append(f"{prev}[s{i}]xfade=transition=fade:duration={XFADE}:offset={round(i * (seg - XFADE), 3)}{out}")
         prev = out
-    return inputs, lines, "[photos]"
+    return inputs, lines
 
 
 def _hex(colour: str, opacity: float = 1.0) -> str:
@@ -83,7 +144,7 @@ def _hex(colour: str, opacity: float = 1.0) -> str:
 def render_reel(
     *,
     template: Template,
-    photos: list[Path],
+    photos: list[Image.Image],
     voice: Path,
     ass_file: Path,
     duration: float,
@@ -93,27 +154,24 @@ def render_reel(
 ) -> None:
     if not ffmpeg_has_libass():
         raise RuntimeError("This FFmpeg build has no libass, so captions can't be burned in. See README → FFmpeg.")
-    fonts = assets_dir() / "fonts"
-    t = template
-    x, y, bw, bh = t.image_box
+    workdir = ass_file.parent
+    scenes = []
+    for i, photo in enumerate(photos or [None]):
+        path = workdir / f"scene_{i}.jpg"
+        compose_scene(photo, template).save(path, quality=92)
+        scenes.append(path)
 
-    inputs, lines = [], []
-    if photos:
-        inputs, lines, photo_label = _photo_segments(photos, t.image_box, duration)
-    lines.append(f"color=c={_hex(t.background)}:s={W}x{H}:r={FPS}:d={duration}[bg]")
-    video = "[bg]"
-    if photos:
-        lines.append(f"{video}{photo_label}overlay={x}:{y}:shortest=1[v0]")
-        video = "[v0]"
-    chain = []
-    if t.panel:
-        px, py, pw, ph, colour, opacity = t.panel
-        chain.append(f"drawbox=x={px}:y={py}:w={pw}:h={ph}:color={_hex(colour, opacity)}:t=fill")
-    chain.append(f"drawbox=x=0:y=0:w={W}:h={H}:color={_hex(t.end_bg)}:t=fill:enable='gte(t,{end_card_start})'")
-    # The .ass file is passed relative to cwd; fontsdir is single-quoted so spaces in the path are safe.
-    chain.append(f"ass={ass_file.name}:fontsdir='{fonts.as_posix()}'")
-    chain.append("format=yuv420p")
-    lines.append(f"{video}{','.join(chain)}[vout]")
+    inputs, lines = _scene_streams(scenes, duration)
+    t = template
+    chain = [
+        # Progress bar along the top edge, filling over the whole Reel.
+        f"drawbox=x=0:y=0:w='iw*t/{duration}':h=10:color={_hex(t.accent)}:t=fill",
+        f"drawbox=x=0:y=0:w={W}:h={H}:color={_hex(t.end_bg)}:t=fill:enable='gte(t,{end_card_start})'",
+        # The .ass file is passed relative to cwd; fontsdir is single-quoted so spaces in the path are safe.
+        f"ass={ass_file.name}:fontsdir='{(assets_dir() / 'fonts').as_posix()}'",
+        "format=yuv420p",
+    ]
+    lines.append(f"[scenes]{','.join(chain)}[vout]")
 
     voice_idx = len(inputs) // 2
     inputs += ["-i", str(voice)]
@@ -138,7 +196,7 @@ def render_reel(
         "-c:a", "aac", "-b:a", "128k", "-ar", "44100", "-ac", "2",
         "-movflags", "+faststart", str(out),
     ]
-    result = subprocess.run(cmd, cwd=ass_file.parent, capture_output=True, text=True)
+    result = subprocess.run(cmd, cwd=workdir, capture_output=True, text=True)
     if result.returncode != 0:
         raise RuntimeError(f"ffmpeg render failed: {result.stderr[-800:]}")
 
