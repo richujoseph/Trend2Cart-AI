@@ -5,7 +5,8 @@ import pytest
 
 from core.doctor import DoctorAdvice
 
-PRODUCT = {"id": "11111111-1111-1111-1111-111111111111", "name": "Ice Roller", "category": "beauty"}
+PRODUCT = {"id": "11111111-1111-1111-1111-111111111111", "name": "Ice Roller", "category": "beauty",
+           "selling_price_paise": 49900, "supplier_price_paise": 15000, "shipping_paise": 5310}
 REEL_ID = "99999999-9999-9999-9999-999999999999"
 
 
@@ -35,8 +36,9 @@ def doctor_fakes(monkeypatch):
 
     monkeypatch.setattr(doctor, "rest_get", rest_get)
     monkeypatch.setattr(doctor, "service_insert", service_insert)
-    monkeypatch.setattr(doctor, "write_advice", lambda result, numbers, product, language: DoctorAdvice(
-        explanation="Explain this simply.", fixes=["Fix one", "Fix two", "Fix three"], hooks=["Hook a", "Hook b", "Hook c"]))
+    monkeypatch.setattr(doctor, "write_advice", lambda result, numbers, product, language, price: DoctorAdvice(
+        explanation="Explain this simply.", fixes=["Fix one", "Fix two", "Fix three"], hooks=["Hook a", "Hook b", "Hook c"],
+        message=f"Price ₹{price // 100}. Reply YES to confirm."))
     return inserted
 
 
@@ -46,12 +48,25 @@ NUMBERS = {"views": 10000, "clicks": 100, "orders": 20, "returns": 2}
 def test_doctor_for_app_reel(client, auth_headers, doctor_fakes):
     r = client.post("/doctor", headers=auth_headers, json={"reel_id": REEL_ID} | NUMBERS)
     body = r.json()
-    assert r.status_code == 201 and body["stage"] == "interest" and body["language"] == "ml"
-    assert body["stages"]["returns"]["benchmark"] == 0.17
+    d = body["diagnoses"][0]
+    assert r.status_code == 201 and d["stage"] == "interest" and body["language"] == "ml"
+    assert d["rates"]["returns"]["benchmark"] == 0.17
+    assert d["message"] == "Price ₹499. Reply YES to confirm."
+    # 18 delivered at ₹499 − ₹150 cost − ₹53.10 shipping − ₹43.66 COD fee (₹37 minimum + GST); 2 returns cost shipping both ways.
+    assert d["money"]["profit_paise"] == 18 * (49900 - 15000 - 5310 - 4366) - 2 * 2 * 5310
     tables = [t for t, _ in doctor_fakes]
     assert tables == ["campaign_results", "diagnoses"]
     assert doctor_fakes[0][1]["product_id"] == PRODUCT["id"] and doctor_fakes[0][1]["user_id"] == "u1"
     assert doctor_fakes[1][1]["new_hooks"] == ["Hook a", "Hook b", "Hook c"]
+    assert doctor_fakes[0][1]["selling_price_paise"] == 49900 and doctor_fakes[0][1]["ad_spend_paise"] == 0
+
+
+def test_doctor_uses_sellers_price_and_ad_spend(client, auth_headers, doctor_fakes):
+    r = client.post("/doctor", headers=auth_headers,
+                    json={"reel_id": REEL_ID} | NUMBERS | {"selling_price_paise": 59900, "ad_spend_paise": 50000})
+    money = r.json()["diagnoses"][0]["money"]
+    assert money["price_paise"] == 59900 and money["ad_spend_paise"] == 50000
+    assert doctor_fakes[0][1]["selling_price_paise"] == 59900
 
 
 def test_doctor_daily_limit(client, auth_headers, doctor_fakes):

@@ -15,14 +15,19 @@ const AUDIENCE_IDEAS = ["college girls in Kochi", "working women in Thiruvananth
 
 export default function NewReel() {
   const router = useRouter();
-  const preselected = useSearchParams().get("product");
+  const params = useSearchParams();
+  const preselected = params.get("product");
+  const langParam = params.get("lang");
   const [products, setProducts] = useState<ProductListItem[] | null>(null);
   const [me, setMe] = useState<Me | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
 
   const [productId, setProductId] = useState(preselected ?? "");
   const [audience, setAudience] = useState("");
-  const [language, setLanguage] = useState<Language | null>(null);
+  const [language, setLanguage] = useState<Language | null>(
+    LANGUAGES.some((l) => l.value === langParam) ? (langParam as Language) : null,
+  );
+  const [hook, setHook] = useState(params.get("hook")?.slice(0, 100) ?? "");
   const [templateId, setTemplateId] = useState(1);
   const [photos, setPhotos] = useState<{ path: string; preview: string }[]>([]);
   const [uploading, setUploading] = useState(false);
@@ -77,6 +82,7 @@ export default function NewReel() {
         body: JSON.stringify({
           product_id: productId, audience: audience.trim(), language: lang, template_id: templateId,
           photo_paths: photos.map((p) => p.path),
+          ...(hook.trim().length >= 3 && { hook: hook.trim() }),
         }),
       });
       router.push(`/reels/${reel.id}`);
@@ -179,6 +185,18 @@ export default function NewReel() {
           ))}
         </div>
       </label>
+
+      {hook && (
+        <div className="flex items-start justify-between gap-2 rounded-lg bg-amber-50 p-3 text-sm">
+          <span>
+            <span className="block text-xs font-medium text-amber-900">Opening line (from Conversion Doctor)</span>
+            “{hook}”
+          </span>
+          <button type="button" onClick={() => setHook("")} aria-label="Remove opening line" className="shrink-0 text-amber-900">
+            ✕
+          </button>
+        </div>
+      )}
 
       <fieldset className="flex flex-col gap-2">
         <legend className="mb-2 text-sm font-medium">Language</legend>

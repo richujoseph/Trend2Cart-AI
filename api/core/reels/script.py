@@ -103,7 +103,8 @@ Rules:
 Return JSON with exactly these keys: hook, benefits, price_line, cta, sentences, caption, hashtags."""
 
 
-def generate_script(product: dict, audience: str, language: str, usage: dict | None = None) -> ReelScript:
+def generate_script(product: dict, audience: str, language: str, usage: dict | None = None,
+                    hook_idea: str | None = None) -> ReelScript:
     price = rupees(product["selling_price_paise"])
     user = (
         f"Product: {product['name']}\n"
@@ -112,6 +113,8 @@ def generate_script(product: dict, audience: str, language: str, usage: dict | N
         f"Audience: {audience}\n"
         f"Language: {LANGUAGE_NAMES[language]}"
     )
+    if hook_idea:
+        user += f"\nThe seller wants this opening line as the hook (keep it, translating only if it isn't in {LANGUAGE_NAMES[language]}): {hook_idea}"
     context = {"language": language, "price_digits": price.lstrip("₹").split(".")[0]}
     feedback = ""
     for _ in range(2):

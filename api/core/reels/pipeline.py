@@ -59,7 +59,8 @@ def run_reel_job(reel: dict, music: bool = True) -> dict:
     with tempfile.TemporaryDirectory(prefix="reel-") as tmp:
         workdir = Path(tmp)
         with _timed(stats, "script"):
-            script = generate_script(product, reel.get("audience") or "online shoppers in Kerala", language, llm_usage)
+            script = generate_script(product, reel.get("audience") or "online shoppers in Kerala", language, llm_usage,
+                                     hook_idea=(reel.get("script") or {}).get("requested_hook"))
         with _timed(stats, "voice"):
             voice = build_voiceover(script.sentences, language, workdir)
         duration = reel_length(voice.duration)

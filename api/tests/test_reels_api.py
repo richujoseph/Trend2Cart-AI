@@ -42,8 +42,15 @@ def test_create_reel_queues_job(client, auth_headers, fake):
     assert r.status_code == 201
     assert r.json() == {"id": REEL_ID, "status": "queued", "reels_left_this_month": 2}
     assert fake["inserted"][0] == {"user_id": "u1", "product_id": PRODUCT_ID, "audience": "college girls in Kochi",
-                                   "language": "ml", "template_id": 2, "photo_paths": [], "status": "queued"}
+                                   "language": "ml", "template_id": 2, "photo_paths": [], "script": None,
+                                   "status": "queued"}
     assert fake["rpc"] == [("use_reel_quota", {"p_user": "u1", "p_limit": 3})]
+
+
+def test_create_reel_keeps_requested_hook(client, auth_headers, fake):
+    r = client.post("/reels", headers=auth_headers, json=BODY | {"hook": "  ഇത് കണ്ടിട്ടുണ്ടോ? "})
+    assert r.status_code == 201
+    assert fake["inserted"][0]["script"] == {"requested_hook": "ഇത് കണ്ടിട്ടുണ്ടോ?"}
 
 
 def test_free_plan_limit_blocks_with_reset_date(client, auth_headers, fake):

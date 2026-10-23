@@ -120,7 +120,27 @@ export default function ReelStatus() {
 
 function DoneReel({ reel }: { reel: Reel }) {
   const [copied, setCopied] = useState(false);
+  const [sharing, setSharing] = useState(false);
+  const [shareError, setShareError] = useState(false);
   const text = [reel.caption, (reel.hashtags ?? []).join(" ")].filter(Boolean).join("\n\n");
+  const fileName = `${(reel.products?.name ?? "reel").replace(/[^a-z0-9]+/gi, "-").toLowerCase()}-reel.mp4`;
+
+  // Phones can share the video file itself (WhatsApp Status, Instagram); elsewhere fall back to a WhatsApp link.
+  async function share() {
+    const whatsapp = () =>
+      window.open(`https://wa.me/?text=${encodeURIComponent(`${text}\n\n${reel.video_url}`)}`, "_blank", "noreferrer");
+    // Decide before any await: browsers only allow window.open straight after the tap.
+    if (!navigator.canShare?.({ files: [new File([], fileName, { type: "video/mp4" })] })) return whatsapp();
+    setSharing(true);
+    try {
+      const blob = await fetch(reel.video_url!).then((r) => r.blob());
+      await navigator.share({ files: [new File([blob], fileName, { type: "video/mp4" })], text });
+    } catch (err) {
+      if ((err as Error).name !== "AbortError") setShareError(true); // AbortError = seller closed the share sheet
+    } finally {
+      setSharing(false);
+    }
+  }
 
   async function copy() {
     try {
@@ -141,15 +161,28 @@ function DoneReel({ reel }: { reel: Reel }) {
         preload="metadata"
         className="mx-auto mt-4 aspect-[9/16] w-full max-w-xs rounded-xl bg-black"
       />
-      <a
-        href={reel.video_url!}
-        target="_blank"
-        rel="noreferrer"
-        className="mt-3 flex h-12 items-center justify-center rounded-lg bg-neutral-900 font-medium text-white"
-      >
-        Open video to save it
-      </a>
-      <p className="mt-1 text-center text-xs text-neutral-500">On your phone: open it, then tap ⋮ or share → Save/Download.</p>
+      <div className="mt-3 grid grid-cols-2 gap-2">
+        {/* Supabase Storage sends the file as a download when ?download= is set. */}
+        <a
+          href={`${reel.video_url}?download=${encodeURIComponent(fileName)}`}
+          className="flex h-12 items-center justify-center rounded-lg bg-neutral-900 font-medium text-white"
+        >
+          Download
+        </a>
+        <button
+          type="button"
+          onClick={share}
+          disabled={sharing}
+          className="h-12 rounded-lg bg-emerald-600 font-medium text-white disabled:opacity-60"
+        >
+          {sharing ? "Preparing…" : "Share"}
+        </button>
+      </div>
+      <p className="mt-1 text-center text-xs text-neutral-500">
+        {shareError
+          ? "Sharing didn't work on this phone. Tap Download, then share the video from your gallery."
+          : "Then post it on Instagram or your WhatsApp Status with the caption below."}
+      </p>
 
       <section className="mt-6">
         <div className="flex items-center justify-between">

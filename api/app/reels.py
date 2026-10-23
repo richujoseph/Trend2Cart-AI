@@ -24,6 +24,8 @@ class NewReel(BaseModel):
     template_id: int = Field(1, ge=1, le=3)
     # Optional seller photos already uploaded to the private seller-photos bucket ("<user id>/<file>").
     photo_paths: list[str] = Field(default_factory=list, max_length=4)
+    # Optional opening line, e.g. a hook suggested by the Conversion Doctor.
+    hook: str | None = Field(None, min_length=3, max_length=100)
 
 
 PHOTO_FILE = re.compile(r"[A-Za-z0-9_-]{1,64}\.(jpg|jpeg|png|webp)")
@@ -73,6 +75,8 @@ def create_reel(body: NewReel, request: Request, user: dict = Depends(current_us
             "language": body.language,
             "template_id": body.template_id,
             "photo_paths": body.photo_paths,
+            # The worker replaces script with the finished one; until then it carries the seller's requested hook.
+            "script": {"requested_hook": " ".join(body.hook.split())} if body.hook else None,
             "status": "queued",
         })
     except SupabaseError:

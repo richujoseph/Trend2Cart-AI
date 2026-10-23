@@ -73,6 +73,13 @@ def test_generate_retries_once_with_feedback(monkeypatch):
     assert "rejected" in prompts[1] and "Malayalam script" in prompts[1]
 
 
+def test_generate_passes_requested_hook(monkeypatch):
+    prompts = []
+    monkeypatch.setattr(script_mod, "complete_json", lambda s, u, temperature, usage: (prompts.append(u), ML)[1])
+    generate_script(PRODUCT, "anyone", "ml", hook_idea="ഇത് കണ്ടിട്ടുണ്ടോ?")
+    assert "opening line as the hook" in prompts[0] and "ഇത് കണ്ടിട്ടുണ്ടോ?" in prompts[0]
+
+
 def test_generate_gives_up_after_two_invalid_answers(monkeypatch):
     monkeypatch.setattr(script_mod, "complete_json", lambda *a, **k: ML | {"cta": "Order now"})
     with pytest.raises(LLMError, match="couldn't write a good script"):
