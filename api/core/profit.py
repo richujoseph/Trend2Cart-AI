@@ -11,6 +11,17 @@ from decimal import ROUND_HALF_UP, Decimal
 
 MARGIN_FOR_FULL_SCORE = Decimal("0.30")
 
+# Courier costs from Shiprocket's published rate card (Lite plan, surface, 500 g slab).
+# Freight: ₹25–45 per 500 g by zone; we use the top (rest-of-India) zone because most
+# suppliers ship from Delhi/Rajkot/Surat. Source: theshizz.in courier comparison, Aug 2026.
+# COD: ₹27 + 1.5% of order value, minimum ₹37; reversed on RTO. Source: flexicommerce.in COD calculator 2026.
+# 18% GST applies to both freight and COD charges.
+GST_ON_SERVICES = Decimal("1.18")
+SHIPPING_500G_PAISE = 4500
+COD_FIXED_PAISE = 2700
+COD_PERCENT = Decimal("0.015")
+COD_MIN_PAISE = 3700
+
 
 @dataclass(frozen=True)
 class ProfitResult:
@@ -21,6 +32,17 @@ class ProfitResult:
 
 def _paise(x: Decimal) -> int:
     return int(x.quantize(Decimal(1), rounding=ROUND_HALF_UP))
+
+
+def shipping_paise() -> int:
+    """One-way courier freight for a ≤500 g parcel, including GST."""
+    return _paise(SHIPPING_500G_PAISE * GST_ON_SERVICES)
+
+
+def cod_fee_paise(selling_price_paise: int) -> int:
+    """Courier COD charge for one delivered order, including GST."""
+    fee = max(Decimal(COD_MIN_PAISE), COD_FIXED_PAISE + COD_PERCENT * selling_price_paise)
+    return _paise(fee * GST_ON_SERVICES)
 
 
 def calculate_profit(

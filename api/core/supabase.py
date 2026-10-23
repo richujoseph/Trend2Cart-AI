@@ -38,5 +38,24 @@ def service_upsert(table: str, rows: list[dict], on_conflict: str) -> None:
         },
         timeout=30,
     )
+    if resp.is_error and "PGRST204" in resp.text:
+        raise RuntimeError(f"The {table} table is missing a column. Run the newest file in supabase/migrations "
+                           f"in the Supabase SQL Editor, then try again. Details: {resp.text}")
     if resp.is_error:
         raise RuntimeError(f"Supabase rejected the {table} upload ({resp.status_code}): {resp.text}")
+
+
+def service_delete_except(table: str, keep_ids: list[str]) -> int:
+    """Delete every row whose id is not in keep_ids (service-role key). Returns how many were deleted."""
+    key = get_settings().supabase_service_role_key
+    if not key:
+        raise RuntimeError("SUPABASE_SERVICE_ROLE_KEY is empty. Add it to api/.env (Supabase → Project Settings → API keys).")
+    resp = httpx.delete(
+        _rest_url(table),
+        params={"id": f"not.in.({','.join(keep_ids)})"},
+        headers={"apikey": key, "Authorization": f"Bearer {key}", "Prefer": "return=representation"},
+        timeout=30,
+    )
+    if resp.is_error:
+        raise RuntimeError(f"Supabase couldn't remove old {table} rows ({resp.status_code}): {resp.text}")
+    return len(resp.json())

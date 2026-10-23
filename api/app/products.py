@@ -6,13 +6,15 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, Field
 
 from app.deps import current_user
-from core.profit import evaluate_product
+from core.profit import cod_fee_paise, evaluate_product
 from core.supabase import rest_get
 
 router = APIRouter(prefix="/products", dependencies=[Depends(current_user)])
 
 Category = Literal["home_gadgets", "beauty", "phone_accessories", "fitness"]
 LOAD_ERROR = "We couldn't load products right now. Please try again in a minute."
+# Only products whose market data has been fetched (scripts/enrich.py) are shown. No guessed numbers.
+READY = {col: "not.is.null" for col in ("selling_price_paise", "fees_paise", "trend_score", "competition_score")}
 
 
 def _assumptions_by_category(token: str) -> dict[str, dict]:
@@ -25,6 +27,8 @@ def _estimates(assumption: dict, rto_rate: float, ad_cost_paise: int) -> dict:
     return {
         "rto_rate": rto_rate,
         "ad_cost_paise": ad_cost_paise,
+        "default_rto_rate": float(assumption["rto_rate"]),
+        "default_ad_cost_paise": assumption["ad_cost_per_order_paise"],
         "source": assumption.get("source"),
         "edited_by_seller": rto_rate != float(assumption["rto_rate"])
         or ad_cost_paise != assumption["ad_cost_per_order_paise"],
@@ -33,7 +37,7 @@ def _estimates(assumption: dict, rto_rate: float, ad_cost_paise: int) -> dict:
 
 @router.get("")
 def list_products(request: Request, category: Category | None = None, sort: Literal["score", "profit"] = "score"):
-    params = {"select": "*"}
+    params = {"select": "*"} | READY
     if category:
         params["category"] = f"eq.{category}"
     try:
@@ -76,9 +80,9 @@ class Overrides(BaseModel):
 def simulate(product_id: UUID, request: Request, overrides: Overrides | None = None):
     overrides = overrides or Overrides()
     try:
-        rows = rest_get("products", request.state.token, {"id": f"eq.{product_id}", "select": "*"})
+        rows = rest_get("products", request.state.token, {"id": f"eq.{product_id}", "select": "*"} | READY)
         if not rows:
-            raise HTTPException(404, "This product isn't available any more.")
+            raise HTTPException(404, "This product isn't available right now.")
         product = rows[0]
         assumptions = _assumptions_by_category(request.state.token)
     except httpx.HTTPError:
@@ -89,7 +93,8 @@ def simulate(product_id: UUID, request: Request, overrides: Overrides | None = N
         raise HTTPException(503, LOAD_ERROR)
 
     if overrides.selling_price_paise is not None:
-        product = product | {"selling_price_paise": overrides.selling_price_paise}
+        price = overrides.selling_price_paise
+        product = product | {"selling_price_paise": price, "fees_paise": cod_fee_paise(price)}
     rto = overrides.rto_rate if overrides.rto_rate is not None else float(a["rto_rate"])
     ad = overrides.ad_cost_paise if overrides.ad_cost_paise is not None else a["ad_cost_per_order_paise"]
 
@@ -97,6 +102,10 @@ def simulate(product_id: UUID, request: Request, overrides: Overrides | None = N
     return {
         "id": product["id"],
         "name": product["name"],
+        "category": product["category"],
+        "image_urls": product["image_urls"],
+        "supplier": product["supplier"],
+        "market_data_updated_at": product["market_data_updated_at"],
         "score": result["score"],
         "profit_paise": result["profit_paise"],
         "profit_rupees": result["profit_paise"] / 100,
@@ -107,6 +116,7 @@ def simulate(product_id: UUID, request: Request, overrides: Overrides | None = N
             "supplier_price_paise": product["supplier_price_paise"],
             "shipping_paise": product["shipping_paise"],
             "fees_paise": product["fees_paise"],
+            "market_selling_price_paise": rows[0]["selling_price_paise"],
         },
         "estimates": _estimates(a, rto, ad),
     }

@@ -1,9 +1,9 @@
-id,name,category,image_urls,supplier,supplier_price_paise,shipping_paise,fees_paise,selling_price_paise,trend_score,competition_score,supplier_reliability
-,Rechargeable Lint Remover,home_gadgets,,Placeholder supplier - Delhi,18000,6000,4500,44900,72,65,70
-,Pull-String Vegetable Chopper 500ml,home_gadgets,,Placeholder supplier - Rajkot,12000,5500,3800,34900,60,80,75
-,Ice Roller for Face,beauty,,Placeholder supplier - Mumbai,9500,5000,3500,29900,68,55,65
-,Heatless Hair Curler Rod Set,beauty,,Placeholder supplier - Surat,11000,5000,3800,34900,78,50,60
-,Magnetic Car Phone Holder,phone_accessories,,Placeholder supplier - Delhi,8500,5000,3200,24900,55,85,70
-,20W Fast Charger with Type-C Cable,phone_accessories,,Placeholder supplier - Delhi,21000,5500,4200,39900,50,90,55
-,Resistance Bands Set (5 pcs),fitness,,Placeholder supplier - Meerut,16000,6500,4800,49900,62,70,72
-,Skipping Rope with Digital Counter,fitness,,Placeholder supplier - Jalandhar,9000,5500,3500,29900,45,75,68
+id,name,category,image_urls,supplier,supplier_price_paise,shipping_paise,selling_price_paise,trend_score,competition_score,supplier_reliability,search_keyword,market_data_updated_at,source_url,source_notes
+,Rechargeable Lint Remover,home_gadgets,,"Shree Ganpati Traders, New Delhi",23600,5310,,,,88,rechargeable lint remover,,https://m.indiamart.com/impcat/lint-remover.html,"IndiaMART listing ₹200/pc + 18% GST; seller 4.4★ (509 ratings), 4 yrs, TrustSEAL. Checked 2026-10-24"
+,Pull-Cord Vegetable Chopper 750ml,home_gadgets,,"Jay N Om Industries, Rajkot",8024,5310,,,,98,pull string vegetable chopper,,https://m.indiamart.com/impcat/hand-chopper.html,"IndiaMART listing ₹68/pc + 18% GST; seller 4.9★ (125 ratings), 7 yrs. Checked 2026-10-24"
+,Face Ice Roller,beauty,,"Shivneet Techoworld, New Delhi",1770,5310,,,,86,ice roller for face,,https://m.indiamart.com/shivneet-techoworld/face-ice-roller.html,"IndiaMART listing ₹15/pc + 18% GST; seller 4.3★ (487 ratings), GST + TrustSEAL. Checked 2026-10-24"
+,Heatless Hair Roller,beauty,,"Mahant, Surat",8260,5310,,,,84,heatless hair curler,,https://m.indiamart.com/impcat/hair-roller.html,"IndiaMART listing ₹70/pc (1 roller) + 18% GST; seller 4.2★ (651 ratings), 5 yrs, TrustSEAL. Checked 2026-10-24"
+,Adjustable Mobile Stand,phone_accessories,,"Call Mate India Pvt. Ltd., New Delhi",5310,5310,,,,84,adjustable mobile stand,,https://m.indiamart.com/impcat/mobile-stands.html,"IndiaMART listing L-301 ₹45/pc + 18% GST; seller 4.2★ (470 ratings), 11 yrs, TrustSEAL. Checked 2026-10-24"
+,20W Type-C PD Charger,phone_accessories,,"Call Mate India Pvt. Ltd., New Delhi",17700,5310,,,,84,20w type c charger,,https://m.indiamart.com/impcat/type-c-charger.html,"IndiaMART listing ₹150/pc + 18% GST (adapter only); seller 4.2★ (470 ratings), 11 yrs, TrustSEAL. Checked 2026-10-24"
+,Resistance Loop Bands (Set of 5),fitness,,"Shivneet Techoworld, New Delhi",6372,5310,,,,86,resistance loop bands set of 5,,https://m.indiamart.com/impcat/resistance-band.html,"IndiaMART listing ₹54/set (latex, 5 bands) + 18% GST; seller 4.3★ (487 ratings), TrustSEAL. Checked 2026-10-24"
+,Skipping Rope with Counter,fitness,,"Ravirandal, Surat",9440,5310,,,,94,skipping rope with counter,,https://m.indiamart.com/impcat/digital-skipping-rope.html,"IndiaMART listing ₹80/pc + 18% GST; seller 4.7★ (419 ratings), 6 yrs, TrustSEAL. Checked 2026-10-24"

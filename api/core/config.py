@@ -14,6 +14,8 @@ class Settings(BaseSettings):
     # Newer projects use signing keys published at /auth/v1/.well-known/jwks.json.
     supabase_jwt_secret: str = ""
     cors_origins: str = "http://localhost:3000"
+    # Market data for scripts/enrich.py (serpapi.com). Free plan: 250 searches/month = 125 products.
+    serpapi_api_key: str = ""
 
 
 @lru_cache

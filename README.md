@@ -35,3 +35,13 @@ cd worker && cp .env.example .env && uv sync && uv run python main.py
 ```
 
 Tests: `cd api && uv run pytest`
+
+## 3. Product data
+
+- `data/products.csv` is the source of truth. Edit it, then load it: `cd api && uv run python scripts/seed.py`
+- Real market data (Google Shopping India price + sellers, Google Trends for Kerala/Tamil Nadu) via SerpApi:
+  add `SERPAPI_API_KEY` to `api/.env`, then `uv run python scripts/enrich.py` (2 searches per product;
+  free plan = 250/month). It updates the CSV and re-seeds. Commit the CSV so the team shares the data.
+- Supplier price (incl. GST), shipping and supplier rating come from real supplier listings, with `source_url`
+  and `source_notes` for every row. COD fees are computed from the courier rate card in `api/core/profit.py`.
+- Never type guessed prices or scores into the CSV. Products without market data are hidden from sellers.

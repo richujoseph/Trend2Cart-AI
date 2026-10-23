@@ -1,6 +1,6 @@
 import pytest
 
-from core.profit import calculate_profit, evaluate_product, profit_component, score
+from core.profit import calculate_profit, cod_fee_paise, evaluate_product, profit_component, score, shipping_paise
 
 
 def test_normal_case():
@@ -104,3 +104,19 @@ def test_rejects_invalid_rto(bad_rto):
 def test_rejects_negative_money():
     with pytest.raises(ValueError):
         calculate_profit(50000, 20000, 5000, 4000, 0.2, -1)
+
+
+def test_shipping_includes_gst():
+    assert shipping_paise() == 5310  # ₹45 + 18% GST
+
+
+@pytest.mark.parametrize(
+    ("price", "expected"),
+    [
+        (29900, 4366),  # ₹27 + 1.5% = ₹31.49 < ₹37 minimum → ₹37 + GST = ₹43.66
+        (66700, 4367),  # just above the minimum: ₹27 + ₹10.005 = ₹37.005 + GST = ₹43.67
+        (100000, 4956),  # ₹27 + ₹15 = ₹42 + GST = ₹49.56
+    ],
+)
+def test_cod_fee(price, expected):
+    assert cod_fee_paise(price) == expected
