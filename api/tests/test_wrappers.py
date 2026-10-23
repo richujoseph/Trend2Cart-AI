@@ -67,9 +67,34 @@ def test_llm_json_gives_up_after_two_bad_answers(monkeypatch):
 
 
 def test_llm_rate_limit_message(monkeypatch):
-    fake_post(monkeypatch, llm, status=429)
+    calls = []
+    fake_post(monkeypatch, llm, status=429, calls=calls)
     with pytest.raises(llm.LLMError, match="busy"):
         llm.complete("s", "u")
+    assert [c[1]["json"]["model"] for c in calls] == ["gemini-3.8-flash", "gemini-3.5-flash-lite"]
+
+
+def test_llm_falls_back_when_main_model_is_overloaded(monkeypatch):
+    def post(url, **kwargs):
+        status = 503 if kwargs["json"]["model"] == "gemini-3.8-flash" else 200
+        return httpx.Response(status, json=chat("ok from lite"), request=httpx.Request("POST", url))
+
+    monkeypatch.setattr(llm.httpx, "post", post)
+    assert llm.complete("s", "u") == "ok from lite"
+
+
+def test_tts_retries_once_after_timeout(monkeypatch):
+    attempts = []
+
+    def post(url, **kwargs):
+        attempts.append(1)
+        if len(attempts) == 1:
+            raise httpx.ReadTimeout("slow", request=httpx.Request("POST", url))
+        return httpx.Response(200, json={"audios": [base64.b64encode(b"mp3").decode()]}, request=httpx.Request("POST", url))
+
+    monkeypatch.setattr(tts.httpx, "post", post)
+    assert tts.synthesize("hello", "en") == b"mp3"
+    assert len(attempts) == 2
 
 
 def test_llm_missing_key(monkeypatch):

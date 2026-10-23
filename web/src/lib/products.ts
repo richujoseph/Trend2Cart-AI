@@ -22,7 +22,8 @@ export type ProductListItem = {
   category: Category;
   image_urls: string[];
   selling_price_paise: number;
-  score: number;
+  selling_price_source: string | null;
+  score: number | null; // null until trend + competition are checked
   profit_paise: number;
   profit_rupees: number;
   loss_trap: boolean;
@@ -35,8 +36,11 @@ export type Simulation = {
   category: Category;
   image_urls: string[];
   supplier: string | null;
-  market_data_updated_at: string;
-  score: number;
+  market_data_updated_at: string | null;
+  selling_price_source: string | null;
+  trend_score: number | null;
+  competition_score: number | null;
+  score: number | null;
   profit_paise: number;
   loss_trap: boolean;
   breakdown: {
@@ -63,11 +67,6 @@ const inrPaise = new Intl.NumberFormat("en-IN", { style: "currency", currency: "
 /** 8768 → "₹87.68", 4560 → "₹45.60", 44900 → "₹449", -2860 → "-₹28.60" */
 export function formatRupees(paise: number): string {
   return (paise % 100 === 0 ? inrWhole : inrPaise).format(paise / 100);
-}
-
-/** "2026-10-24T09:12:00+00:00" → "24 Oct 2026" */
-export function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
 }
 
 export const categoryLabel = (c: Category) => CATEGORIES.find((x) => x.value === c)?.label ?? c;

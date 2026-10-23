@@ -52,11 +52,16 @@ def synthesize(text: str, language: str) -> bytes:
     if provider not in providers or not providers[provider][1]:
         raise TTSError("Voiceover isn't set up yet. Please try again later.")
     synth, key = providers[provider]
-    try:
-        return synth(text, LANGUAGE_CODES[language], key)
-    except httpx.HTTPStatusError as e:
-        if e.response.status_code == 429:
-            raise TTSError("Voiceover is busy right now. Please try again in a minute.")
-        raise TTSError("We couldn't create the voiceover. Please try again.")
-    except (httpx.HTTPError, KeyError, IndexError, ValueError):
-        raise TTSError("We couldn't create the voiceover. Please try again.")
+    for attempt in range(2):  # one retry: free-tier APIs occasionally time out or return 5xx
+        try:
+            return synth(text, LANGUAGE_CODES[language], key)
+        except httpx.HTTPStatusError as e:
+            if e.response.status_code == 429:
+                raise TTSError("Voiceover is busy right now. Please try again in a minute.")
+            if e.response.status_code < 500 or attempt == 1:
+                raise TTSError("We couldn't create the voiceover. Please try again.")
+        except httpx.TransportError:
+            if attempt == 1:
+                raise TTSError("We couldn't reach the voiceover service. Please try again in a minute.")
+        except (KeyError, IndexError, ValueError):
+            raise TTSError("We couldn't create the voiceover. Please try again.")

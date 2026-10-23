@@ -13,8 +13,15 @@ router = APIRouter(prefix="/products", dependencies=[Depends(current_user)])
 
 Category = Literal["home_gadgets", "beauty", "phone_accessories", "fitness"]
 LOAD_ERROR = "We couldn't load products right now. Please try again in a minute."
-# Only products whose market data has been fetched (scripts/enrich.py) are shown. No guessed numbers.
-READY = {col: "not.is.null" for col in ("selling_price_paise", "fees_paise", "trend_score", "competition_score")}
+# Only products with a real market price (so profit is real) are shown. Trend and competition may still
+# be NULL ("not checked yet"); those products have score None and rank after scored ones.
+READY = {col: "not.is.null" for col in ("selling_price_paise", "fees_paise")}
+
+
+def _rank(item: dict, sort: str) -> tuple:
+    if sort == "profit":
+        return (item["profit_paise"],)
+    return (item["score"] is not None, item["score"] or 0, item["profit_paise"])
 
 
 def _assumptions_by_category(token: str) -> dict[str, dict]:
@@ -59,14 +66,14 @@ def list_products(request: Request, category: Category | None = None, sort: Lite
             "category": p["category"],
             "image_urls": p["image_urls"],
             "selling_price_paise": p["selling_price_paise"],
+            "selling_price_source": p.get("selling_price_source"),
             "score": result["score"],
             "profit_paise": result["profit_paise"],
             "profit_rupees": result["profit_paise"] / 100,
             "loss_trap": result["loss_trap"],
             "estimates": _estimates(a, rto, ad),
         })
-    key = "score" if sort == "score" else "profit_paise"
-    items.sort(key=lambda i: i[key], reverse=True)
+    items.sort(key=lambda i: _rank(i, sort), reverse=True)
     return items
 
 
@@ -105,7 +112,10 @@ def simulate(product_id: UUID, request: Request, overrides: Overrides | None = N
         "category": product["category"],
         "image_urls": product["image_urls"],
         "supplier": product["supplier"],
-        "market_data_updated_at": product["market_data_updated_at"],
+        "market_data_updated_at": product.get("market_data_updated_at"),
+        "selling_price_source": product.get("selling_price_source"),
+        "trend_score": product["trend_score"],
+        "competition_score": product["competition_score"],
         "score": result["score"],
         "profit_paise": result["profit_paise"],
         "profit_rupees": result["profit_paise"] / 100,

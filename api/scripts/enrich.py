@@ -62,11 +62,12 @@ def main() -> None:
             continue
 
         old = row["selling_price_paise"].strip()
-        if snap.market_price_paise is None:
-            # Too few listings to trust a price: don't keep or invent one.
-            row["selling_price_paise"] = ""
-        else:
+        if snap.market_price_paise is not None:
             row["selling_price_paise"] = str(snap.market_price_paise)
+            row["selling_price_source"] = (
+                f"Median of {snap.listings} Google Shopping India listings — {snap.fetched_at:%Y-%m-%d}"
+            )
+        # else: too few listings to trust a new price; keep the existing researched price (if any).
         row["trend_score"] = str(snap.trend_score)
         row["competition_score"] = str(snap.competition_score)
         if not row["image_urls"].strip() and snap.image_url:
@@ -76,7 +77,7 @@ def main() -> None:
         price = (
             f"₹{int(old) // 100 if old else '—'} → ₹{snap.market_price_paise // 100}"
             if snap.market_price_paise is not None
-            else f"none (only {snap.listings} listings; product stays hidden)"
+            else f"unchanged (only {snap.listings} listings)"
         )
         print(f"  ✓ {row['name']}: price {price}, trend {snap.trend_score}, "
               f"competition {snap.competition_score} ({snap.sellers} sellers)")

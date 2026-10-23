@@ -98,7 +98,10 @@ def score(
 
 
 def evaluate_product(product: dict, rto_rate: float, ad_cost_paise: int) -> dict:
-    """Profit, score and breakdown for one products-table row."""
+    """Profit, score and breakdown for one products-table row.
+
+    score is None until trend and competition have real data (never guessed).
+    """
     result = calculate_profit(
         selling_price_paise=product["selling_price_paise"],
         supplier_price_paise=product["supplier_price_paise"],
@@ -107,6 +110,7 @@ def evaluate_product(product: dict, rto_rate: float, ad_cost_paise: int) -> dict
         rto_rate=rto_rate,
         ad_cost_paise=ad_cost_paise,
     )
+    scored = product["trend_score"] is not None and product["competition_score"] is not None
     return {
         "score": score(
             result.profit_paise,
@@ -114,7 +118,7 @@ def evaluate_product(product: dict, rto_rate: float, ad_cost_paise: int) -> dict
             product["trend_score"],
             product["competition_score"],
             product["supplier_reliability"],
-        ),
+        ) if scored else None,
         "profit_paise": result.profit_paise,
         "loss_trap": result.profit_paise <= 0,
         "breakdown": result.breakdown,

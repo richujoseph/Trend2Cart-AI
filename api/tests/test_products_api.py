@@ -11,7 +11,7 @@ PRODUCTS = [
      "supplier_price_paise": 16000, "shipping_paise": 6500, "fees_paise": 4800, "selling_price_paise": 49900,
      "trend_score": 62, "competition_score": 70, "supplier_reliability": 72},
     {"id": "44444444-4444-4444-4444-444444444444", "name": "Not enriched yet", "category": "fitness", "image_urls": [], "supplier": "S", "market_data_updated_at": "2026-10-24T00:00:00+00:00",
-     "supplier_price_paise": 9440, "shipping_paise": 5310, "fees_paise": None, "selling_price_paise": None,
+     "supplier_price_paise": 9440, "shipping_paise": 5310, "fees_paise": 4366, "selling_price_paise": 32900,
      "trend_score": None, "competition_score": None, "supplier_reliability": 94},
 ]
 ASSUMPTIONS = [
@@ -46,7 +46,7 @@ def test_list_requires_sign_in(client):
 
 def test_list_sorted_by_score_with_loss_trap(client, auth_headers):
     items = client.get("/products?sort=score", headers=auth_headers).json()
-    assert [i["id"] for i in items] == [BANDS_ID, CHARGER_ID]
+    assert [i["id"] for i in items][:2] == [BANDS_ID, CHARGER_ID]
     charger = items[1]
     assert charger["profit_paise"] == -2860
     assert charger["profit_rupees"] == -28.6
@@ -57,7 +57,7 @@ def test_list_sorted_by_score_with_loss_trap(client, auth_headers):
 
 def test_list_filters_by_category(client, auth_headers):
     items = client.get("/products?category=fitness", headers=auth_headers).json()
-    assert [i["id"] for i in items] == [BANDS_ID]
+    assert [i["id"] for i in items] == [BANDS_ID, "44444444-4444-4444-4444-444444444444"]
 
 
 def test_list_rejects_unknown_category(client, auth_headers):
@@ -66,11 +66,24 @@ def test_list_rejects_unknown_category(client, auth_headers):
     assert r.json()["detail"] == "Please pick a valid category."
 
 
-def test_products_without_market_data_are_hidden(client, auth_headers):
-    ids = [i["id"] for i in client.get("/products", headers=auth_headers).json()]
-    assert "44444444-4444-4444-4444-444444444444" not in ids
+def test_unscored_products_are_listed_last_with_score_pending(client, auth_headers):
+    items = client.get("/products", headers=auth_headers).json()
+    assert items[-1]["id"] == "44444444-4444-4444-4444-444444444444"
+    assert items[-1]["score"] is None
     r = client.post("/products/44444444-4444-4444-4444-444444444444/simulate", headers=auth_headers)
-    assert r.status_code == 404
+    assert r.status_code == 200 and r.json()["score"] is None
+
+
+def test_products_without_a_price_are_hidden(client, auth_headers, monkeypatch):
+    from app import products
+
+    PRODUCTS.append({**PRODUCTS[0], "id": "55555555-5555-5555-5555-555555555555",
+                     "selling_price_paise": None, "fees_paise": None})
+    try:
+        ids = [i["id"] for i in client.get("/products", headers=auth_headers).json()]
+        assert "55555555-5555-5555-5555-555555555555" not in ids
+    finally:
+        PRODUCTS.pop()
 
 
 def test_simulate_defaults_match_list(client, auth_headers):

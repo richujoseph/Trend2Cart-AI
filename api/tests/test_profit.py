@@ -120,3 +120,13 @@ def test_shipping_includes_gst():
 )
 def test_cod_fee(price, expected):
     assert cod_fee_paise(price) == expected
+
+
+def test_score_is_pending_without_trend_or_competition():
+    product = {
+        "selling_price_paise": 45900, "supplier_price_paise": 23600, "shipping_paise": 5310,
+        "fees_paise": 4366, "trend_score": None, "competition_score": None, "supplier_reliability": 88,
+    }
+    out = evaluate_product(product, rto_rate=0.22, ad_cost_paise=0)
+    assert out["score"] is None
+    assert out["profit_paise"] == calculate_profit(45900, 23600, 5310, 4366, 0.22, 0).profit_paise

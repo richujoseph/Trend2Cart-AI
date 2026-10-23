@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { apiFetch } from "@/lib/api";
-import { type Simulation, categoryLabel, formatDate, formatRupees } from "@/lib/products";
+import { type Simulation, categoryLabel, formatRupees } from "@/lib/products";
 import { createClient } from "@/lib/supabase/client";
 import { ErrorState, LossTrapTag, ProductImage, ScoreBadge } from "@/components/states";
 
@@ -132,6 +132,11 @@ export default function ProductDetail() {
         <ScoreBadge score={sim.score} />
       </section>
 
+      <dl className="mt-3 grid grid-cols-2 gap-2 text-xs">
+        <Fact label="Trend (Kerala + TN)" value={sim.trend_score} />
+        <Fact label="Competition" value={sim.competition_score} />
+      </dl>
+
       <div className="mt-3 grid grid-cols-2 gap-2">
         <SaveButton productId={sim.id} />
         <Link
@@ -156,7 +161,7 @@ export default function ProductDetail() {
             min={Math.max(1, Math.round(market * 0.5))}
             max={Math.round(market * 2)}
             step={1}
-            hint={`Market price ${formatRupees(sim.inputs.market_selling_price_paise)} (Google Shopping, ${formatDate(sim.market_data_updated_at)})`}
+            hint={`Market price ${formatRupees(sim.inputs.market_selling_price_paise)}`}
           />
           <Field
             label="Orders returned (RTO)"
@@ -188,6 +193,7 @@ export default function ProductDetail() {
         {sim.estimates.source && (
           <details className="mt-4 text-xs text-neutral-600">
             <summary className="cursor-pointer font-medium">Where these numbers come from</summary>
+            {sim.selling_price_source && <p className="mt-2">Market price: {sim.selling_price_source}.</p>}
             <p className="mt-2">{sim.estimates.source}</p>
             <p className="mt-2">
               Supplier price is a real wholesale listing including 18% GST. Shipping and COD fees use
@@ -201,6 +207,17 @@ export default function ProductDetail() {
         })()}
       </section>
     </>
+  );
+}
+
+function Fact({ label, value }: { label: string; value: number | null }) {
+  return (
+    <div className="rounded-lg border border-neutral-200 bg-white p-2">
+      <dt className="text-neutral-500">{label}</dt>
+      <dd className={value === null ? "text-neutral-400" : "text-base font-semibold tabular-nums"}>
+        {value === null ? "Not checked yet" : `${value}/100`}
+      </dd>
+    </div>
   );
 }
 

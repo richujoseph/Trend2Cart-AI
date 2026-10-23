@@ -9,8 +9,10 @@ so editing a row and re-running updates it instead of duplicating it. Renaming a
 Columns:
 - supplier_price_paise: real supplier quote INCLUDING GST (sellers below the GST threshold can't claim it back)
 - shipping_paise: courier freight for the product's weight slab, including GST (≤500 g: core.profit.shipping_paise())
-- selling_price_paise, trend_score, competition_score, image_urls, market_data_updated_at:
-  filled by scripts/enrich.py from SerpApi. Leave blank; never type guesses here.
+- selling_price_paise + selling_price_source: a real retail price and where it came from (web research or
+  scripts/enrich.py via SerpApi). Products without a price are hidden from sellers.
+- trend_score, competition_score, image_urls, market_data_updated_at: filled by scripts/enrich.py from SerpApi.
+  Leave blank until then (shown as "not checked yet"); never type guesses here.
 - supplier_reliability: IndiaMART seller rating out of 5, × 20
 - fees_paise is not in the CSV: it's computed from the courier COD rate card.
 - source_url, source_notes: where each number came from (not loaded into the database)
@@ -74,6 +76,8 @@ def load_products() -> list[dict]:
             if raw["category"] not in CATEGORIES:
                 errors.append(f"line {line_no}: category '{raw['category']}' must be one of {sorted(CATEGORIES)}")
                 continue
+            if (raw.get("selling_price_paise") or "").strip() and not (raw.get("selling_price_source") or "").strip():
+                errors.append(f"line {line_no}: selling_price_source is empty; say where the price came from")
             if not (raw.get("source_url") or "").strip():
                 errors.append(f"line {line_no}: source_url is empty; every product needs a real supplier source")
             row = {
@@ -83,6 +87,7 @@ def load_products() -> list[dict]:
                 "image_urls": [u.strip() for u in raw["image_urls"].split("|") if u.strip()],
                 "supplier": raw["supplier"].strip() or None,
                 "search_keyword": (raw.get("search_keyword") or "").strip() or None,
+                "selling_price_source": (raw.get("selling_price_source") or "").strip() or None,
                 "market_data_updated_at": (raw.get("market_data_updated_at") or "").strip() or None,
             }
             for col in REQUIRED_INT_COLUMNS:
@@ -105,11 +110,13 @@ def main() -> None:
         removed = service_delete_except("products", [p["id"] for p in products])
     except RuntimeError as e:
         sys.exit(str(e))
-    ready = sum(1 for p in products if None not in (p["selling_price_paise"], p["trend_score"], p["competition_score"]))
-    print(f"Seeded {len(CATEGORY_ASSUMPTIONS)} category assumptions and {len(products)} products "
-          f"({ready} with market data, shown to sellers). Removed {removed} products not in the CSV.")
-    if ready < len(products):
-        print("Run scripts/enrich.py to fetch market data for the rest.")
+    priced = sum(1 for p in products if p["selling_price_paise"] is not None)
+    scored = sum(1 for p in products if p["trend_score"] is not None and p["competition_score"] is not None)
+    print(f"Seeded {len(CATEGORY_ASSUMPTIONS)} category assumptions and {len(products)} products: "
+          f"{priced} with a real price (shown to sellers), {scored} with trend + competition (scored). "
+          f"Removed {removed} products not in the CSV.")
+    if scored < len(products):
+        print("Run scripts/enrich.py (needs SERPAPI_API_KEY) to add trend and competition.")
 
 
 if __name__ == "__main__":

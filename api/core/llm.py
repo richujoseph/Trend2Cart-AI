@@ -15,31 +15,42 @@ class LLMError(Exception):
     """Message is safe to show to sellers."""
 
 
+RETRYABLE = {429, 500, 502, 503, 504}
+
+
 def complete(system: str, user: str, temperature: float = 0.7) -> str:
+    """Try the main model, then each fallback model when one is busy or the network drops."""
     settings = get_settings()
     if not settings.llm_api_key:
         raise LLMError("Our writing assistant isn't set up yet. Please try again later.")
-    try:
-        resp = httpx.post(
-            f"{settings.llm_base_url.rstrip('/')}/chat/completions",
-            headers={"Authorization": f"Bearer {settings.llm_api_key}"},
-            json={
-                "model": settings.llm_model,
-                "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}],
-                "temperature": temperature,
-            },
-            timeout=60,
-        )
-    except httpx.HTTPError:
-        raise LLMError("We couldn't reach our writing assistant. Please try again in a minute.")
-    if resp.status_code == 429:
+    models = [settings.llm_model] + [m.strip() for m in settings.llm_fallback_models.split(",") if m.strip()]
+    busy = False
+    for model in models:
+        try:
+            resp = httpx.post(
+                f"{settings.llm_base_url.rstrip('/')}/chat/completions",
+                headers={"Authorization": f"Bearer {settings.llm_api_key}"},
+                json={
+                    "model": model,
+                    "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}],
+                    "temperature": temperature,
+                },
+                timeout=60,
+            )
+        except httpx.HTTPError:
+            continue
+        if resp.status_code in RETRYABLE:
+            busy = True
+            continue
+        if resp.is_error:
+            raise LLMError("Our writing assistant had a problem. Please try again.")
+        try:
+            return resp.json()["choices"][0]["message"]["content"].strip()
+        except (KeyError, IndexError, TypeError, ValueError):
+            raise LLMError("Our writing assistant sent back an empty answer. Please try again.")
+    if busy:
         raise LLMError("Our writing assistant is busy right now. Please try again in a minute.")
-    if resp.is_error:
-        raise LLMError("Our writing assistant had a problem. Please try again.")
-    try:
-        return resp.json()["choices"][0]["message"]["content"].strip()
-    except (KeyError, IndexError, TypeError, ValueError):
-        raise LLMError("Our writing assistant sent back an empty answer. Please try again.")
+    raise LLMError("We couldn't reach our writing assistant. Please try again in a minute.")
 
 
 def _parse_json(text: str) -> dict:

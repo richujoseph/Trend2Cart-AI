@@ -25,6 +25,8 @@ class Settings(BaseSettings):
     llm_base_url: str = "https://generativelanguage.googleapis.com/v1beta/openai"
     llm_api_key: str = ""
     llm_model: str = "gemini-3.8-flash"
+    # Tried in order when the main model is overloaded (free tiers often return 503/429).
+    llm_fallback_models: str = "gemini-3.5-flash-lite"
 
     # TTS: "sarvam" (free credits, no card) or "google" (free monthly quota, needs billing card).
     tts_provider: str = "sarvam"

@@ -20,7 +20,15 @@ export function EmptyState({ title, body }: { title: string; body: string }) {
   );
 }
 
-export function ScoreBadge({ score }: { score: number }) {
+export function ScoreBadge({ score }: { score: number | null }) {
+  if (score === null) {
+    return (
+      <span className="inline-flex shrink-0 flex-col items-center rounded-lg bg-neutral-100 px-2 py-1 leading-none text-neutral-500" title="Trend and competition not checked yet">
+        <span className="text-lg font-bold">–</span>
+        <span className="text-[10px] font-medium uppercase tracking-wide">not scored</span>
+      </span>
+    );
+  }
   const tone =
     score >= 60 ? "bg-emerald-100 text-emerald-800" : score >= 35 ? "bg-amber-100 text-amber-800" : "bg-neutral-200 text-neutral-700";
   return (
