@@ -21,7 +21,7 @@ from PIL import Image, ImageDraw
 
 from core.reels.captions import build_ass
 from core.reels.pipeline import END_CARD, costs_paise, reel_length
-from core.reels.render import load_photo, render_reel
+from core.reels.render import load_photo, pick_music, render_reel
 from core.reels.script import generate_script, rupees
 from core.reels.templates import TEMPLATES
 from core.reels.voice import build_voiceover
@@ -54,7 +54,7 @@ def main() -> None:
     ap.add_argument("--templates", type=int, nargs="+", default=[1, 2, 3])
     ap.add_argument("--photos", type=Path, nargs="*", default=[])
     ap.add_argument("--test-photos", action="store_true")
-    ap.add_argument("--music", action="store_true", help="mix a test tone to check ducking")
+    ap.add_argument("--music", action="store_true", help="mix a background track (worker/assets/music) under the voice")
     args = ap.parse_args()
     OUT.mkdir(exist_ok=True)
 
@@ -87,7 +87,7 @@ def main() -> None:
             t0 = time.perf_counter()
             render_reel(template=template, photos=photos, voice=voice.path, ass_file=ass_file, duration=duration,
                         end_card_start=end_card_start, out=workdir / out.name,
-                        music=tone(workdir) if args.music else None)
+                        music=(pick_music() or tone(workdir)) if args.music else None)
             timings[f"render_t{tid}"] = round(time.perf_counter() - t0, 2)
             shutil.copy(workdir / out.name, out)
             # Frames for checking: a caption line, the price badge, the end card.

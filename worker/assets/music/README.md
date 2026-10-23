@@ -1,8 +1,14 @@
-# Background music (optional)
+# Background music
 
-Drop royalty-free `.mp3` tracks here; the worker picks one at random per Reel, plays it at low volume
-and ducks it under the voice. With no tracks, Reels render with voice only.
+The worker picks one `.mp3` here at random per Reel, plays it quietly and ducks it under the voice.
 
-Only add tracks whose licence allows commercial use without attribution, for example from the
-YouTube Audio Library (filter: "No attribution required") or Pixabay Music. Keep the licence link
-for each track in this folder (e.g. `track-name.txt`).
+The included loops (`calm-lofi`, `bright-pop`, `warm-marimba`) are **original**: synthesised by
+`worker/scripts/make_music.py`, so there are no licensing questions. Regenerate or tweak them with:
+
+```bash
+cd worker && uv run --no-project --with numpy python scripts/make_music.py
+```
+
+You can add other tracks only if their licence allows commercial use without attribution
+(e.g. YouTube Audio Library "No attribution required", Pixabay Music). Keep the licence link for
+each added track in this folder (e.g. `track-name.txt`).
