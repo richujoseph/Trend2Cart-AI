@@ -6,7 +6,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from app import products
+from app import products, reels
 from app.deps import current_user
 from core.config import get_settings
 from core.supabase import rest_get
@@ -38,6 +38,10 @@ FIELD_MESSAGES = {
     "rto_rate": "Return rate (RTO) must be between 0% and 100%.",
     "category": "Please pick a valid category.",
     "product_id": "This product link looks broken. Go back and pick the product again.",
+    "reel_id": "This Reel link looks broken. Go back to your Reels and open it again.",
+    "audience": "Describe who the Reel is for in 3–80 characters, for example \"college girls in Kochi\".",
+    "language": "Please pick Malayalam, Hindi or English.",
+    "template_id": "Please pick one of the 3 Reel styles.",
 }
 
 
@@ -73,3 +77,4 @@ def me(request: Request, user: dict = Depends(current_user)):
 
 app.include_router(protected)
 app.include_router(products.router)
+app.include_router(reels.router)

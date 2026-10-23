@@ -46,7 +46,24 @@ Tests: `cd api && uv run pytest`
   and `source_notes` for every row. COD fees are computed from the courier rate card in `api/core/profit.py`.
 - Never type guessed prices or scores into the CSV. Products without market data are hidden from sellers.
 
-## 4. Free deployment (₹0)
+## 4. Reels (script → voice → captions → render)
+
+- `POST /reels` `{product_id, audience, language: ml|hi|en, template_id: 1|2|3}` checks the plan limit
+  (free = 3/month, resets on the 1st, India time), queues a job and returns its id. `GET /reels/{id}` returns
+  `queued | processing | done | failed`, plus `video_url`, `caption`, `hashtags` or a plain-language `error`.
+- The worker (`worker/main.py`) polls every 2 s, runs `api/core/reels/pipeline.py`, uploads the MP4 to the
+  public `reels` Storage bucket and logs seconds per stage and LLM/TTS cost in paise. Failed jobs are refunded.
+- Rendering needs FFmpeg **with libass**. Homebrew's ffmpeg doesn't have it, so run the worker in Docker locally:
+  ```bash
+  docker build -t t2c-api .
+  docker run --rm --env-file api/.env t2c-api python /app/worker/main.py
+  ```
+  (or `brew tap homebrew-ffmpeg/ffmpeg && brew install homebrew-ffmpeg/ffmpeg/ffmpeg`, then `cd worker && uv run python main.py`).
+- Try the stages without the database: `worker/experiments/render_sample.py` (usage in its docstring).
+- Fonts (OFL, in `worker/assets/fonts`): Noto Sans Malayalam, Mukta (Hindi + Latin), Noto Sans (English, ₹).
+  Optional music: see `worker/assets/music/README.md`.
+
+## 5. Free deployment (₹0)
 
 | Part | Service (free plan) |
 |---|---|

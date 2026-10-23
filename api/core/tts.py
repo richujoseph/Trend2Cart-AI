@@ -20,8 +20,14 @@ def _sarvam(text: str, language_code: str, key: str) -> bytes:
     resp = httpx.post(
         "https://api.sarvam.ai/text-to-speech",
         headers={"api-subscription-key": key},
-        json={"text": text, "language_code": language_code, "model": "bulbul:v3", "output_audio_codec": "mp3"},
-        timeout=60,
+        json={
+            "text": text,
+            "language_code": language_code,
+            "model": "bulbul:v3",
+            "output_audio_codec": "mp3",
+            "enable_preprocessing": True,  # reads numbers like ₹459 naturally
+        },
+        timeout=20,  # normally ~1.5 s; a hung call is retried once by synthesize()
     )
     resp.raise_for_status()
     return base64.b64decode(resp.json()["audios"][0])

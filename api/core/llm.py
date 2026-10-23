@@ -18,8 +18,11 @@ class LLMError(Exception):
 RETRYABLE = {429, 500, 502, 503, 504}
 
 
-def complete(system: str, user: str, temperature: float = 0.7) -> str:
-    """Try the main model, then each fallback model when one is busy or the network drops."""
+def complete(system: str, user: str, temperature: float = 0.7, usage: dict | None = None) -> str:
+    """Try the main model, then each fallback model when one is busy or the network drops.
+
+    Pass a dict as `usage` to accumulate token counts (prompt_tokens, completion_tokens, calls, model).
+    """
     settings = get_settings()
     if not settings.llm_api_key:
         raise LLMError("Our writing assistant isn't set up yet. Please try again later.")
@@ -35,7 +38,7 @@ def complete(system: str, user: str, temperature: float = 0.7) -> str:
                     "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}],
                     "temperature": temperature,
                 },
-                timeout=60,
+                timeout=settings.llm_timeout_seconds,
             )
         except httpx.HTTPError:
             continue
@@ -45,9 +48,17 @@ def complete(system: str, user: str, temperature: float = 0.7) -> str:
         if resp.is_error:
             raise LLMError("Our writing assistant had a problem. Please try again.")
         try:
-            return resp.json()["choices"][0]["message"]["content"].strip()
+            body = resp.json()
+            text = body["choices"][0]["message"]["content"].strip()
         except (KeyError, IndexError, TypeError, ValueError):
             raise LLMError("Our writing assistant sent back an empty answer. Please try again.")
+        if usage is not None:
+            counts = body.get("usage") or {}
+            usage["prompt_tokens"] = usage.get("prompt_tokens", 0) + (counts.get("prompt_tokens") or 0)
+            usage["completion_tokens"] = usage.get("completion_tokens", 0) + (counts.get("completion_tokens") or 0)
+            usage["calls"] = usage.get("calls", 0) + 1
+            usage["model"] = model
+        return text
     if busy:
         raise LLMError("Our writing assistant is busy right now. Please try again in a minute.")
     raise LLMError("We couldn't reach our writing assistant. Please try again in a minute.")
@@ -61,12 +72,12 @@ def _parse_json(text: str) -> dict:
     return json.loads(match.group(0))
 
 
-def complete_json(system: str, user: str, temperature: float = 0.7) -> dict:
+def complete_json(system: str, user: str, temperature: float = 0.7, usage: dict | None = None) -> dict:
     """Like complete(), but returns a dict. Retries once if the model's JSON is malformed."""
     system = system + "\n\nReply with a single JSON object only. No markdown, no explanation."
     for _ in range(2):
         try:
-            return _parse_json(complete(system, user, temperature))
+            return _parse_json(complete(system, user, temperature, usage))
         except (ValueError, json.JSONDecodeError):
             continue
     raise LLMError("Our writing assistant gave an unclear answer. Please try again.")
