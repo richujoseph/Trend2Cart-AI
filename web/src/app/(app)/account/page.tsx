@@ -20,6 +20,14 @@ export default function AccountPage() {
     apiFetch<Me>("/me").then(setMe).catch((e: Error) => setError(e.message));
   }, []);
 
+  // Dev only: copy the access token to paste into http://localhost:8000/docs → Authorize.
+  async function copyToken() {
+    const { data } = await createClient().auth.getSession();
+    if (!data.session) return setError("Please sign in to continue.");
+    await navigator.clipboard.writeText(data.session.access_token);
+    alert("API token copied. It expires in 1 hour.");
+  }
+
   async function signOut() {
     await createClient().auth.signOut();
     router.replace("/sign-in");
@@ -37,6 +45,11 @@ export default function AccountPage() {
           <Row label="Language" value={me.profile.language} />
           <Row label="Reels this month" value={String(me.profile.reels_used_this_month)} />
         </dl>
+      )}
+      {process.env.NODE_ENV === "development" && (
+        <button onClick={copyToken} className="mt-6 h-12 w-full rounded-lg border border-dashed border-neutral-400 text-sm text-neutral-600">
+          Copy API token (dev only)
+        </button>
       )}
       <button onClick={signOut} className="mt-6 h-12 w-full rounded-lg border border-neutral-300 font-medium">
         Sign out
