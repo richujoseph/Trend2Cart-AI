@@ -3,8 +3,9 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { apiFetch } from "@/lib/api";
-import { type Me, type Reel, STATUS_LABEL, languageLabel, reelsLeftText, shortDate } from "@/lib/reels";
+import { type Me, type Reel, STATUS_LABEL, languageLabel, shortDate } from "@/lib/reels";
 import { EmptyState, ErrorState } from "@/components/states";
+import QuotaLine from "@/components/quota-line";
 
 export default function ReelsPage() {
   const [reels, setReels] = useState<Reel[] | null>(null);
@@ -43,7 +44,7 @@ export default function ReelsPage() {
           + New Reel
         </Link>
       </div>
-      {me && <p className="mt-1 text-sm text-neutral-600">{reelsLeftText(me)}</p>}
+      {me && <QuotaLine me={me} />}
 
       {error && (
         <ErrorState

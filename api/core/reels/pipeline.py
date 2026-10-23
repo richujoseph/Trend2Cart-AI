@@ -44,8 +44,9 @@ def _timed(stats: dict, stage: str):
         stats["seconds"][stage] = round(time.perf_counter() - start, 2)
 
 
-def run_reel_job(reel: dict, music: bool = True) -> dict:
-    """Returns the fields to save on the reels row. Raises ReelJobError/LLMError/TTSError for sellers."""
+def run_reel_job(reel: dict, music: bool = True, on_stage=lambda stage: None) -> dict:
+    """Returns the fields to save on the reels row. Raises ReelJobError/LLMError/TTSError for sellers.
+    on_stage("script" | "voice" | "video") is called as each step starts, for the seller's progress screen."""
     products = service_get("products", {"id": f"eq.{reel['product_id']}", "select": "*"})
     if not products or products[0]["selling_price_paise"] is None:
         raise ReelJobError("This product isn't available any more. Please pick another one.")
@@ -58,15 +59,18 @@ def run_reel_job(reel: dict, music: bool = True) -> dict:
 
     with tempfile.TemporaryDirectory(prefix="reel-") as tmp:
         workdir = Path(tmp)
+        on_stage("script")
         with _timed(stats, "script"):
             script = generate_script(product, reel.get("audience") or "online shoppers in Kerala", language, llm_usage,
                                      hook_idea=(reel.get("script") or {}).get("requested_hook"))
+        on_stage("voice")
         with _timed(stats, "voice"):
             voice = build_voiceover(script.sentences, language, workdir)
         duration = reel_length(voice.duration)
         cta_start = voice.timings[-1][0]
         end_card_start = round(min(cta_start, duration - END_CARD), 3)
         price = rupees(product["selling_price_paise"])
+        on_stage("video")
         with _timed(stats, "photos"):
             # The seller's own photos win; otherwise the product's market photos.
             if reel.get("photo_paths"):

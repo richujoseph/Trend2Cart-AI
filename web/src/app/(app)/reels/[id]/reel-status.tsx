@@ -7,7 +7,12 @@ import { ApiError, apiFetch } from "@/lib/api";
 import { type Reel, STATUS_LABEL, languageLabel } from "@/lib/reels";
 import { ErrorState } from "@/components/states";
 
-const STEPS = ["Writing your script", "Recording the voice", "Adding captions", "Making the video"];
+// The worker reports which step it's on (reels.stage).
+const STEPS = [
+  { stage: "script", label: "Writing your script…" },
+  { stage: "voice", label: "Recording voice…" },
+  { stage: "video", label: "Making your video…" },
+] as const;
 
 export default function ReelStatus() {
   const { id } = useParams<{ id: string }>();
@@ -20,7 +25,7 @@ export default function ReelStatus() {
 
   const working = !reel || reel.status === "queued" || reel.status === "processing";
 
-  // Poll every 3 s until the Reel is done or failed.
+  // Poll every 2 s until the Reel is done or failed.
   useEffect(() => {
     if (!working) return;
     let stale = false;
@@ -28,7 +33,7 @@ export default function ReelStatus() {
       apiFetch<Reel>(`/reels/${id}`)
         .then((r) => !stale && setReel(r))
         .catch((e: Error) => !stale && setError(e.message));
-    const timer = setTimeout(load, reel ? 3000 : 0);
+    const timer = setTimeout(load, reel ? 2000 : 0);
     return () => {
       stale = true;
       clearTimeout(timer);
@@ -51,6 +56,9 @@ export default function ReelStatus() {
         body: JSON.stringify({
           product_id: reel.product_id, audience: reel.audience ?? "online shoppers in Kerala",
           language: reel.language, template_id: reel.template_id,
+          // Same photos and opening line as the failed attempt.
+          photo_paths: reel.photo_paths ?? [],
+          ...(reel.requested_hook && { hook: reel.requested_hook }),
         }),
       });
       router.push(`/reels/${next.id}`);
@@ -89,13 +97,22 @@ export default function ReelStatus() {
               will start automatically as soon as it&apos;s back.
             </p>
           )}
-          <ol className="mt-4 flex flex-col gap-2 text-sm">
+          <ol className="mt-4 flex flex-col gap-3 text-sm">
             {STEPS.map((step, i) => {
-              // The worker doesn't report its stage; this paces the list roughly like a typical job.
-              const active = reel?.status === "processing" && Math.min(Math.floor(seconds / 8), STEPS.length - 1) === i;
+              const current = reel?.status === "processing" ? STEPS.findIndex((s) => s.stage === (reel.stage ?? "script")) : -1;
+              const state = i < current ? "done" : i === current ? "active" : "todo";
               return (
-                <li key={step} className={active ? "font-semibold text-neutral-900" : "text-neutral-400"}>
-                  {active ? "● " : "○ "}{step}
+                <li key={step.stage} className={`flex items-center gap-3 ${state === "todo" ? "text-neutral-400" : "text-neutral-900"}`}>
+                  <span
+                    aria-hidden
+                    className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs ${
+                      state === "done" ? "bg-emerald-600 text-white" : state === "active" ? "animate-pulse bg-neutral-900 text-white" : "bg-neutral-100"
+                    }`}
+                  >
+                    {state === "done" ? "✓" : i + 1}
+                  </span>
+                  <span className={state === "active" ? "font-semibold" : ""}>{step.label}</span>
+                  <span className="sr-only">{state === "done" ? "(done)" : state === "active" ? "(in progress)" : ""}</span>
                 </li>
               );
             })}
@@ -167,7 +184,7 @@ function DoneReel({ reel }: { reel: Reel }) {
           href={`${reel.video_url}?download=${encodeURIComponent(fileName)}`}
           className="flex h-12 items-center justify-center rounded-lg bg-neutral-900 font-medium text-white"
         >
-          Download
+          Download MP4
         </a>
         <button
           type="button"
@@ -175,7 +192,7 @@ function DoneReel({ reel }: { reel: Reel }) {
           disabled={sharing}
           className="h-12 rounded-lg bg-emerald-600 font-medium text-white disabled:opacity-60"
         >
-          {sharing ? "Preparing…" : "Share"}
+          {sharing ? "Preparing…" : "Share to WhatsApp"}
         </button>
       </div>
       <p className="mt-1 text-center text-xs text-neutral-500">

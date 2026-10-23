@@ -37,10 +37,18 @@ def recover_interrupted() -> None:
         fail(reel, INTERRUPTED)
 
 
+def report_stage(reel_id: str, stage: str) -> None:
+    # Progress is nice to have: a failed update must never fail the Reel.
+    try:
+        service_update("reels", reel_id, {"stage": stage})
+    except Exception:
+        log.warning("reel %s: couldn't report stage %s", reel_id, stage)
+
+
 def process(reel: dict) -> None:
     log.info("reel %s started (language=%s, template=%s)", reel["id"], reel["language"], reel.get("template_id"))
     try:
-        service_update("reels", reel["id"], run_reel_job(reel))
+        service_update("reels", reel["id"], run_reel_job(reel, on_stage=lambda stage: report_stage(reel["id"], stage)))
     except (ReelJobError, LLMError, TTSError) as e:
         log.warning("reel %s failed: %s", reel["id"], e)
         fail(reel, f"{e} It didn't count against your limit.")

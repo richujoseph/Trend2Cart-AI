@@ -106,8 +106,8 @@ def get_reel(reel_id: UUID, request: Request):
     try:
         rows = rest_get("reels", request.state.token, {
             "id": f"eq.{reel_id}",
-            "select": "id,status,error,video_url,caption,hashtags,language,template_id,product_id,audience,"
-                      "created_at,products(name)",
+            "select": "id,status,stage,error,video_url,caption,hashtags,language,template_id,product_id,audience,"
+                      "photo_paths,requested_hook:script->>requested_hook,created_at,products(name)",
         })
     except httpx.HTTPError:
         raise HTTPException(503, "We couldn't check your Reel right now. Please try again in a minute.")

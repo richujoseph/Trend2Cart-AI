@@ -7,6 +7,12 @@ export const LANGUAGES: { value: Language; label: string; native: string }[] = [
   { value: "en", label: "English", native: "English" },
 ];
 
+// Where the seller sells decides the default Reel language (they can still pick another for any Reel).
+export const REGIONS: { value: string; label: string; language: Language }[] = [
+  { value: "kerala", label: "Kerala", language: "ml" },
+  { value: "tamil_nadu", label: "Tamil Nadu", language: "en" },
+];
+
 export const languageLabel = (l: string) => LANGUAGES.find((x) => x.value === l)?.label ?? l;
 
 // Mirrors api/core/reels/templates.py so the picker previews the real look.
@@ -19,6 +25,7 @@ export const TEMPLATES = [
 export type Reel = {
   id: string;
   status: ReelStatus;
+  stage?: "script" | "voice" | "video" | null; // worker's current step while processing
   error: string | null;
   video_url: string | null;
   caption?: string | null;
@@ -27,6 +34,8 @@ export type Reel = {
   template_id: number;
   product_id: string;
   audience: string | null;
+  photo_paths?: string[];
+  requested_hook?: string | null;
   created_at: string;
   products: { name: string } | null;
 };

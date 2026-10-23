@@ -4,7 +4,8 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { apiFetch } from "@/lib/api";
-import { LANGUAGES, type Language, type Me, reelsLeftText } from "@/lib/reels";
+import { LANGUAGES, type Language, type Me, REGIONS, reelsLeftText } from "@/lib/reels";
+import { saveProfile } from "@/lib/profile";
 import { createClient } from "@/lib/supabase/client";
 
 const PLAN_NAMES: Record<string, string> = { free: "Free", pro: "Pro", founding: "Founding member" };
@@ -20,17 +21,21 @@ export default function AccountPage() {
     apiFetch<Me>("/me").then(setMe).catch((e: Error) => setError(e.message));
   }, []);
 
-  async function changeLanguage(language: Language) {
+  // Picking a region also sets the default language (Kerala → Malayalam, Tamil Nadu → English); either can be changed.
+  async function save(fields: { language?: Language; region?: string }) {
     if (!me) return;
     setSaving(true);
     setSaved(false);
-    const supabase = createClient();
-    const { data } = await supabase.auth.getSession();
-    const { error } = await supabase.from("profiles").update({ language }).eq("id", data.session?.user.id ?? "");
-    setSaving(false);
-    if (error) return setError("Couldn't save your language. Please try again.");
-    setMe({ ...me, profile: { ...me.profile, language } });
-    setSaved(true);
+    setError(null);
+    try {
+      await saveProfile(fields);
+      setMe({ ...me, profile: { ...me.profile, ...fields } });
+      setSaved(true);
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setSaving(false);
+    }
   }
 
   // Dev only: copy the access token to paste into http://localhost:8000/docs → Authorize.
@@ -66,6 +71,24 @@ export default function AccountPage() {
           )}
 
           <fieldset className="mt-6">
+            <legend className="text-sm font-medium">Where you sell</legend>
+            <div className="mt-2 grid grid-cols-2 gap-2">
+              {REGIONS.map((r) => (
+                <button
+                  key={r.value}
+                  type="button"
+                  disabled={saving}
+                  aria-pressed={me.profile.region === r.value}
+                  onClick={() => save({ region: r.value, language: r.language })}
+                  className={`h-12 rounded-lg border text-sm ${me.profile.region === r.value ? "border-neutral-900 bg-neutral-900 text-white" : "border-neutral-300 bg-white"}`}
+                >
+                  {r.label}
+                </button>
+              ))}
+            </div>
+          </fieldset>
+
+          <fieldset className="mt-6">
             <legend className="text-sm font-medium">Default Reel language</legend>
             <div className="mt-2 grid grid-cols-3 gap-2">
               {LANGUAGES.map((l) => (
@@ -74,7 +97,7 @@ export default function AccountPage() {
                   type="button"
                   disabled={saving}
                   aria-pressed={me.profile.language === l.value}
-                  onClick={() => changeLanguage(l.value)}
+                  onClick={() => save({ language: l.value })}
                   className={`h-12 rounded-lg border text-sm ${me.profile.language === l.value ? "border-neutral-900 bg-neutral-900 text-white" : "border-neutral-300 bg-white"}`}
                 >
                   {l.native}
