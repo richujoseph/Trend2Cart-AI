@@ -1,36 +1,37 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Trend2Cart AI
 
-## Getting Started
-
-First, run the development server:
-
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+```
+web/                  Next.js (App Router, TS, Tailwind) — mobile-first UI
+api/                  FastAPI — app/ (HTTP routes) + core/ (shared with worker)
+worker/               Python worker for Reel rendering; imports api/core
+supabase/migrations/  Postgres schema + Row Level Security
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 1. Supabase setup (once per project)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. Create a project at supabase.com.
+2. Run the migration: paste `supabase/migrations/20261023000000_init.sql` into **SQL Editor** and run it
+   (or `supabase link` then `supabase db push` with the Supabase CLI).
+3. **Authentication → URL Configuration**: Site URL `http://localhost:3000`; add `http://localhost:3000/auth/callback` to Redirect URLs (add the Vercel URL later).
+4. **Authentication → Providers → Google**: enable it and paste a Google Cloud OAuth client ID/secret.
+   In Google Cloud, set the authorized redirect URI to `https://YOUR-PROJECT.supabase.co/auth/v1/callback`.
+5. **Authentication → Providers → Phone**: enable it and choose an SMS provider (Twilio, MessageBird, Vonage or Textlocal).
+   Real SMS to Indian numbers needs DLT registration, so for development add **Test phone numbers**
+   (e.g. `919999999999=123456`). They sign in with a fixed code and send no SMS.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 2. Run locally
 
-## Learn More
+```bash
+# API (http://localhost:8000)
+cd api && cp .env.example .env    # fill in values
+uv sync && uv run uvicorn app.main:app --reload
 
-To learn more about Next.js, take a look at the following resources:
+# Web (http://localhost:3000)
+cd web && cp .env.example .env.local   # fill in values
+npm install && npm run dev
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+# Worker (placeholder for now)
+cd worker && cp .env.example .env && uv sync && uv run python main.py
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Tests: `cd api && uv run pytest`

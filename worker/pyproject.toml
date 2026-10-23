@@ -1,0 +1,9 @@
+[project]
+name = "trend2cart-worker"
+version = "0.1.0"
+requires-python = ">=3.11,<3.12"
+# Shares core/ with the API (installed from ../api in editable mode).
+dependencies = ["trend2cart-api"]
+
+[tool.uv.sources]
+trend2cart-api = { path = "../api", editable = true }
