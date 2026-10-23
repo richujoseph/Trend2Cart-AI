@@ -39,3 +39,10 @@ def test_crash_shows_generic_message(monkeypatch):
     calls = setup(monkeypatch, job)
     main.process(REEL)
     assert calls[1] == ("update", {"status": "failed", "error": main.GENERIC_ERROR})
+
+
+def test_recovery_only_touches_old_processing_rows(monkeypatch):
+    seen = {}
+    monkeypatch.setattr(main, "service_get", lambda table, params: seen.update(params) or [])
+    main.recover_interrupted()
+    assert seen["status"] == "eq.processing" and seen["created_at"].startswith("lt.")

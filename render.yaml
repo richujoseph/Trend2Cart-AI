@@ -21,3 +21,7 @@ services:
         sync: false
       - key: TTS_PROVIDER
         value: sarvam
+      - key: RAZORPAY_KEY_ID
+        sync: false
+      - key: RAZORPAY_KEY_SECRET
+        sync: false

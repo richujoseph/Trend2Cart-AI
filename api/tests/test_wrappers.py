@@ -154,6 +154,28 @@ def test_service_rpc_handles_void_functions(monkeypatch):
 
     monkeypatch.setenv("SUPABASE_SERVICE_ROLE_KEY", "service")
     get_settings.cache_clear()
-    monkeypatch.setattr(supabase.httpx, "post",
-                        lambda url, **k: httpx.Response(204, content=b"", request=httpx.Request("POST", url)))
+    class FakeClient:
+        def post(self, url, **k):
+            return httpx.Response(204, content=b"", request=httpx.Request("POST", url))
+
+    monkeypatch.setattr(supabase, "_http", lambda: FakeClient())
     assert supabase.service_rpc("refund_reel_quota", {"p_user": "u1"}) is None
+
+
+def test_storage_upload_retries_dropped_connection(monkeypatch):
+    from core import supabase
+
+    monkeypatch.setenv("SUPABASE_SERVICE_ROLE_KEY", "service")
+    get_settings.cache_clear()
+    attempts = []
+
+    class FlakyClient:
+        def request(self, method, url, **k):
+            attempts.append(method)
+            if len(attempts) == 1:
+                raise httpx.ReadError("[SSL: SSLV3_ALERT_BAD_RECORD_MAC]", request=httpx.Request(method, url))
+            return httpx.Response(200, json={"Key": "reels/u1/r1.mp4"}, request=httpx.Request(method, url))
+
+    monkeypatch.setattr(supabase, "_http", lambda: FlakyClient())
+    url = supabase.storage_upload("reels", "u1/r1.mp4", b"mp4", "video/mp4")
+    assert url.endswith("/storage/v1/object/public/reels/u1/r1.mp4") and attempts == ["POST", "POST"]

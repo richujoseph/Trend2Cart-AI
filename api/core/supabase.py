@@ -1,6 +1,26 @@
+from functools import lru_cache
+
 import httpx
 
 from core.config import get_settings
+
+
+@lru_cache
+def _http() -> httpx.Client:
+    """One pooled, keep-alive client: saves a ~0.4 s TLS handshake on every Supabase call."""
+    return httpx.Client(timeout=15)
+
+
+def _idempotent(method: str, url: str, attempts: int = 3, **kwargs) -> httpx.Response:
+    """GET/PATCH/upsert-upload can safely be repeated, so retry them on dropped connections.
+    (Seen in testing: an 8 s video upload failed with SSL "bad record mac" on a flaky network.)"""
+    for attempt in range(attempts):
+        try:
+            return _http().request(method, url, **kwargs)
+        except httpx.TransportError:
+            if attempt == attempts - 1:
+                raise
+    raise AssertionError("unreachable")
 
 
 class SupabaseError(RuntimeError):
@@ -36,7 +56,8 @@ def _check(resp: httpx.Response, what: str) -> httpx.Response:
 
 def rest_get(path: str, user_token: str, params: dict | None = None) -> list[dict]:
     """GET from Supabase's REST API as the signed-in user, so Row Level Security applies."""
-    resp = httpx.get(
+    resp = _idempotent(
+        "GET",
         _rest_url(path),
         params=params,
         headers={
@@ -51,20 +72,20 @@ def rest_get(path: str, user_token: str, params: dict | None = None) -> list[dic
 
 def service_get(table: str, params: dict) -> list[dict]:
     """Read rows with the service-role key (bypasses RLS). Server-side only."""
-    resp = httpx.get(_rest_url(table), params=params, headers=_service_headers(), timeout=15)
+    resp = _idempotent("GET", _rest_url(table), params=params, headers=_service_headers(), timeout=15)
     return _check(resp, f"Reading {table}").json()
 
 
 def service_insert(table: str, row: dict) -> dict:
     """Insert one row with the service-role key and return it."""
-    resp = httpx.post(_rest_url(table), json=row, headers=_service_headers(Prefer="return=representation"), timeout=15)
+    resp = _http().post(_rest_url(table), json=row, headers=_service_headers(Prefer="return=representation"), timeout=15)
     return _check(resp, f"Saving to {table}").json()[0]
 
 
 def service_update(table: str, row_id: str, fields: dict) -> None:
     """Update one row by id with the service-role key."""
-    resp = httpx.patch(
-        _rest_url(table), params={"id": f"eq.{row_id}"}, json=fields,
+    resp = _idempotent(
+        "PATCH", _rest_url(table), params={"id": f"eq.{row_id}"}, json=fields,
         headers=_service_headers(Prefer="return=minimal"), timeout=15,
     )
     _check(resp, f"Updating {table}")
@@ -72,14 +93,15 @@ def service_update(table: str, row_id: str, fields: dict) -> None:
 
 def service_rpc(function: str, args: dict | None = None):
     """Call a Postgres function (supabase/migrations) with the service-role key."""
-    resp = httpx.post(_rest_url(f"rpc/{function}"), json=args or {}, headers=_service_headers(), timeout=15)
+    resp = _http().post(_rest_url(f"rpc/{function}"), json=args or {}, headers=_service_headers(), timeout=15)
     _check(resp, f"Calling {function}")
     return resp.json() if resp.content else None  # functions returning void send an empty body
 
 
 def storage_upload(bucket: str, path: str, data: bytes, content_type: str) -> str:
     """Upload a file to Supabase Storage (overwrites) and return its public URL."""
-    resp = httpx.post(
+    resp = _idempotent(
+        "POST",
         f"{_base()}/storage/v1/object/{bucket}/{path}",
         content=data,
         headers=_service_headers(**{"Content-Type": content_type, "x-upsert": "true"}),
@@ -91,7 +113,7 @@ def storage_upload(bucket: str, path: str, data: bytes, content_type: str) -> st
 
 def service_upsert(table: str, rows: list[dict], on_conflict: str) -> None:
     """Insert or update rows with the service-role key (bypasses RLS). Server-side only."""
-    resp = httpx.post(
+    resp = _http().post(
         _rest_url(table),
         params={"on_conflict": on_conflict},
         json=rows,
@@ -103,7 +125,7 @@ def service_upsert(table: str, rows: list[dict], on_conflict: str) -> None:
 
 def service_delete_except(table: str, keep_ids: list[str]) -> int:
     """Delete every row whose id is not in keep_ids (service-role key). Returns how many were deleted."""
-    resp = httpx.delete(
+    resp = _http().delete(
         _rest_url(table),
         params={"id": f"not.in.({','.join(keep_ids)})"},
         headers=_service_headers(Prefer="return=representation"),

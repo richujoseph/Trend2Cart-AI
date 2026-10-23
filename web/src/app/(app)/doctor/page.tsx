@@ -1,8 +1,10 @@
-export default function ConversionDoctorPage() {
+import { Suspense } from "react";
+import Doctor from "./doctor";
+
+export default function DoctorPage() {
   return (
-    <>
-      <h1 className="text-xl font-bold">Conversion Doctor</h1>
-      <p className="mt-2 text-sm text-neutral-600">Enter your Reel results here to find what&apos;s losing you orders.</p>
-    </>
+    <Suspense>
+      <Doctor />
+    </Suspense>
   );
 }

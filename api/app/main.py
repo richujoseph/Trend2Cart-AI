@@ -6,7 +6,9 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from app import products, reels
+from datetime import datetime, timezone
+
+from app import doctor, preorders, products, reels
 from app.deps import current_user
 from core.config import get_settings
 from core.supabase import rest_get
@@ -42,6 +44,10 @@ FIELD_MESSAGES = {
     "audience": "Describe who the Reel is for in 3–80 characters, for example \"college girls in Kochi\".",
     "language": "Please pick Malayalam, Hindi or English.",
     "template_id": "Please pick one of the 3 Reel styles.",
+    "views": "Views must be a whole number (0 or more).",
+    "clicks": "Clicks/DMs must be a whole number (0 or more).",
+    "orders": "Orders must be a whole number (0 or more).",
+    "returns": "Returns must be a whole number (0 or more).",
 }
 
 
@@ -72,9 +78,20 @@ def me(request: Request, user: dict = Depends(current_user)):
         raise HTTPException(503, "We couldn't load your account right now. Please try again in a minute.")
     if not rows:
         raise HTTPException(404, "Your account setup isn't finished. Please sign out and sign in again.")
-    return {"email": user.get("email"), "phone": user.get("phone"), "profile": rows[0]}
+    profile = rows[0]
+    limit = get_settings().free_reels_per_month if profile["plan"] == "free" else None
+    # The counter resets lazily when the next Reel is made; show the real number before that.
+    reset_passed = datetime.fromisoformat(profile["month_reset_at"]) <= datetime.now(timezone.utc)
+    used = 0 if reset_passed else profile["reels_used_this_month"]
+    return {
+        "email": user.get("email"), "phone": user.get("phone"), "profile": profile,
+        "reels": {"limit": limit, "used": used, "left": None if limit is None else max(limit - used, 0),
+                  "resets_at": None if reset_passed else profile["month_reset_at"]},
+    }
 
 
 app.include_router(protected)
 app.include_router(products.router)
 app.include_router(reels.router)
+app.include_router(doctor.router)
+app.include_router(preorders.router)

@@ -51,6 +51,11 @@ class Settings(BaseSettings):
     # Monthly Reel limits per plan; plans not listed are unlimited.
     free_reels_per_month: int = 3
 
+    # Razorpay (use test-mode keys for the MVP: dashboard.razorpay.com → Test Mode → API Keys)
+    razorpay_key_id: str = ""
+    razorpay_key_secret: str = ""
+    founding_price_paise: int = 9900
+
 
 @lru_cache
 def get_settings() -> Settings:

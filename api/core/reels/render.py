@@ -131,6 +131,9 @@ def render_reel(
         get_settings().ffmpeg_path, "-y", "-hide_banner", "-loglevel", "error", *inputs,
         "-filter_complex", ";".join(lines), "-map", "[vout]", "-map", "[aout]",
         "-t", str(duration), "-r", str(FPS),
+        # Cap threads: x264 sizes its thread pool from the host's CPU count, which on shared hosting can be
+        # dozens of cores and exhaust a 512 MB instance.
+        "-threads", "2", "-filter_threads", "2",
         "-c:v", "libx264", "-preset", "veryfast", "-crf", "23", "-profile:v", "high", "-pix_fmt", "yuv420p",
         "-c:a", "aac", "-b:a", "128k", "-ar", "44100", "-ac", "2",
         "-movflags", "+faststart", str(out),

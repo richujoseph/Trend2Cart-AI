@@ -29,10 +29,20 @@ def test_me_rejects_wrong_signature(client):
 def test_me_returns_profile(client, auth_headers, monkeypatch):
     from app import main
 
-    monkeypatch.setattr(main, "rest_get", lambda *a, **k: [{"id": "u1", "plan": "free"}])
+    monkeypatch.setattr(main, "rest_get", lambda *a, **k: [{"id": "u1", "plan": "free", "reels_used_this_month": 2,
+                                                          "month_reset_at": "2999-01-01T00:00:00+00:00"}])
     r = client.get("/me", headers=auth_headers)
     assert r.status_code == 200
     assert r.json()["profile"]["plan"] == "free"
+    assert r.json()["reels"] == {"limit": 3, "used": 2, "left": 1, "resets_at": "2999-01-01T00:00:00+00:00"}
+
+
+def test_me_counts_zero_after_month_reset(client, auth_headers, monkeypatch):
+    from app import main
+
+    monkeypatch.setattr(main, "rest_get", lambda *a, **k: [{"id": "u1", "plan": "free", "reels_used_this_month": 3,
+                                                          "month_reset_at": "2000-01-01T00:00:00+00:00"}])
+    assert client.get("/me", headers=auth_headers).json()["reels"]["left"] == 3
 
 
 def test_unexpected_error_is_readable_and_keeps_cors(client, auth_headers, monkeypatch):

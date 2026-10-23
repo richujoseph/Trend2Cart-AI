@@ -39,11 +39,17 @@ def test_price_line_must_contain_price_digits():
         ReelScript.model_validate(ML | {"price_line": "വളരെ കുറഞ്ഞ വില, COD ഉണ്ട്."}, context=CTX)
 
 
-def test_needs_exactly_three_benefits_and_ten_hashtags():
+def test_needs_three_benefits_and_ten_hashtags():
     with pytest.raises(ValueError):
         ReelScript.model_validate(ML | {"benefits": ML["benefits"][:2]}, context=CTX)
     with pytest.raises(ValueError):
         ReelScript.model_validate(ML | {"hashtags": ML["hashtags"][:9]}, context=CTX)
+
+
+def test_extra_benefits_and_hashtags_are_trimmed_not_rejected():
+    s = ReelScript.model_validate(ML | {"benefits": ML["benefits"] + ["നാലാമത്തെ ഗുണം."],
+                                        "hashtags": ML["hashtags"] + ["#extra"]}, context=CTX)
+    assert len(s.benefits) == 3 and len(s.hashtags) == 10 and "#extra" not in s.hashtags
 
 
 def test_rejects_scripts_too_long_for_30_seconds():

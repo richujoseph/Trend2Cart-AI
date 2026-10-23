@@ -6,6 +6,7 @@ On Render's free plan it runs inside the API container (see start.sh).
 
 import logging
 import time
+from datetime import datetime, timedelta, timezone
 
 from core.llm import LLMError
 from core.reels import ReelJobError
@@ -14,6 +15,7 @@ from core.supabase import service_get, service_rpc, service_update
 from core.tts import TTSError
 
 POLL_SECONDS = 2
+STUCK_AFTER = timedelta(minutes=10)  # jobs take under a minute; older 'processing' rows were interrupted
 GENERIC_ERROR = "Something went wrong while making your Reel. Please try again. It didn't count against your limit."
 INTERRUPTED = "This Reel was interrupted. Please try again. It didn't count against your limit."
 
@@ -27,8 +29,10 @@ def fail(reel: dict, message: str) -> None:
 
 
 def recover_interrupted() -> None:
-    """A restart mid-job leaves rows stuck in 'processing'; fail them so sellers can retry."""
-    for reel in service_get("reels", {"status": "eq.processing", "select": "id,user_id"}):
+    """A restart mid-job leaves rows stuck in 'processing'; fail them so sellers can retry.
+    Only old ones: another worker (e.g. a teammate's local one) may be rendering recent rows right now."""
+    cutoff = (datetime.now(timezone.utc) - STUCK_AFTER).isoformat()
+    for reel in service_get("reels", {"status": "eq.processing", "created_at": f"lt.{cutoff}", "select": "id,user_id"}):
         log.warning("reel %s was interrupted by a restart", reel["id"])
         fail(reel, INTERRUPTED)
 

@@ -73,12 +73,25 @@ def create_reel(body: NewReel, request: Request, user: dict = Depends(current_us
     }
 
 
+@router.get("")
+def list_reels(request: Request):
+    try:
+        return rest_get("reels", request.state.token, {
+            "select": "id,status,error,video_url,language,template_id,product_id,audience,created_at,products(name)",
+            "order": "created_at.desc",
+            "limit": "50",
+        })
+    except httpx.HTTPError:
+        raise HTTPException(503, "We couldn't load your Reels right now. Please try again in a minute.")
+
+
 @router.get("/{reel_id}")
 def get_reel(reel_id: UUID, request: Request):
     try:
         rows = rest_get("reels", request.state.token, {
             "id": f"eq.{reel_id}",
-            "select": "id,status,error,video_url,caption,hashtags,language,template_id,product_id,created_at",
+            "select": "id,status,error,video_url,caption,hashtags,language,template_id,product_id,audience,"
+                      "created_at,products(name)",
         })
     except httpx.HTTPError:
         raise HTTPException(503, "We couldn't check your Reel right now. Please try again in a minute.")

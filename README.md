@@ -30,11 +30,11 @@ uv sync && uv run uvicorn app.main:app --reload
 cd web && cp .env.example .env.local   # fill in values
 npm install && npm run dev
 
-# Worker (placeholder for now)
+# Reel worker (needs FFmpeg with libass, see section 4)
 cd worker && cp .env.example .env && uv sync && uv run python main.py
 ```
 
-Tests: `cd api && uv run pytest`
+Tests: `cd api && uv run pytest` and `cd worker && uv run --with pytest pytest -q test_main.py`
 
 ## 3. Product data
 
@@ -62,13 +62,30 @@ Tests: `cd api && uv run pytest`
 - Try the stages without the database: `worker/experiments/render_sample.py` (usage in its docstring).
 - Fonts (OFL, in `worker/assets/fonts`): Noto Sans Malayalam, Mukta (Hindi + Latin), Noto Sans (English, ₹).
   Optional music: see `worker/assets/music/README.md`.
+- If uploads from Docker fail locally with `SSL: BAD_RECORD_MAC`, that's Docker Desktop's network on your Mac
+  (uploads from the host work). Run the worker on the host instead with a libass FFmpeg (Homebrew tap above).
 
-## 5. Free deployment (₹0)
+## 5. Conversion Doctor
+
+`POST /doctor` `{reel_id | product_id, views, clicks, orders, returns}` compares three stages with benchmarks
+(views→DMs/clicks ≈4.5%, DMs→orders ≈10%, returns vs the category's RTO estimate; all labeled estimates with
+sources in `api/core/doctor.py`), picks the weakest, and the LLM writes an explanation, 3 fixes and 3 new hooks
+in the seller's language. `GET /doctor` returns past check-ups.
+
+## 6. ₹99 founding pre-order (Razorpay test mode)
+
+Add `RAZORPAY_KEY_ID` (`rzp_test_…`) and `RAZORPAY_KEY_SECRET` to `api/.env`
+(dashboard.razorpay.com → Test Mode → API Keys). `POST /preorders` creates the order; the pricing page opens
+Razorpay Checkout; `POST /preorders/verify` checks the HMAC signature server-side and upgrades the plan to
+`founding` (unlimited Reels). Without keys the pricing page says payments aren't switched on yet.
+Test card: see Razorpay's test-mode docs (e.g. UPI `success@razorpay`).
+
+## 7. Free deployment (₹0)
 
 | Part | Service (free plan) |
 |---|---|
 | Web | Vercel Hobby: import repo, **Root Directory = `web`**, add the 3 `NEXT_PUBLIC_*` env vars |
-| API + Reel worker | Render free web service from `render.yaml` (Docker; worker runs inside the API container) |
+| API + Reel worker | Render free web service from `render.yaml` (Docker; worker runs inside the API container, auto-restarts) |
 | DB / Auth / Storage | Supabase Free |
 | LLM | Gemini free tier via the OpenAI-compatible wrapper `api/core/llm.py` |
 | TTS | Sarvam AI free credits via `api/core/tts.py` (or Google Cloud TTS with `TTS_PROVIDER=google`) |

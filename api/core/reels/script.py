@@ -28,6 +28,13 @@ class ReelScript(BaseModel):
     caption: str = Field(min_length=10, max_length=700)
     hashtags: list[str] = Field(min_length=10, max_length=10)
 
+    @field_validator("benefits", "hashtags", mode="before")
+    @classmethod
+    def _trim_extras(cls, v, info: ValidationInfo):
+        # Models sometimes return 4 benefits or 11 hashtags; keep the first ones instead of failing the Reel.
+        limit = 3 if info.field_name == "benefits" else 10
+        return v[:limit] if isinstance(v, list) else v
+
     @field_validator("hook", "price_line", "cta", "caption")
     @classmethod
     def _strip(cls, v: str) -> str:
