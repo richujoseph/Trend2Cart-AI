@@ -9,11 +9,16 @@ PRODUCT = {"id": "11111111-1111-1111-1111-111111111111", "name": "Ice Roller", "
 REEL_ID = "99999999-9999-9999-9999-999999999999"
 
 
+doctor_fakes_recent: list = []
+
+
 @pytest.fixture
 def doctor_fakes(monkeypatch):
     from app import doctor
 
     inserted = []
+    recent_count = [0]
+    doctor_fakes_recent.append(recent_count)
 
     def rest_get(path, token, params=None):
         return {
@@ -21,6 +26,7 @@ def doctor_fakes(monkeypatch):
             "products": [PRODUCT],
             "profiles": [{"language": "en"}],
             "category_assumptions": [{"rto_rate": 0.17, "source": "x"}],
+            "campaign_results": [{"id": str(i)} for i in range(recent_count[0])],
         }[path]
 
     def service_insert(table, row):
@@ -46,6 +52,13 @@ def test_doctor_for_app_reel(client, auth_headers, doctor_fakes):
     assert tables == ["campaign_results", "diagnoses"]
     assert doctor_fakes[0][1]["product_id"] == PRODUCT["id"] and doctor_fakes[0][1]["user_id"] == "u1"
     assert doctor_fakes[1][1]["new_hooks"] == ["Hook a", "Hook b", "Hook c"]
+
+
+def test_doctor_daily_limit(client, auth_headers, doctor_fakes):
+    doctor_fakes_recent[-1][0] = 20
+    r = client.post("/doctor", headers=auth_headers, json={"reel_id": REEL_ID} | NUMBERS)
+    assert r.status_code == 429 and "20 check-ups" in r.json()["detail"]
+    assert doctor_fakes == []
 
 
 def test_doctor_needs_reel_or_product(client, auth_headers, doctor_fakes):

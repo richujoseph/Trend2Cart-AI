@@ -83,6 +83,12 @@ export default function ReelStatus() {
           <p className="text-sm text-neutral-500">
             {reel?.status === "queued" ? "Waiting for a free slot." : "Usually ready in under a minute."} You can leave this page.
           </p>
+          {reel?.status === "queued" && seconds > 45 && (
+            <p className="mt-2 rounded-lg bg-amber-50 p-2 text-sm text-amber-900">
+              This is taking longer than usual. The Reel maker may be offline right now. Your Reel is saved and
+              will start automatically as soon as it&apos;s back.
+            </p>
+          )}
           <ol className="mt-4 flex flex-col gap-2 text-sm">
             {STEPS.map((step, i) => {
               // The worker doesn't report its stage; this paces the list roughly like a typical job.

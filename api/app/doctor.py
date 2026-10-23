@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta, timezone
 from typing import Literal
 from uuid import UUID
 
@@ -13,6 +14,7 @@ from core.supabase import SupabaseError, rest_get, service_insert
 router = APIRouter(prefix="/doctor", dependencies=[Depends(current_user)])
 BUSY = "We couldn't check your results right now. Please try again in a minute."
 OVERALL_RTO = (0.22, "GoKwik 2026 (via base.com): COD RTO in India is 20–25%")
+DAILY_CHECKUPS = 20  # each check-up is an LLM call; keeps one account from draining the free Gemini quota
 
 
 class Results(BaseModel):
@@ -29,6 +31,10 @@ class Results(BaseModel):
 def run_doctor(body: Results, request: Request, user: dict = Depends(current_user)):
     token = request.state.token
     try:
+        since = (datetime.now(timezone.utc) - timedelta(days=1)).isoformat()
+        recent = rest_get("campaign_results", token, {"select": "id", "entered_at": f"gte.{since}", "limit": str(DAILY_CHECKUPS)})
+        if len(recent) >= DAILY_CHECKUPS:
+            raise HTTPException(429, f"You've done {DAILY_CHECKUPS} check-ups in the last 24 hours. Please try again tomorrow.")
         language = body.language
         product_id = body.product_id
         if body.reel_id:

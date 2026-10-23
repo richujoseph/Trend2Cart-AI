@@ -7,10 +7,24 @@ worker/               Python worker for Reel rendering; imports api/core
 supabase/migrations/  Postgres schema + Row Level Security
 ```
 
+## Demo in one command
+
+Needs: [uv](https://docs.astral.sh/uv/), Node 20+, Docker Desktop (running), and filled-in `api/.env` + `web/.env`
+(copy the `.env.example` files; ask a teammate for the keys).
+
+```bash
+./start-local.sh          # API :8000, web :3000 (production build), Reel maker in Docker
+```
+
+Open http://localhost:3000 (Chrome → Cmd+Option+I → phone icon for the mobile view). Ctrl+C stops everything.
+Ports are configurable: `WEB_PORT=3100 API_PORT=8100 ./start-local.sh`.
+Phone sign-in works with the Supabase **test phone numbers** (section 1); Google sign-in works for anyone.
+Reels made while the Reel maker is off wait in the queue and start as soon as it's running.
+
 ## 1. Supabase setup (once per project)
 
 1. Create a project at supabase.com.
-2. Run the migration: paste `supabase/migrations/20261023000000_init.sql` into **SQL Editor** and run it
+2. Run **every** file in `supabase/migrations` in filename order (oldest first): paste each into **SQL Editor** and run it
    (or `supabase link` then `supabase db push` with the Supabase CLI).
 3. **Authentication → URL Configuration**: Site URL `http://localhost:3000`; add `http://localhost:3000/auth/callback` to Redirect URLs (add the Vercel URL later).
 4. **Authentication → Providers → Google**: enable it and paste a Google Cloud OAuth client ID/secret.
@@ -88,7 +102,7 @@ Razorpay Checkout; `POST /preorders/verify` checks the HMAC signature server-sid
 `founding` (unlimited Reels). Without keys the pricing page says payments aren't switched on yet.
 Test card: see Razorpay's test-mode docs (e.g. UPI `success@razorpay`).
 
-## 7. Free deployment (₹0)
+## 7. Free deployment (optional, later)
 
 | Part | Service (free plan) |
 |---|---|
