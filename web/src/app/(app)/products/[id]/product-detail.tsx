@@ -4,9 +4,12 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { apiFetch } from "@/lib/api";
-import { type Simulation, categoryLabel, formatRupees } from "@/lib/products";
+import { type Messages } from "@/lib/i18n/en";
+import { fmt, useT } from "@/lib/i18n";
+import { type Simulation, formatRupees } from "@/lib/products";
 import { createClient } from "@/lib/supabase/client";
 import { ErrorState, LossTrapTag, ProductImage, ScoreBadge } from "@/components/states";
+import { EstimateTag, btnPrimary, btnSecondary, card } from "@/components/ui";
 
 type Form = { price: string; rto: string; ad: string };
 
@@ -19,13 +22,13 @@ function simulate(id: string, body: object = {}) {
 }
 
 /** Returns the API overrides, or a seller-friendly message if an input is invalid. */
-function parseForm(form: Form): { body: object } | { error: string } {
+function parseForm(form: Form, t: Messages): { body: object } | { error: string } {
   const price = Number(form.price);
   const rto = Number(form.rto);
   const ad = Number(form.ad);
-  if (form.price === "" || !Number.isFinite(price) || price <= 0) return { error: "Enter a selling price above ₹0." };
-  if (form.rto === "" || !Number.isFinite(rto) || rto < 0 || rto > 100) return { error: "Returns (RTO) must be between 0% and 100%." };
-  if (form.ad === "" || !Number.isFinite(ad) || ad < 0) return { error: "Ad cost can't be negative." };
+  if (form.price === "" || !Number.isFinite(price) || price <= 0) return { error: t.product.errPrice };
+  if (form.rto === "" || !Number.isFinite(rto) || rto < 0 || rto > 100) return { error: t.product.errRto };
+  if (form.ad === "" || !Number.isFinite(ad) || ad < 0) return { error: t.product.errAd };
   return {
     body: {
       selling_price_paise: Math.round(price * 100),
@@ -36,6 +39,7 @@ function parseForm(form: Form): { body: object } | { error: string } {
 }
 
 export default function ProductDetail() {
+  const { t } = useT();
   const { id } = useParams<{ id: string }>();
   const [sim, setSim] = useState<Simulation | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -64,12 +68,12 @@ export default function ProductDetail() {
     setAttempt((a) => a + 1);
   }
 
-  const parsed = form ? parseForm(form) : null;
+  const parsed = form ? parseForm(form, t) : null;
 
   // Recalculate 400 ms after the seller stops typing or sliding.
   useEffect(() => {
     if (!edited || !form) return;
-    const parsed = parseForm(form);
+    const parsed = parseForm(form, t);
     if ("error" in parsed) return; // shown inline from render
     const timer = setTimeout(() => {
       const request = ++latestRequest.current;
@@ -84,7 +88,7 @@ export default function ProductDetail() {
         .finally(() => request === latestRequest.current && setUpdating(false));
     }, 400);
     return () => clearTimeout(timer);
-  }, [form, edited, id]);
+  }, [form, edited, id, t]);
 
   function update(field: keyof Form, value: string) {
     setEdited(true);
@@ -108,74 +112,71 @@ export default function ProductDetail() {
   return (
     <>
       <BackLink />
-      <div className="mt-3 flex gap-3">
-        <ProductImage src={sim.image_urls[0]} name={sim.name} className="h-24 w-24 shrink-0 rounded-xl" />
+      <div className={`${card} mt-3 flex gap-3 p-3`}>
+        <ProductImage src={sim.image_urls[0]} name={sim.name} className="h-28 w-28 shrink-0 rounded-xl" />
         <div className="min-w-0 flex-1">
-          <p className="text-xs text-neutral-500">{categoryLabel(sim.category)}</p>
-          <h1 className="text-lg font-bold leading-tight">{sim.name}</h1>
-          {sim.supplier && <p className="mt-0.5 text-xs text-neutral-500">Supplier: {sim.supplier}</p>}
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-brand-500">{t.categories[sim.category]}</p>
+          <h1 className="text-lg font-extrabold leading-tight text-brand-900">{sim.name}</h1>
+          {sim.supplier && <p className="mt-1 text-xs text-neutral-500">{fmt(t.product.supplier, { name: sim.supplier })}</p>}
           {sim.loss_trap && <div className="mt-1"><LossTrapTag /></div>}
         </div>
       </div>
 
       <section
         aria-live="polite"
-        className={`mt-4 flex items-center justify-between rounded-xl p-4 ${losing ? "bg-red-50" : "bg-emerald-50"} ${updating ? "opacity-60" : ""}`}
+        className={`mt-3 flex items-center justify-between rounded-2xl bg-gradient-to-br p-4 text-white shadow-lg ${
+          losing ? "from-rose-500 to-red-600 shadow-red-600/20" : "from-emerald-500 to-teal-600 shadow-emerald-600/20"
+        } ${updating ? "opacity-70" : ""}`}
       >
         <div>
-          <p className="text-xs text-neutral-600">Expected profit per order</p>
-          <p className={`text-3xl font-bold tabular-nums ${losing ? "text-red-600" : "text-emerald-700"}`}>
-            {formatRupees(sim.profit_paise)}
-          </p>
-          {losing && <p className="mt-1 text-xs text-red-700">You lose money on every order at these numbers.</p>}
+          <p className="text-xs text-white/85">{t.product.expectedProfit}</p>
+          <p className="text-4xl font-extrabold tabular-nums">{formatRupees(sim.profit_paise)}</p>
+          {losing && <p className="mt-1 text-xs text-white/90">{t.product.losing}</p>}
         </div>
-        <ScoreBadge score={sim.score} />
+        <span className="rounded-xl bg-white/20 p-1"><ScoreBadge score={sim.score} /></span>
       </section>
 
       <dl className="mt-3 grid grid-cols-2 gap-2 text-xs">
-        <Fact label="Search trend" value={sim.trend_score} />
-        <Fact label="Competition" value={sim.competition_score} />
+        <Fact label={t.product.searchTrend} value={sim.trend_score} />
+        <Fact label={t.product.competition} value={sim.competition_score} />
       </dl>
 
       <div className="mt-3 grid grid-cols-2 gap-2">
         <SaveButton productId={sim.id} />
-        <Link
-          href={`/reels/new?product=${sim.id}`}
-          className="flex h-12 items-center justify-center rounded-lg bg-neutral-900 font-medium text-white"
-        >
-          Make a Reel
+        <Link href={`/reels/new?product=${sim.id}`} className={btnPrimary}>
+          🎬 {t.product.makeReel}
         </Link>
       </div>
 
       <Breakdown sim={sim} />
 
-      <section className="mt-6">
-        <h2 className="font-semibold">Your numbers</h2>
-        <p className="text-xs text-neutral-500">Change these to see your real profit. Starting values are our estimates.</p>
-        <div className="mt-3 flex flex-col gap-5">
+      <section className={`${card} mt-4 p-4`}>
+        <h2 className="text-lg font-bold text-brand-900">{t.product.yourNumbers}</h2>
+        <p className="text-xs text-neutral-500">{t.product.yourNumbersSub}</p>
+        <div className="mt-4 flex flex-col gap-5">
           <Field
-            label="Selling price"
+            label={t.product.sellingPrice}
             prefix="₹"
             value={form.price}
             onChange={(v) => update("price", v)}
             min={Math.max(1, Math.round(market * 0.5))}
             max={Math.round(market * 2)}
             step={1}
-            hint={`Market price ${formatRupees(sim.inputs.market_selling_price_paise)}`}
+            hint={fmt(t.product.marketPrice, { price: formatRupees(sim.inputs.market_selling_price_paise) })}
           />
           <Field
-            label="Orders returned (RTO)"
+            label={t.product.rto}
             suffix="%"
             value={form.rto}
             onChange={(v) => update("rto", v)}
             min={0}
             max={60}
             step={1}
-            hint={`Our estimate for ${categoryLabel(sim.category).toLowerCase()}: ${Math.round(sim.estimates.default_rto_rate * 100)}%`}
+            hint={fmt(t.product.rtoHint, { category: t.categories[sim.category], pct: Math.round(sim.estimates.default_rto_rate * 100) })}
             onReset={() => update("rto", String(Math.round(sim.estimates.default_rto_rate * 100)))}
           />
           <Field
-            label="Ad cost per order"
+            label={t.product.adCost}
             prefix="₹"
             value={form.ad}
             onChange={(v) => update("ad", v)}
@@ -184,30 +185,24 @@ export default function ProductDetail() {
             step={5}
             hint={
               sim.estimates.default_ad_cost_paise === 0
-                ? "Default ₹0: organic Reels, no paid ads"
-                : `Our estimate: ${formatRupees(sim.estimates.default_ad_cost_paise)}`
+                ? t.product.adHintZero
+                : fmt(t.product.adHint, { price: formatRupees(sim.estimates.default_ad_cost_paise) })
             }
             onReset={() => update("ad", String(sim.estimates.default_ad_cost_paise / 100))}
           />
         </div>
         {sim.estimates.source && (
           <details className="mt-4 text-xs text-neutral-600">
-            <summary className="cursor-pointer font-medium">Where these numbers come from</summary>
-            {sim.selling_price_source && <p className="mt-2">Market price: {sim.selling_price_source}.</p>}
-            <p className="mt-2">
-              Search trend: Google Trends over the last 90 days (Kerala + Tamil Nadu, or all of India when there
-              are too few local searches). Competition: number of different sellers on Google Shopping India.
-            </p>
+            <summary className="cursor-pointer font-semibold text-brand-700">{t.product.sourcesTitle}</summary>
+            {sim.selling_price_source && <p className="mt-2">{fmt(t.product.sourcesMarket, { source: sim.selling_price_source })}</p>}
+            <p className="mt-2">{t.product.sourcesTrend}</p>
             <p className="mt-2">{sim.estimates.source}</p>
-            <p className="mt-2">
-              Supplier price is a real wholesale listing including 18% GST. Shipping and COD fees use
-              Shiprocket&apos;s published rates (₹45 per 500 g, COD ₹27 + 1.5%, min ₹37, plus 18% GST).
-            </p>
+            <p className="mt-2">{t.product.sourcesSupplier}</p>
           </details>
         )}
         {(() => {
           const message = parsed && "error" in parsed ? parsed.error : calcError;
-          return message && <p role="alert" className="mt-3 rounded-lg bg-red-50 p-3 text-sm text-red-700">{message}</p>;
+          return message && <p role="alert" className="mt-3 rounded-xl bg-red-50 p-3 text-sm text-red-700">{message}</p>;
         })()}
       </section>
     </>
@@ -215,12 +210,18 @@ export default function ProductDetail() {
 }
 
 function Fact({ label, value }: { label: string; value: number | null }) {
+  const { t } = useT();
   return (
-    <div className="rounded-lg border border-neutral-200 bg-white p-2">
+    <div className={`${card} p-3`}>
       <dt className="text-neutral-500">{label}</dt>
-      <dd className={value === null ? "text-neutral-400" : "text-base font-semibold tabular-nums"}>
-        {value === null ? "Not checked yet" : `${value}/100`}
+      <dd className={value === null ? "text-neutral-400" : "text-lg font-extrabold tabular-nums text-brand-900"}>
+        {value === null ? t.product.notChecked : `${value}/100`}
       </dd>
+      {value !== null && (
+        <div className="mt-1 h-1.5 rounded-full bg-brand-50">
+          <div className="h-1.5 rounded-full bg-gradient-to-r from-brand-500 to-fuchsia-500" style={{ width: `${value}%` }} />
+        </div>
+      )}
     </div>
   );
 }
@@ -237,27 +238,28 @@ function Field(props: {
   suffix?: string;
   onReset?: () => void;
 }) {
-  const id = props.label.toLowerCase().replace(/\W+/g, "-");
+  const { t } = useT();
+  const id = `field-${props.prefix ?? ""}${props.suffix ?? ""}-${props.min}-${props.max}`;
   const numeric = Number(props.value);
   return (
     <div>
       <div className="flex items-center justify-between">
-        <label htmlFor={id} className="text-sm font-medium">{props.label}</label>
-        <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-amber-800">Estimate</span>
+        <label htmlFor={id} className="text-sm font-semibold">{props.label}</label>
+        <EstimateTag />
       </div>
-      <p className="text-xs text-neutral-500">Estimate — edit to match your business</p>
+      <p className="text-xs text-neutral-500">{t.product.estimateEdit}</p>
       <div className="mt-2 flex items-center gap-3">
         <input
           type="range"
-          aria-label={`${props.label} slider`}
+          aria-label={fmt(t.product.slider, { label: props.label })}
           min={props.min}
           max={props.max}
           step={props.step}
           value={Number.isFinite(numeric) ? numeric : props.min}
           onChange={(e) => props.onChange(e.target.value)}
-          className="h-2 flex-1 accent-neutral-900"
+          className="h-2 flex-1 accent-brand-600"
         />
-        <div className="flex h-11 w-28 items-center rounded-lg border border-neutral-300 bg-white px-2 focus-within:border-neutral-900">
+        <div className="flex h-11 w-28 items-center rounded-xl border border-brand-100 bg-white px-2 focus-within:border-brand-500">
           {props.prefix && <span className="text-neutral-500">{props.prefix}</span>}
           <input
             id={id}
@@ -272,7 +274,7 @@ function Field(props: {
       <div className="mt-1 flex justify-between text-xs text-neutral-500">
         <span>{props.hint}</span>
         {props.onReset && (
-          <button type="button" onClick={props.onReset} className="underline">Reset</button>
+          <button type="button" onClick={props.onReset} className="font-semibold text-brand-700 underline">{t.common.reset}</button>
         )}
       </div>
     </div>
@@ -280,24 +282,24 @@ function Field(props: {
 }
 
 function Breakdown({ sim }: { sim: Simulation }) {
+  const { t } = useT();
   const b = sim.breakdown;
   const rows = [
-    { label: "You collect (after returns)", value: b.revenue, kind: "in" },
-    { label: "Supplier", value: b.supplier_cost, kind: "out" },
-    { label: "Shipping", value: b.shipping, kind: "out" },
-    { label: "COD, payment & GST fees", value: b.fees, kind: "out" },
-    { label: "Returned orders (shipping both ways)", value: b.rto_shipping_loss, kind: "out" },
-    { label: "Ads", value: b.ad_cost, kind: "out" },
+    { label: t.product.rowCollect, value: b.revenue, kind: "in" },
+    { label: t.product.rowSupplier, value: b.supplier_cost, kind: "out" },
+    { label: t.product.rowShipping, value: b.shipping, kind: "out" },
+    { label: t.product.rowFees, value: b.fees, kind: "out" },
+    { label: t.product.rowReturns, value: b.rto_shipping_loss, kind: "out" },
+    { label: t.product.rowAds, value: b.ad_cost, kind: "out" },
   ] as const;
   const scale = Math.max(b.revenue, 1);
   const losing = sim.profit_paise <= 0;
 
   return (
-    <section className="mt-6">
-      <h2 className="font-semibold">Where your money goes</h2>
+    <section className={`${card} mt-4 p-4`}>
+      <h2 className="text-lg font-bold text-brand-900">{t.product.breakdownTitle}</h2>
       <p className="text-xs text-neutral-500">
-        Average per order. Sells at {formatRupees(sim.inputs.selling_price_paise)}, but{" "}
-        {Math.round(sim.estimates.rto_rate * 100)}% of orders come back and pay nothing.
+        {fmt(t.product.breakdownSub, { price: formatRupees(sim.inputs.selling_price_paise), pct: Math.round(sim.estimates.rto_rate * 100) })}
       </p>
       <ul className="mt-3 flex flex-col gap-2">
         {rows.map((r) => (
@@ -308,15 +310,15 @@ function Breakdown({ sim }: { sim: Simulation }) {
             </div>
             <div className="mt-1 h-2 rounded-full bg-neutral-100">
               <div
-                className={`h-2 rounded-full ${r.kind === "in" ? "bg-neutral-800" : "bg-neutral-400"}`}
+                className={`h-2 rounded-full ${r.kind === "in" ? "bg-gradient-to-r from-brand-500 to-fuchsia-500" : "bg-brand-200"}`}
                 style={{ width: `${Math.min(100, (r.value / scale) * 100)}%` }}
               />
             </div>
           </li>
         ))}
-        <li className="border-t border-neutral-200 pt-2">
-          <div className="flex justify-between text-sm font-semibold">
-            <span>= Your profit</span>
+        <li className="border-t border-brand-50 pt-2">
+          <div className="flex justify-between text-sm font-bold">
+            <span>{t.product.yourProfit}</span>
             <span className={`tabular-nums ${losing ? "text-red-600" : "text-emerald-700"}`}>{formatRupees(sim.profit_paise)}</span>
           </div>
           <div className="mt-1 h-2 rounded-full bg-neutral-100">
@@ -332,6 +334,7 @@ function Breakdown({ sim }: { sim: Simulation }) {
 }
 
 function SaveButton({ productId }: { productId: string }) {
+  const { t } = useT();
   const [saved, setSaved] = useState<boolean | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -348,7 +351,7 @@ function SaveButton({ productId }: { productId: string }) {
     const supabase = createClient();
     const { data } = await supabase.auth.getSession();
     const userId = data.session?.user.id;
-    if (!userId) return setError("Please sign in to save products.");
+    if (!userId) return setError(t.product.saveSignIn);
     setError(null);
     const next = !saved;
     setSaved(next);
@@ -357,7 +360,7 @@ function SaveButton({ productId }: { productId: string }) {
       : await supabase.from("saved_products").delete().eq("user_id", userId).eq("product_id", productId);
     if (error) {
       setSaved(!next);
-      setError("Couldn't update your saved list. Please try again.");
+      setError(t.product.saveError);
     }
   }
 
@@ -367,9 +370,9 @@ function SaveButton({ productId }: { productId: string }) {
         onClick={toggle}
         disabled={saved === null}
         aria-pressed={!!saved}
-        className="h-12 w-full rounded-lg border border-neutral-300 bg-white font-medium disabled:opacity-50"
+        className={`${btnSecondary} w-full ${saved ? "bg-amber-50 text-amber-700 ring-amber-200" : ""}`}
       >
-        {saved ? "★ Saved" : "☆ Save"}
+        {saved ? t.product.saved : t.product.save}
       </button>
       {error && <p role="alert" className="mt-1 text-xs text-red-700">{error}</p>}
     </div>
@@ -377,9 +380,10 @@ function SaveButton({ productId }: { productId: string }) {
 }
 
 function BackLink() {
+  const { t } = useT();
   return (
-    <Link href="/products" className="text-sm text-neutral-600">
-      ← All products
+    <Link href="/products" className="text-sm font-medium text-brand-700">
+      {t.product.allProducts}
     </Link>
   );
 }
@@ -387,22 +391,22 @@ function BackLink() {
 export function DetailSkeleton() {
   return (
     <div className="animate-pulse" aria-label="Loading product">
-      <div className="h-4 w-24 rounded bg-neutral-200" />
+      <div className="h-4 w-24 rounded bg-brand-50" />
       <div className="mt-3 flex gap-3">
-        <div className="h-24 w-24 rounded-xl bg-neutral-200" />
+        <div className="h-24 w-24 rounded-xl bg-brand-50" />
         <div className="flex-1 space-y-2">
-          <div className="h-3 w-1/3 rounded bg-neutral-200" />
-          <div className="h-5 w-3/4 rounded bg-neutral-200" />
+          <div className="h-3 w-1/3 rounded bg-brand-50" />
+          <div className="h-5 w-3/4 rounded bg-brand-50" />
         </div>
       </div>
-      <div className="mt-4 h-24 rounded-xl bg-neutral-200" />
+      <div className="mt-4 h-24 rounded-xl bg-brand-50" />
       <div className="mt-3 grid grid-cols-2 gap-2">
-        <div className="h-12 rounded-lg bg-neutral-200" />
-        <div className="h-12 rounded-lg bg-neutral-200" />
+        <div className="h-12 rounded-lg bg-brand-50" />
+        <div className="h-12 rounded-lg bg-brand-50" />
       </div>
       <div className="mt-6 space-y-3">
         {[0, 1, 2, 3, 4, 5].map((i) => (
-          <div key={i} className="h-6 rounded bg-neutral-200" />
+          <div key={i} className="h-6 rounded bg-brand-50" />
         ))}
       </div>
     </div>

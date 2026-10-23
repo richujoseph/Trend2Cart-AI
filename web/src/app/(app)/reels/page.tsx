@@ -3,11 +3,14 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { apiFetch } from "@/lib/api";
-import { type Me, type Reel, STATUS_LABEL, languageLabel, shortDate } from "@/lib/reels";
+import { fmt, useT } from "@/lib/i18n";
+import { type Me, type Reel, STATUS_TONE, languageLabel } from "@/lib/reels";
 import { EmptyState, ErrorState } from "@/components/states";
 import QuotaLine from "@/components/quota-line";
+import { PageHero, card } from "@/components/ui";
 
 export default function ReelsPage() {
+  const { t, date } = useT();
   const [reels, setReels] = useState<Reel[] | null>(null);
   const [me, setMe] = useState<Me | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -38,13 +41,12 @@ export default function ReelsPage() {
 
   return (
     <>
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold">Reels</h1>
-        <Link href="/reels/new" className="flex h-10 items-center rounded-lg bg-neutral-900 px-4 text-sm font-medium text-white">
-          + New Reel
+      <PageHero title={t.reels.title} subtitle={t.reels.subtitle} tone="sunset">
+        {me && <QuotaLine me={me} tone="light" />}
+        <Link href="/reels/new" className="mt-4 inline-flex h-11 items-center rounded-xl bg-white px-5 text-sm font-bold text-rose-600 shadow-md">
+          {t.reels.newReel}
         </Link>
-      </div>
-      {me && <QuotaLine me={me} />}
+      </PageHero>
 
       {error && (
         <ErrorState
@@ -56,30 +58,36 @@ export default function ReelsPage() {
         />
       )}
       {!reels && !error && <ListSkeleton />}
-      {reels?.length === 0 && (
-        <EmptyState
-          title="No Reels yet"
-          body="Pick a product and we'll make a 15–30 second Reel in Malayalam, Hindi or English."
-        />
-      )}
+      {reels?.length === 0 && <EmptyState icon="🎬" title={t.reels.emptyTitle} body={t.reels.emptyBody} />}
       {reels && reels.length > 0 && (
-        <ul className="mt-4 flex flex-col gap-3">
-          {reels.map((r) => (
-            <li key={r.id}>
-              <Link href={`/reels/${r.id}`} className="flex items-center gap-3 rounded-xl border border-neutral-200 bg-white p-3 active:bg-neutral-50">
-                <div className="flex h-16 w-12 shrink-0 items-center justify-center rounded-md bg-neutral-900 text-lg text-white" aria-hidden>
-                  ▶
+        <ul className="mt-5 grid grid-cols-2 gap-3">
+          {reels.map((r, i) => (
+            <li key={r.id} className="animate-rise" style={{ animationDelay: `${Math.min(i, 8) * 40}ms` }}>
+              <Link href={`/reels/${r.id}`} className={`${card} block overflow-hidden transition active:scale-[.98]`}>
+                <div className="relative aspect-[9/14] bg-gradient-to-br from-brand-700 to-fuchsia-600">
+                  {r.status === "done" && r.video_url ? (
+                    <video src={`${r.video_url}#t=1.5`} preload="metadata" muted playsInline className="h-full w-full object-cover" aria-hidden />
+                  ) : (
+                    <span className="flex h-full items-center justify-center text-4xl" aria-hidden>
+                      {r.status === "failed" ? "⚠️" : "⏳"}
+                    </span>
+                  )}
+                  <span className={`absolute left-2 top-2 rounded-full px-2 py-0.5 text-[11px] font-bold shadow ${STATUS_TONE[r.status].tone}`}>
+                    {t.reels[STATUS_TONE[r.status].key]}
+                  </span>
+                  {r.status === "done" && (
+                    <span className="absolute inset-0 flex items-center justify-center" aria-hidden>
+                      <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white/85 text-brand-700 shadow-lg">▶</span>
+                    </span>
+                  )}
                 </div>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate font-medium">{r.products?.name ?? "Product"}</p>
-                  <p className="text-xs text-neutral-500">
-                    {languageLabel(r.language)} · {shortDate(r.created_at)}
-                    {r.audience ? ` · ${r.audience}` : ""}
+                <div className="p-2.5">
+                  <p className="line-clamp-1 text-sm font-bold">{r.products?.name ?? "Reel"}</p>
+                  <p className="line-clamp-1 text-[11px] text-neutral-500">
+                    {languageLabel(r.language)} · {date(r.created_at)}
                   </p>
+                  {r.audience && <p className="line-clamp-1 text-[11px] text-neutral-400">{fmt(t.reels.forAudience, { audience: r.audience })}</p>}
                 </div>
-                <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold ${STATUS_LABEL[r.status].tone}`}>
-                  {STATUS_LABEL[r.status].text}
-                </span>
               </Link>
             </li>
           ))}
@@ -91,13 +99,13 @@ export default function ReelsPage() {
 
 function ListSkeleton() {
   return (
-    <ul className="mt-4 flex flex-col gap-3" aria-label="Loading Reels">
-      {[0, 1, 2].map((i) => (
-        <li key={i} className="flex animate-pulse items-center gap-3 rounded-xl border border-neutral-200 bg-white p-3">
-          <div className="h-16 w-12 rounded-md bg-neutral-200" />
-          <div className="flex-1 space-y-2">
-            <div className="h-4 w-2/3 rounded bg-neutral-200" />
-            <div className="h-3 w-1/3 rounded bg-neutral-200" />
+    <ul className="mt-5 grid grid-cols-2 gap-3" aria-busy>
+      {[0, 1, 2, 3].map((i) => (
+        <li key={i} className={`${card} animate-pulse overflow-hidden`}>
+          <div className="aspect-[9/14] bg-brand-50" />
+          <div className="space-y-2 p-2.5">
+            <div className="h-3 w-3/4 rounded bg-brand-50" />
+            <div className="h-3 w-1/2 rounded bg-brand-50" />
           </div>
         </li>
       ))}

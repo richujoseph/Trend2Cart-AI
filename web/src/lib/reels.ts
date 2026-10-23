@@ -8,12 +8,12 @@ export const LANGUAGES: { value: Language; label: string; native: string }[] = [
 ];
 
 // Where the seller sells decides the default Reel language (they can still pick another for any Reel).
-export const REGIONS: { value: string; label: string; language: Language }[] = [
-  { value: "kerala", label: "Kerala", language: "ml" },
-  { value: "tamil_nadu", label: "Tamil Nadu", language: "en" },
+export const REGIONS: { value: "kerala" | "tamil_nadu"; language: Language }[] = [
+  { value: "kerala", language: "ml" },
+  { value: "tamil_nadu", language: "en" },
 ];
 
-export const languageLabel = (l: string) => LANGUAGES.find((x) => x.value === l)?.label ?? l;
+export const languageLabel = (l: string) => LANGUAGES.find((x) => x.value === l)?.native ?? l;
 
 // Mirrors api/core/reels/templates.py so the picker previews the real look.
 export const TEMPLATES = [
@@ -47,20 +47,9 @@ export type Me = {
   reels: { limit: number | null; used: number; left: number | null; resets_at: string | null };
 };
 
-export const STATUS_LABEL: Record<ReelStatus, { text: string; tone: string }> = {
-  queued: { text: "Waiting", tone: "bg-neutral-100 text-neutral-700" },
-  processing: { text: "Making…", tone: "bg-amber-100 text-amber-800" },
-  done: { text: "Ready", tone: "bg-emerald-100 text-emerald-800" },
-  failed: { text: "Failed", tone: "bg-red-100 text-red-700" },
+export const STATUS_TONE: Record<ReelStatus, { key: "statusQueued" | "statusProcessing" | "statusDone" | "statusFailed"; tone: string }> = {
+  queued: { key: "statusQueued", tone: "bg-neutral-100 text-neutral-700" },
+  processing: { key: "statusProcessing", tone: "bg-amber-100 text-amber-800" },
+  done: { key: "statusDone", tone: "bg-emerald-100 text-emerald-800" },
+  failed: { key: "statusFailed", tone: "bg-red-100 text-red-700" },
 };
-
-/** "2026-10-24T09:12:00+00:00" → "24 Oct" */
-export function shortDate(iso: string): string {
-  return new Date(iso).toLocaleDateString("en-IN", { day: "numeric", month: "short" });
-}
-
-export function reelsLeftText(me: Me): string {
-  if (me.reels.limit === null) return "Unlimited Reels on your plan";
-  const reset = me.reels.resets_at ? ` · resets ${shortDate(me.reels.resets_at)}` : "";
-  return `${me.reels.left} of ${me.reels.limit} free Reels left this month${reset}`;
-}

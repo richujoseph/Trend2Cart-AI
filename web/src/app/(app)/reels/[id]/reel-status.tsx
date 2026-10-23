@@ -4,17 +4,16 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ApiError, apiFetch } from "@/lib/api";
-import { type Reel, STATUS_LABEL, languageLabel } from "@/lib/reels";
+import { fmt, useT } from "@/lib/i18n";
+import { type Reel, STATUS_TONE, languageLabel } from "@/lib/reels";
 import { ErrorState } from "@/components/states";
+import { btnPrimary, btnSmall, card } from "@/components/ui";
 
-// The worker reports which step it's on (reels.stage).
-const STEPS = [
-  { stage: "script", label: "Writing your script…" },
-  { stage: "voice", label: "Recording voice…" },
-  { stage: "video", label: "Making your video…" },
-] as const;
+// The worker reports which step it's on (reels.stage); labels are t.reel.steps in the same order.
+const STAGES = ["script", "voice", "video"] as const;
 
 export default function ReelStatus() {
+  const { t } = useT();
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const [reel, setReel] = useState<Reel | null>(null);
@@ -70,49 +69,57 @@ export default function ReelStatus() {
 
   if (error) return <ErrorState message={error} onRetry={() => window.location.reload()} />;
 
+  const current = reel?.status === "processing" ? STAGES.indexOf(reel.stage ?? "script") : -1;
+
   return (
     <>
-      <Link href="/reels" className="text-sm text-neutral-600">← Your Reels</Link>
+      <Link href="/reels" className="text-sm font-medium text-brand-700">{t.reel.back}</Link>
       <div className="mt-2 flex items-start justify-between gap-2">
-        <div>
-          <h1 className="text-xl font-bold">{reel?.products?.name ?? "Your Reel"}</h1>
-          {reel && <p className="text-sm text-neutral-500">{languageLabel(reel.language)}{reel.audience ? ` · for ${reel.audience}` : ""}</p>}
+        <div className="min-w-0">
+          <h1 className="text-2xl font-extrabold tracking-tight text-brand-900">{reel?.products?.name ?? t.reel.yourReel}</h1>
+          {reel && (
+            <p className="text-sm text-neutral-500">
+              {languageLabel(reel.language)}
+              {reel.audience ? ` · ${fmt(t.reels.forAudience, { audience: reel.audience })}` : ""}
+            </p>
+          )}
         </div>
         {reel && (
-          <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold ${STATUS_LABEL[reel.status].tone}`}>
-            {STATUS_LABEL[reel.status].text}
+          <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-bold ${STATUS_TONE[reel.status].tone}`}>
+            {t.reels[STATUS_TONE[reel.status].key]}
           </span>
         )}
       </div>
 
       {working && (
-        <section className="mt-6 rounded-xl border border-neutral-200 bg-white p-4" aria-live="polite">
-          <p className="font-medium">Making your Reel… {seconds}s</p>
-          <p className="text-sm text-neutral-500">
-            {reel?.status === "queued" ? "Waiting for a free slot." : "Usually ready in under a minute."} You can leave this page.
-          </p>
-          {reel?.status === "queued" && seconds > 45 && (
-            <p className="mt-2 rounded-lg bg-amber-50 p-2 text-sm text-amber-900">
-              This is taking longer than usual. The Reel maker may be offline right now. Your Reel is saved and
-              will start automatically as soon as it&apos;s back.
+        <section className={`${card} mt-5 overflow-hidden`} aria-live="polite">
+          <div className="bg-gradient-to-r from-brand-600 via-fuchsia-600 to-orange-500 p-4 text-white">
+            <p className="text-lg font-bold">{fmt(t.reel.making, { s: seconds })}</p>
+            <p className="text-sm text-white/85">
+              {reel?.status === "queued" ? t.reel.waitingSlot : t.reel.usuallyReady} {t.reel.canLeave}
             </p>
+            <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-white/25">
+              <div className="h-full rounded-full bg-white transition-all duration-700" style={{ width: `${((current + 1) / (STAGES.length + 1)) * 100}%` }} />
+            </div>
+          </div>
+          {reel?.status === "queued" && seconds > 45 && (
+            <p className="m-4 mb-0 rounded-xl bg-amber-50 p-3 text-sm text-amber-900">{t.reel.offline}</p>
           )}
-          <ol className="mt-4 flex flex-col gap-3 text-sm">
-            {STEPS.map((step, i) => {
-              const current = reel?.status === "processing" ? STEPS.findIndex((s) => s.stage === (reel.stage ?? "script")) : -1;
+          <ol className="flex flex-col gap-3 p-4 text-sm">
+            {STAGES.map((stage, i) => {
               const state = i < current ? "done" : i === current ? "active" : "todo";
               return (
-                <li key={step.stage} className={`flex items-center gap-3 ${state === "todo" ? "text-neutral-400" : "text-neutral-900"}`}>
+                <li key={stage} className={`flex items-center gap-3 ${state === "todo" ? "text-neutral-400" : "text-neutral-900"}`}>
                   <span
                     aria-hidden
-                    className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs ${
-                      state === "done" ? "bg-emerald-600 text-white" : state === "active" ? "animate-pulse bg-neutral-900 text-white" : "bg-neutral-100"
+                    className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
+                      state === "done" ? "bg-emerald-500 text-white" : state === "active" ? "animate-pulse bg-brand-600 text-white" : "bg-brand-50"
                     }`}
                   >
                     {state === "done" ? "✓" : i + 1}
                   </span>
-                  <span className={state === "active" ? "font-semibold" : ""}>{step.label}</span>
-                  <span className="sr-only">{state === "done" ? "(done)" : state === "active" ? "(in progress)" : ""}</span>
+                  <span className={state === "active" ? "font-bold" : ""}>{t.reel.steps[i]}</span>
+                  <span className="sr-only">{state === "done" ? t.reel.stepDone : state === "active" ? t.reel.stepActive : ""}</span>
                 </li>
               );
             })}
@@ -123,10 +130,10 @@ export default function ReelStatus() {
       {reel?.status === "done" && reel.video_url && <DoneReel reel={reel} />}
 
       {reel?.status === "failed" && (
-        <section className="mt-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800" role="alert">
-          <p>{reel.error ?? "Something went wrong while making your Reel."}</p>
-          <button onClick={retry} disabled={retrying} className="mt-3 h-11 rounded-lg bg-red-700 px-4 font-medium text-white disabled:opacity-50">
-            {retrying ? "Starting…" : "Try again"}
+        <section className="mt-5 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-800" role="alert">
+          <p>{reel.error ?? t.reel.failedDefault}</p>
+          <button onClick={retry} disabled={retrying} className="mt-3 h-11 rounded-xl bg-red-700 px-5 font-bold text-white disabled:opacity-50">
+            {retrying ? t.newReel.starting : t.common.tryAgain}
           </button>
           {retryError && <p className="mt-2">{retryError}</p>}
         </section>
@@ -136,6 +143,7 @@ export default function ReelStatus() {
 }
 
 function DoneReel({ reel }: { reel: Reel }) {
+  const { t } = useT();
   const [copied, setCopied] = useState(false);
   const [sharing, setSharing] = useState(false);
   const [shareError, setShareError] = useState(false);
@@ -171,49 +179,38 @@ function DoneReel({ reel }: { reel: Reel }) {
 
   return (
     <>
-      <video
-        src={reel.video_url!}
-        controls
-        playsInline
-        preload="metadata"
-        className="mx-auto mt-4 aspect-[9/16] w-full max-w-xs rounded-xl bg-black"
-      />
-      <div className="mt-3 grid grid-cols-2 gap-2">
+      <div className="mx-auto mt-5 w-full max-w-[17rem] rounded-[2rem] bg-gradient-to-br from-brand-600 via-fuchsia-600 to-orange-400 p-1.5 shadow-xl shadow-brand-900/20">
+        <video src={reel.video_url!} controls playsInline preload="metadata" className="aspect-[9/16] w-full rounded-[1.6rem] bg-black" />
+      </div>
+      <div className="mt-4 grid grid-cols-2 gap-2">
         {/* Supabase Storage sends the file as a download when ?download= is set. */}
-        <a
-          href={`${reel.video_url}?download=${encodeURIComponent(fileName)}`}
-          className="flex h-12 items-center justify-center rounded-lg bg-neutral-900 font-medium text-white"
-        >
-          Download MP4
+        <a href={`${reel.video_url}?download=${encodeURIComponent(fileName)}`} className={btnPrimary}>
+          ⬇ {t.reel.download}
         </a>
         <button
           type="button"
           onClick={share}
           disabled={sharing}
-          className="h-12 rounded-lg bg-emerald-600 font-medium text-white disabled:opacity-60"
+          className="inline-flex h-12 items-center justify-center rounded-xl bg-[#25D366] px-3 font-semibold text-white shadow-md shadow-emerald-600/25 transition active:scale-[.98] disabled:opacity-60"
         >
-          {sharing ? "Preparing…" : "Share to WhatsApp"}
+          {sharing ? t.reel.preparing : t.reel.share}
         </button>
       </div>
-      <p className="mt-1 text-center text-xs text-neutral-500">
-        {shareError
-          ? "Sharing didn't work on this phone. Tap Download, then share the video from your gallery."
-          : "Then post it on Instagram or your WhatsApp Status with the caption below."}
-      </p>
+      <p className="mt-2 text-center text-xs text-neutral-500">{shareError ? t.reel.shareFailed : t.reel.postHint}</p>
 
-      <section className="mt-6">
+      <section className={`${card} mt-5 p-4`}>
         <div className="flex items-center justify-between">
-          <h2 className="font-semibold">Caption & hashtags</h2>
-          <button onClick={copy} className="h-9 rounded-lg border border-neutral-300 bg-white px-3 text-sm">
-            {copied ? "Copied ✓" : "Copy"}
+          <h2 className="font-bold text-brand-900">✍️ {t.reel.captionTitle}</h2>
+          <button onClick={copy} className={btnSmall}>
+            {copied ? t.common.copied : t.common.copy}
           </button>
         </div>
-        <p className="mt-2 whitespace-pre-wrap rounded-lg border border-neutral-200 bg-white p-3 text-sm">{text}</p>
+        <p className="mt-2 whitespace-pre-wrap rounded-xl bg-brand-50/60 p-3 text-sm">{text}</p>
       </section>
 
-      <Link href={`/doctor?reel=${reel.id}`} className="mt-6 block rounded-xl border border-neutral-200 bg-white p-4 text-sm">
-        <span className="font-semibold">Posted it? Check how it did →</span>
-        <span className="block text-neutral-500">After a few days, enter its views and orders in Conversion Doctor.</span>
+      <Link href={`/doctor?reel=${reel.id}`} className="mt-4 block rounded-2xl bg-gradient-to-r from-teal-500 to-cyan-600 p-4 text-sm text-white shadow-md shadow-teal-600/20">
+        <span className="font-bold">📈 {t.reel.checkHow}</span>
+        <span className="block text-white/85">{t.reel.checkHowSub}</span>
       </Link>
     </>
   );

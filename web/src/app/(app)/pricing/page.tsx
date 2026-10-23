@@ -3,7 +3,9 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ApiError, apiFetch } from "@/lib/api";
+import { messagesNow, useT } from "@/lib/i18n";
 import type { Me } from "@/lib/reels";
+import { PageHero, card } from "@/components/ui";
 
 type Order = { order_id: string; amount_paise: number; currency: string; key_id: string; prefill: { email: string; contact: string } };
 type RazorpayResponse = { razorpay_order_id: string; razorpay_payment_id: string; razorpay_signature: string };
@@ -19,15 +21,13 @@ function loadCheckout(): Promise<void> {
     const s = document.createElement("script");
     s.src = "https://checkout.razorpay.com/v1/checkout.js";
     s.onload = () => resolve();
-    s.onerror = () => reject(new Error("We couldn't load the payment page. Check your internet and try again."));
+    s.onerror = () => reject(new Error(messagesNow().pricing.loadFailed));
     document.body.appendChild(s);
   });
 }
 
-const FREE = ["Profit scores for every product", "3 Reels a month (Malayalam, Hindi, English)", "Conversion Doctor check-ups"];
-const FOUNDING = ["Everything in Free", "Unlimited Reels while we're in beta", "Founding-member price, paid once"];
-
 export default function PricingPage() {
+  const { t } = useT();
   const [me, setMe] = useState<Me | null>(null);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<{ text: string; ok: boolean } | null>(null);
@@ -50,11 +50,11 @@ export default function PricingPage() {
         name: "Trend2Cart AI",
         description: "Founding member pre-order",
         prefill: order.prefill,
-        theme: { color: "#111111" },
+        theme: { color: "#7c3aed" },
         handler: async (resp: RazorpayResponse) => {
           try {
             await apiFetch("/preorders/verify", { method: "POST", body: JSON.stringify(resp) });
-            setMessage({ text: "Payment received. Welcome, founding member! Your Reels are now unlimited.", ok: true });
+            setMessage({ text: t.pricing.paid, ok: true });
             apiFetch<Me>("/me").then(setMe).catch(() => {});
           } catch (err) {
             setMessage({ text: (err as ApiError).message, ok: false });
@@ -64,7 +64,7 @@ export default function PricingPage() {
         modal: { ondismiss: () => setBusy(false) },
       });
       checkout.on("payment.failed", () => {
-        setMessage({ text: "The payment didn't go through. No money was taken. Please try again.", ok: false });
+        setMessage({ text: t.pricing.failed, ok: false });
         setBusy(false);
       });
       checkout.open();
@@ -78,45 +78,42 @@ export default function PricingPage() {
 
   return (
     <>
-      <h1 className="text-xl font-bold">Plans</h1>
-      <p className="mt-1 text-sm text-neutral-600">Start free. Pre-order the founding plan to support us and remove the Reel limit.</p>
+      <PageHero title={`⭐ ${t.pricing.title}`} subtitle={t.pricing.subtitle} tone="sunset" />
 
       <div className="mt-4 flex flex-col gap-3">
-        <Plan name="Free" price="₹0" items={FREE} current={me?.profile.plan === "free"} />
-        <Plan name="Founding member" price="₹99" note="one-time pre-order" items={FOUNDING} current={!!founding} highlight>
+        <Plan name={t.pricing.free} price="₹0" items={t.pricing.freeItems} current={me?.profile.plan === "free"} currentLabel={t.pricing.yourPlan} />
+        <Plan name={t.pricing.founding} price="₹99" note={t.pricing.oneTime} items={t.pricing.foundingItems} current={!!founding} currentLabel={t.pricing.yourPlan} highlight>
           {!founding && (
-            <button onClick={preorder} disabled={busy || !me} className="mt-4 h-12 w-full rounded-lg bg-white font-semibold text-neutral-900 disabled:opacity-50">
-              {busy ? "Opening payment…" : "Pre-order for ₹99"}
+            <button onClick={preorder} disabled={busy || !me} className="mt-4 h-12 w-full rounded-xl bg-white font-bold text-brand-700 shadow-md disabled:opacity-50">
+              {busy ? t.pricing.opening : t.pricing.preorder}
             </button>
           )}
         </Plan>
       </div>
 
       {message && (
-        <p role="alert" className={`mt-4 rounded-lg p-3 text-sm ${message.ok ? "bg-emerald-50 text-emerald-800" : "bg-red-50 text-red-700"}`}>
+        <p role="alert" className={`mt-4 rounded-xl p-3 text-sm ${message.ok ? "bg-emerald-50 text-emerald-800" : "bg-red-50 text-red-700"}`}>
           {message.text}
         </p>
       )}
-      <p className="mt-4 text-xs text-neutral-500">
-        Payments by Razorpay (UPI, cards, net banking). This is a test-mode pre-order during our beta.
-      </p>
-      <Link href="/account" className="mt-4 block text-sm underline">← Back to account</Link>
+      <p className="mt-4 text-xs text-neutral-500">{t.pricing.note}</p>
+      <Link href="/account" className="mt-4 block text-sm font-medium text-brand-700">{t.pricing.backAccount}</Link>
     </>
   );
 }
 
-function Plan(props: { name: string; price: string; note?: string; items: string[]; current: boolean; highlight?: boolean; children?: React.ReactNode }) {
+function Plan(props: { name: string; price: string; note?: string; items: string[]; current: boolean; currentLabel: string; highlight?: boolean; children?: React.ReactNode }) {
   return (
-    <section className={`rounded-xl p-4 ${props.highlight ? "bg-neutral-900 text-white" : "border border-neutral-200 bg-white"}`}>
+    <section className={`rounded-2xl p-5 ${props.highlight ? "bg-gradient-to-br from-brand-700 via-brand-600 to-fuchsia-600 text-white shadow-xl shadow-brand-700/25" : card}`}>
       <div className="flex items-baseline justify-between">
-        <h2 className="font-semibold">{props.name}</h2>
-        {props.current && <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-800">Your plan</span>}
+        <h2 className="font-bold">{props.name}</h2>
+        {props.current && <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-bold text-emerald-800">{props.currentLabel}</span>}
       </div>
-      <p className="mt-1 text-3xl font-bold">
+      <p className="mt-1 text-4xl font-extrabold">
         {props.price}
         {props.note && <span className="ml-1 text-sm font-normal opacity-75">{props.note}</span>}
       </p>
-      <ul className="mt-3 space-y-1 text-sm">
+      <ul className="mt-3 space-y-1.5 text-sm">
         {props.items.map((i) => <li key={i}>✓ {i}</li>)}
       </ul>
       {props.children}

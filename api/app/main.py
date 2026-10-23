@@ -5,13 +5,15 @@ from fastapi import APIRouter, Depends, FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from pydantic import BaseModel
 
 from datetime import datetime, timezone
+from typing import Literal
 
-from app import doctor, preorders, products, reels
+from app import discover, doctor, preorders, products, reels
 from app.deps import current_user
 from core.config import get_settings
-from core.supabase import rest_get
+from core.supabase import SupabaseError, rest_get, service_update
 
 app = FastAPI(title="Trend2Cart API")
 log = logging.getLogger("trend2cart")
@@ -91,8 +93,27 @@ def me(request: Request, user: dict = Depends(current_user)):
     }
 
 
+class ProfileUpdate(BaseModel):
+    language: Literal["ml", "hi", "en"] | None = None
+    region: Literal["kerala", "tamil_nadu"] | None = None
+
+
+@protected.patch("/me")
+def update_me(body: ProfileUpdate, user: dict = Depends(current_user)):
+    """Seller preferences. Server-side so a save either really happens or shows an error."""
+    fields = body.model_dump(exclude_none=True)
+    if not fields:
+        raise HTTPException(422, "Nothing to save.")
+    try:
+        service_update("profiles", user["sub"], fields)
+    except (httpx.HTTPError, SupabaseError):
+        raise HTTPException(503, "Couldn't save that. Please check your internet and try again.")
+    return fields
+
+
 app.include_router(protected)
 app.include_router(products.router)
 app.include_router(reels.router)
 app.include_router(doctor.router)
 app.include_router(preorders.router)
+app.include_router(discover.router)

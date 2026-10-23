@@ -1,11 +1,7 @@
-export const CATEGORIES = [
-  { value: "home_gadgets", label: "Home gadgets" },
-  { value: "beauty", label: "Beauty" },
-  { value: "phone_accessories", label: "Phone accessories" },
-  { value: "fitness", label: "Fitness" },
-] as const;
+// Labels are in the i18n dictionary (t.categories).
+export const CATEGORIES = ["home_gadgets", "beauty", "phone_accessories", "fitness"] as const;
 
-export type Category = (typeof CATEGORIES)[number]["value"];
+export type Category = (typeof CATEGORIES)[number];
 
 export type Estimates = {
   rto_rate: number;
@@ -68,5 +64,3 @@ const inrPaise = new Intl.NumberFormat("en-IN", { style: "currency", currency: "
 export function formatRupees(paise: number): string {
   return (paise % 100 === 0 ? inrWhole : inrPaise).format(paise / 100);
 }
-
-export const categoryLabel = (c: Category) => CATEGORIES.find((x) => x.value === c)?.label ?? c;

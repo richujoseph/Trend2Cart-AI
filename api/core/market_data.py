@@ -2,7 +2,8 @@
 
 Provider: SerpApi (Google Shopping India for prices and sellers, Google Trends for
 Kerala + Tamil Nadu search interest). Costs 2 API searches per product.
-Used only by the offline enrich script, never on a seller's page load.
+Used by the offline enrich script, and by product search (app/discover.py), which caches
+every lookup for 7 days and caps new lookups per seller.
 """
 
 from dataclasses import dataclass
@@ -91,11 +92,9 @@ def _serpapi(params: dict) -> dict:
     return data
 
 
-def fetch_market_snapshot(keyword: str, trend_keyword: str | None = None) -> MarketSnapshot:
-    """keyword: specific product phrase for Shopping prices. trend_keyword: what people actually type
-    into Google (usually broader, e.g. "vegetable chopper"); defaults to keyword."""
-    trend_keyword = trend_keyword or keyword
-    shopping = _serpapi({
+def fetch_shopping(keyword: str) -> list[dict]:
+    """Page one of Google Shopping India for this phrase."""
+    return _serpapi({
         "engine": "google_shopping",
         "q": keyword,
         "gl": "in",
@@ -103,9 +102,12 @@ def fetch_market_snapshot(keyword: str, trend_keyword: str | None = None) -> Mar
         "google_domain": "google.co.in",
     }).get("shopping_results", [])
 
+
+def fetch_trend_series(trend_keyword: str) -> tuple[list[list[float]], str, list[str]]:
+    """90 days of search interest: (series per region, region label, dates)."""
     # Kerala + Tamil Nadu first; niche products often have too few state-level searches (a single spike in
     # 90 days is noise), so fall back to all of India. If India is sparse too, use it anyway: low interest is real.
-    series_by_geo, trend_region = [], "none"
+    series_by_geo, trend_region, dates = [], "none", []
     for geos, region in [(TREND_GEOS, "Kerala + Tamil Nadu"), (["IN"], "India")]:
         try:
             trends = _serpapi({
@@ -119,8 +121,9 @@ def fetch_market_snapshot(keyword: str, trend_keyword: str | None = None) -> Mar
             if NO_TRENDS_DATA in str(e):
                 continue
             raise
-        series_by_geo = [[] for _ in geos]
+        series_by_geo, dates = [[] for _ in geos], []
         for point in trends.get("interest_over_time", {}).get("timeline_data", []):
+            dates.append(point.get("date", ""))
             for v in point.get("values", []):
                 idx = v.get("query_index", 0)
                 if idx < len(series_by_geo):
@@ -130,6 +133,34 @@ def fetch_market_snapshot(keyword: str, trend_keyword: str | None = None) -> Mar
             trend_region = region
             if sum(v > 0 for v in points) / len(points) >= MIN_ACTIVE_SHARE:
                 break
+    if trend_region == "none":
+        series_by_geo, dates = [], []
+    return series_by_geo, trend_region, dates
+
+
+def fetch_region_series(terms: list[str], geo: str) -> dict[str, list[float]]:
+    """Up to 5 terms compared in one region over 90 days (1 search). Missing data → all zeros."""
+    try:
+        trends = _serpapi({"engine": "google_trends", "q": ",".join(terms), "geo": geo,
+                           "date": "today 3-m", "data_type": "TIMESERIES"})
+    except RuntimeError as e:
+        if NO_TRENDS_DATA in str(e):
+            return {t: [] for t in terms}
+        raise
+    series: dict[str, list[float]] = {t: [] for t in terms}
+    for point in trends.get("interest_over_time", {}).get("timeline_data", []):
+        for v in point.get("values", []):
+            idx = v.get("query_index", 0)
+            if idx < len(terms):
+                series[terms[idx]].append(float(v.get("extracted_value") or 0))
+    return series
+
+
+def fetch_market_snapshot(keyword: str, trend_keyword: str | None = None) -> MarketSnapshot:
+    """keyword: specific product phrase for Shopping prices. trend_keyword: what people actually type
+    into Google (usually broader, e.g. "vegetable chopper"); defaults to keyword."""
+    shopping = fetch_shopping(keyword)
+    series_by_geo, trend_region, _ = fetch_trend_series(trend_keyword or keyword)
 
     sellers = [r.get("source", "") for r in shopping]
     return MarketSnapshot(

@@ -1,3 +1,4 @@
+import { messagesNow } from "@/lib/i18n";
 import { createClient } from "@/lib/supabase/client";
 
 const MAX_SIDE = 1600; // enough for a 1080x1920 Reel card, small enough for mobile data
@@ -8,7 +9,7 @@ async function toJpeg(file: File): Promise<Blob> {
   try {
     bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
   } catch {
-    throw new Error("This photo format isn't supported. Please choose a JPG or PNG.");
+    throw new Error(messagesNow().photos.format);
   }
   const scale = Math.min(1, MAX_SIDE / Math.max(bitmap.width, bitmap.height));
   const canvas = document.createElement("canvas");
@@ -17,7 +18,7 @@ async function toJpeg(file: File): Promise<Blob> {
   canvas.getContext("2d")!.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
   bitmap.close();
   return new Promise((resolve, reject) =>
-    canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("We couldn't read this photo."))), "image/jpeg", 0.85),
+    canvas.toBlob((b) => (b ? resolve(b) : reject(new Error(messagesNow().photos.read))), "image/jpeg", 0.85),
   );
 }
 
@@ -27,10 +28,10 @@ export async function uploadSellerPhoto(file: File): Promise<{ path: string; pre
   const supabase = createClient();
   const { data } = await supabase.auth.getSession();
   const userId = data.session?.user.id;
-  if (!userId) throw new Error("Please sign in to continue.");
+  if (!userId) throw new Error(messagesNow().api.signIn);
   const path = `${userId}/${crypto.randomUUID()}.jpg`;
   const { error } = await supabase.storage.from("seller-photos").upload(path, blob, { contentType: "image/jpeg" });
-  if (error) throw new Error("We couldn't upload this photo. Please try again.");
+  if (error) throw new Error(messagesNow().photos.upload);
   return { path, preview: URL.createObjectURL(blob) };
 }
 
