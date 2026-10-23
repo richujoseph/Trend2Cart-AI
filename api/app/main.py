@@ -1,9 +1,11 @@
 import httpx
 from fastapi import APIRouter, Depends, FastAPI, HTTPException, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from fastapi.responses import JSONResponse
 
-from core.auth import AuthError, verify_supabase_jwt
+from app import products
+from app.deps import current_user
 from core.config import get_settings
 from core.supabase import rest_get
 
@@ -15,20 +17,23 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-bearer = HTTPBearer(auto_error=False)
+FIELD_MESSAGES = {
+    "selling_price_paise": "Selling price can't be negative.",
+    "ad_cost_paise": "Ad cost can't be negative.",
+    "rto_rate": "Return rate (RTO) must be between 0% and 100%.",
+    "category": "Please pick a valid category.",
+    "product_id": "This product link looks broken. Go back and pick the product again.",
+}
 
 
-def current_user(
-    request: Request, creds: HTTPAuthorizationCredentials | None = Depends(bearer)
-) -> dict:
-    if creds is None:
-        raise HTTPException(401, "Please sign in to continue.")
-    try:
-        claims = verify_supabase_jwt(creds.credentials)
-    except AuthError as e:
-        raise HTTPException(401, str(e))
-    request.state.token = creds.credentials
-    return claims
+@app.exception_handler(RequestValidationError)
+def validation_error(request: Request, exc: RequestValidationError):
+    # Turn Pydantic's technical errors into one sentence a seller can act on.
+    for err in exc.errors():
+        field = str(err["loc"][-1]) if err["loc"] else ""
+        if field in FIELD_MESSAGES:
+            return JSONResponse({"detail": FIELD_MESSAGES[field]}, status_code=422)
+    return JSONResponse({"detail": "Some of the details you entered don't look right. Please check and try again."}, status_code=422)
 
 
 @app.get("/health")
@@ -52,3 +57,4 @@ def me(request: Request, user: dict = Depends(current_user)):
 
 
 app.include_router(protected)
+app.include_router(products.router)

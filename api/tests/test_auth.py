@@ -1,30 +1,8 @@
 import time
 
 import jwt
-import pytest
-from fastapi.testclient import TestClient
 
-SECRET = "test-secret-at-least-32-characters-long"
-URL = "https://example.supabase.co"
-
-
-@pytest.fixture
-def client(monkeypatch):
-    monkeypatch.setenv("SUPABASE_URL", URL)
-    monkeypatch.setenv("SUPABASE_ANON_KEY", "anon")
-    monkeypatch.setenv("SUPABASE_JWT_SECRET", SECRET)
-    from core.config import get_settings
-
-    get_settings.cache_clear()
-    from app import main
-
-    monkeypatch.setattr(main, "rest_get", lambda *a, **k: [{"id": "u1", "plan": "free"}])
-    return TestClient(main.app)
-
-
-def token(**overrides):
-    claims = {"sub": "u1", "aud": "authenticated", "iss": f"{URL}/auth/v1", "exp": int(time.time()) + 60}
-    return jwt.encode(claims | overrides, SECRET, algorithm="HS256")
+from tests.conftest import make_token
 
 
 def test_health(client):
@@ -38,7 +16,7 @@ def test_me_requires_token(client):
 
 
 def test_me_rejects_expired_token(client):
-    r = client.get("/me", headers={"Authorization": f"Bearer {token(exp=int(time.time()) - 10)}"})
+    r = client.get("/me", headers={"Authorization": f"Bearer {make_token(exp=int(time.time()) - 10)}"})
     assert r.status_code == 401
     assert "expired" in r.json()["detail"]
 
@@ -48,7 +26,10 @@ def test_me_rejects_wrong_signature(client):
     assert client.get("/me", headers={"Authorization": f"Bearer {bad}"}).status_code == 401
 
 
-def test_me_returns_profile(client):
-    r = client.get("/me", headers={"Authorization": f"Bearer {token()}"})
+def test_me_returns_profile(client, auth_headers, monkeypatch):
+    from app import main
+
+    monkeypatch.setattr(main, "rest_get", lambda *a, **k: [{"id": "u1", "plan": "free"}])
+    r = client.get("/me", headers=auth_headers)
     assert r.status_code == 200
     assert r.json()["profile"]["plan"] == "free"
