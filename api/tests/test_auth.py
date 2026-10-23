@@ -33,3 +33,16 @@ def test_me_returns_profile(client, auth_headers, monkeypatch):
     r = client.get("/me", headers=auth_headers)
     assert r.status_code == 200
     assert r.json()["profile"]["plan"] == "free"
+
+
+def test_unexpected_error_is_readable_and_keeps_cors(client, auth_headers, monkeypatch):
+    from app import main
+
+    def boom(*a, **k):
+        raise KeyError("market_data_updated_at")
+
+    monkeypatch.setattr(main, "rest_get", boom)
+    r = client.get("/me", headers=auth_headers | {"Origin": "http://localhost:3000"})
+    assert r.status_code == 500
+    assert r.json()["detail"] == "Something went wrong on our side. Please try again."
+    assert r.headers["access-control-allow-origin"] == "http://localhost:3000"

@@ -45,3 +45,23 @@ Tests: `cd api && uv run pytest`
 - Supplier price (incl. GST), shipping and supplier rating come from real supplier listings, with `source_url`
   and `source_notes` for every row. COD fees are computed from the courier rate card in `api/core/profit.py`.
 - Never type guessed prices or scores into the CSV. Products without market data are hidden from sellers.
+
+## 4. Free deployment (₹0)
+
+| Part | Service (free plan) |
+|---|---|
+| Web | Vercel Hobby: import repo, **Root Directory = `web`**, add the 3 `NEXT_PUBLIC_*` env vars |
+| API + Reel worker | Render free web service from `render.yaml` (Docker; worker runs inside the API container) |
+| DB / Auth / Storage | Supabase Free |
+| LLM | Gemini free tier via the OpenAI-compatible wrapper `api/core/llm.py` |
+| TTS | Sarvam AI free credits via `api/core/tts.py` (or Google Cloud TTS with `TTS_PROVIDER=google`) |
+
+Render: Dashboard → New → Blueprint → this repo, then fill the secret env vars. After the first deploy,
+set `CORS_ORIGINS` to your Vercel URL and set `NEXT_PUBLIC_API_URL` in Vercel to the Render URL.
+In Supabase → Authentication → URL Configuration, add the Vercel URL and `<vercel-url>/auth/callback`.
+
+Free-tier gotchas:
+- Render sleeps after 15 min idle (~1 min cold start). Open the API URL before a demo.
+- Supabase pauses after 7 days without activity; restore it from the dashboard.
+- Phone OTP needs a paid SMS provider: use Supabase test phone numbers for demos, Google sign-in for real users.
+- Switch LLM provider by changing `LLM_BASE_URL`, `LLM_MODEL`, `LLM_API_KEY` only.

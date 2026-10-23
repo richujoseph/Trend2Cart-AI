@@ -57,16 +57,12 @@ export type Simulation = {
   estimates: Estimates;
 };
 
-const inr = new Intl.NumberFormat("en-IN", {
-  style: "currency",
-  currency: "INR",
-  minimumFractionDigits: 0,
-  maximumFractionDigits: 2,
-});
+const inrWhole = new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 });
+const inrPaise = new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", minimumFractionDigits: 2 });
 
-/** 8768 → "₹87.68", 44900 → "₹449", -2860 → "-₹28.60" */
+/** 8768 → "₹87.68", 4560 → "₹45.60", 44900 → "₹449", -2860 → "-₹28.60" */
 export function formatRupees(paise: number): string {
-  return inr.format(paise / 100);
+  return (paise % 100 === 0 ? inrWhole : inrPaise).format(paise / 100);
 }
 
 /** "2026-10-24T09:12:00+00:00" → "24 Oct 2026" */

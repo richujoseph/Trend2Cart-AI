@@ -1,3 +1,5 @@
+import logging
+
 import httpx
 from fastapi import APIRouter, Depends, FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
@@ -10,6 +12,19 @@ from core.config import get_settings
 from core.supabase import rest_get
 
 app = FastAPI(title="Trend2Cart API")
+log = logging.getLogger("trend2cart")
+
+
+# Registered before CORS so CORS wraps it: crashes still get CORS headers and a readable message.
+@app.middleware("http")
+async def unexpected_errors(request: Request, call_next):
+    try:
+        return await call_next(request)
+    except Exception:
+        log.exception("Unhandled error on %s %s", request.method, request.url.path)
+        return JSONResponse({"detail": "Something went wrong on our side. Please try again."}, status_code=500)
+
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[o.strip() for o in get_settings().cors_origins.split(",")],

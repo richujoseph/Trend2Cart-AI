@@ -7,3 +7,7 @@ dependencies = ["trend2cart-api"]
 
 [tool.uv.sources]
 trend2cart-api = { path = "../api", editable = true }
+
+[dependency-groups]
+# Only for experiments/ scripts; not part of the worker.
+experiments = ["pillow>=11"]

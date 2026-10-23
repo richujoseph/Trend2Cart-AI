@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { apiFetch } from "@/lib/api";
 import { createClient } from "@/lib/supabase/client";
 
+const LANGUAGES: Record<string, string> = { ml: "Malayalam", hi: "Hindi", en: "English" };
+
 type Me = {
   email: string | null;
   phone: string | null;
@@ -40,9 +42,9 @@ export default function AccountPage() {
       {!me && !error && <p className="mt-4 text-sm text-neutral-500">Loading…</p>}
       {me && (
         <dl className="mt-4 divide-y divide-neutral-200 rounded-lg border border-neutral-200 bg-white text-sm">
-          <Row label="Signed in as" value={me.email ?? (me.phone ? `+${me.phone}` : "—")} />
-          <Row label="Plan" value={me.profile.plan} />
-          <Row label="Language" value={me.profile.language} />
+          <Row label="Signed in as" value={me.email || (me.phone ? `+${me.phone}` : "—")} />
+          <Row label="Plan" value={me.profile.plan.charAt(0).toUpperCase() + me.profile.plan.slice(1)} />
+          <Row label="Language" value={LANGUAGES[me.profile.language] ?? me.profile.language} />
           <Row label="Reels this month" value={String(me.profile.reels_used_this_month)} />
         </dl>
       )}
@@ -62,7 +64,7 @@ function Row({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex justify-between p-3">
       <dt className="text-neutral-500">{label}</dt>
-      <dd className="font-medium capitalize text-neutral-900">{value}</dd>
+      <dd className="min-w-0 break-all text-right font-medium text-neutral-900">{value}</dd>
     </div>
   );
 }

@@ -1,0 +1,11 @@
+**/.venv
+**/.env
+**/.env.*
+!**/.env.example
+**/__pycache__
+**/.pytest_cache
+web/
+data/
+supabase/
+worker/experiments/
+.git
