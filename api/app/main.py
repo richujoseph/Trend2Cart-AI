@@ -10,7 +10,7 @@ from pydantic import BaseModel
 from datetime import datetime, timezone
 from typing import Literal
 
-from app import discover, doctor, preorders, products, reels
+from app import discover, doctor, preorders, products, public, reels
 from app.deps import current_user
 from core.config import get_settings
 from core.supabase import SupabaseError, rest_get, service_update
@@ -117,3 +117,4 @@ app.include_router(reels.router)
 app.include_router(doctor.router)
 app.include_router(preorders.router)
 app.include_router(discover.router)
+app.include_router(public.router)

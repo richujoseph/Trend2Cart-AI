@@ -85,7 +85,7 @@ export default function PricingPage() {
         <Plan name={t.pricing.free} price="₹0" items={t.pricing.freeItems} current={me?.profile.plan === "free"} currentLabel={t.pricing.yourPlan} />
         <Plan name={t.pricing.founding} price="₹99" note={t.pricing.oneTime} items={t.pricing.foundingItems} current={!!founding} currentLabel={t.pricing.yourPlan} highlight>
           {!founding && (
-            <button onClick={preorder} disabled={busy || !me} className="mt-4 h-12 w-full rounded-xl bg-white font-bold text-brand-700 shadow-md disabled:opacity-50">
+            <button onClick={preorder} disabled={busy || !me} className="mt-4 h-12 w-full rounded-xl bg-white/[0.04] font-bold text-brand-700 shadow-md disabled:opacity-50">
               {busy ? t.pricing.opening : t.pricing.preorder}
             </button>
           )}
@@ -93,11 +93,11 @@ export default function PricingPage() {
       </div>
 
       {message && (
-        <p role="alert" className={`mt-4 rounded-xl p-3 text-sm ${message.ok ? "bg-emerald-50 text-emerald-800" : "bg-red-50 text-red-700"}`}>
+        <p role="alert" className={`mt-4 rounded-xl p-3 text-sm ${message.ok ? "bg-emerald-400/10 text-emerald-300" : "bg-red-500/10 text-red-400"}`}>
           {message.text}
         </p>
       )}
-      <p className="mt-4 text-xs text-neutral-500">{t.pricing.note}</p>
+      <p className="mt-4 text-xs text-ink-2">{t.pricing.note}</p>
       <Link href="/account" className="mt-4 block text-sm font-medium text-brand-700">{t.pricing.backAccount}</Link>
     </>
   );
@@ -105,12 +105,12 @@ export default function PricingPage() {
 
 function Plan(props: { name: string; price: string; note?: string; items: string[]; current: boolean; currentLabel: string; highlight?: boolean; children?: React.ReactNode }) {
   return (
-    <section className={`rounded-2xl p-5 ${props.highlight ? "bg-gradient-to-br from-brand-700 via-brand-600 to-fuchsia-600 text-white shadow-xl shadow-brand-700/25" : card}`}>
+    <section className={`rounded-2xl p-5 ${props.highlight ? "bg-gradient-to-br from-brand-700 via-brand-600 to-orange-600 text-white shadow-xl shadow-brand-700/25" : card}`}>
       <div className="flex items-baseline justify-between">
         <h2 className="font-bold">{props.name}</h2>
-        {props.current && <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-bold text-emerald-800">{props.currentLabel}</span>}
+        {props.current && <span className="rounded-full bg-emerald-400/15 px-2 py-0.5 text-xs font-bold text-emerald-300">{props.currentLabel}</span>}
       </div>
-      <p className="mt-1 text-4xl font-extrabold">
+      <p className="mt-1 text-4xl font-medium">
         {props.price}
         {props.note && <span className="ml-1 text-sm font-normal opacity-75">{props.note}</span>}
       </p>

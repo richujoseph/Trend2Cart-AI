@@ -117,11 +117,11 @@ export default function ProductDetail() {
         <ProductImage src={sim.image_urls[0]} name={sim.name} className="h-28 w-28 shrink-0 rounded-xl" />
         <div className="min-w-0 flex-1">
           <p className="text-[11px] font-semibold uppercase tracking-wide text-brand-500">{t.categories[sim.category]}</p>
-          <h1 className="text-lg font-extrabold leading-tight text-brand-900">{sim.name}</h1>
+          <h1 className="text-lg font-medium leading-tight text-brand-900">{sim.name}</h1>
           {sim.mine ? (
-            <p className="mt-1 text-xs text-neutral-500">{t.product.unrated}</p>
+            <p className="mt-1 text-xs text-ink-2">{t.product.unrated}</p>
           ) : (
-            sim.supplier && <p className="mt-1 text-xs text-neutral-500">{fmt(t.product.supplier, { name: sim.supplier })}</p>
+            sim.supplier && <p className="mt-1 text-xs text-ink-2">{fmt(t.product.supplier, { name: sim.supplier })}</p>
           )}
           {sim.loss_trap && <div className="mt-1"><LossTrapTag /></div>}
         </div>
@@ -130,12 +130,12 @@ export default function ProductDetail() {
       <section
         aria-live="polite"
         className={`mt-3 flex items-center justify-between rounded-2xl bg-gradient-to-br p-4 text-white shadow-lg ${
-          losing ? "from-rose-500 to-red-600 shadow-red-600/20" : "from-emerald-500 to-teal-600 shadow-emerald-600/20"
+          losing ? "from-[#4a0d08] to-[#c42f1c] shadow-red-600/20" : "from-[#06301f] to-[#138a5b] shadow-emerald-600/20"
         } ${updating ? "opacity-70" : ""}`}
       >
         <div>
           <p className="text-xs text-white/85">{t.product.expectedProfit}</p>
-          <p className="text-4xl font-extrabold tabular-nums">{formatRupees(sim.profit_paise)}</p>
+          <p className="text-4xl font-medium tabular-nums">{formatRupees(sim.profit_paise)}</p>
           {losing && <p className="mt-1 text-xs text-white/90">{t.product.losing}</p>}
         </div>
         <span className="rounded-xl bg-white/20 p-1"><ScoreBadge score={sim.score} /></span>
@@ -157,8 +157,8 @@ export default function ProductDetail() {
       {sim.mine && <RemoveOwn id={sim.id} />}
 
       <section className={`${card} mt-4 p-4`}>
-        <h2 className="text-lg font-bold text-brand-900">{t.product.yourNumbers}</h2>
-        <p className="text-xs text-neutral-500">{t.product.yourNumbersSub}</p>
+        <h2 className="text-xl font-light text-ink">{t.product.yourNumbers}</h2>
+        <p className="text-xs text-ink-2">{t.product.yourNumbersSub}</p>
         <div className="mt-4 flex flex-col gap-5">
           <Field
             label={t.product.sellingPrice}
@@ -198,7 +198,7 @@ export default function ProductDetail() {
           />
         </div>
         {sim.estimates.source && (
-          <details className="mt-4 text-xs text-neutral-600">
+          <details className="mt-4 text-xs text-ink-2">
             <summary className="cursor-pointer font-semibold text-brand-700">{t.product.sourcesTitle}</summary>
             {sim.selling_price_source && <p className="mt-2">{fmt(t.product.sourcesMarket, { source: sim.selling_price_source })}</p>}
             <p className="mt-2">{t.product.sourcesTrend}</p>
@@ -208,7 +208,7 @@ export default function ProductDetail() {
         )}
         {(() => {
           const message = parsed && "error" in parsed ? parsed.error : calcError;
-          return message && <p role="alert" className="mt-3 rounded-xl bg-red-50 p-3 text-sm text-red-700">{message}</p>;
+          return message && <p role="alert" className="mt-3 rounded-xl bg-red-500/10 p-3 text-sm text-red-400">{message}</p>;
         })()}
       </section>
     </>
@@ -219,13 +219,13 @@ function Fact({ label, value }: { label: string; value: number | null }) {
   const { t } = useT();
   return (
     <div className={`${card} p-3`}>
-      <dt className="text-neutral-500">{label}</dt>
-      <dd className={value === null ? "text-neutral-400" : "text-lg font-extrabold tabular-nums text-brand-900"}>
+      <dt className="text-ink-2">{label}</dt>
+      <dd className={value === null ? "text-ink-3" : "text-lg font-medium tabular-nums text-brand-900"}>
         {value === null ? t.product.notChecked : `${value}/100`}
       </dd>
       {value !== null && (
         <div className="mt-1 h-1.5 rounded-full bg-brand-50">
-          <div className="h-1.5 rounded-full bg-gradient-to-r from-brand-500 to-fuchsia-500" style={{ width: `${value}%` }} />
+          <div className="h-1.5 rounded-full bg-gradient-to-r from-brand-500 to-orange-500" style={{ width: `${value}%` }} />
         </div>
       )}
     </div>
@@ -253,7 +253,7 @@ function Field(props: {
         <label htmlFor={id} className="text-sm font-semibold">{props.label}</label>
         <EstimateTag />
       </div>
-      <p className="text-xs text-neutral-500">{t.product.estimateEdit}</p>
+      <p className="text-xs text-ink-2">{t.product.estimateEdit}</p>
       <div className="mt-2 flex items-center gap-3">
         <input
           type="range"
@@ -265,8 +265,8 @@ function Field(props: {
           onChange={(e) => props.onChange(e.target.value)}
           className="h-2 flex-1 accent-brand-600"
         />
-        <div className="flex h-11 w-28 items-center rounded-xl border border-brand-100 bg-white px-2 focus-within:border-brand-500">
-          {props.prefix && <span className="text-neutral-500">{props.prefix}</span>}
+        <div className="flex h-11 w-28 items-center rounded-xl border border-white/[0.08] bg-white/[0.04] px-2 focus-within:border-brand-500">
+          {props.prefix && <span className="text-ink-2">{props.prefix}</span>}
           <input
             id={id}
             inputMode="decimal"
@@ -274,10 +274,10 @@ function Field(props: {
             onChange={(e) => props.onChange(e.target.value.replace(/[^\d.]/g, ""))}
             className="w-full bg-transparent px-1 text-right tabular-nums outline-none"
           />
-          {props.suffix && <span className="text-neutral-500">{props.suffix}</span>}
+          {props.suffix && <span className="text-ink-2">{props.suffix}</span>}
         </div>
       </div>
-      <div className="mt-1 flex justify-between text-xs text-neutral-500">
+      <div className="mt-1 flex justify-between text-xs text-ink-2">
         <span>{props.hint}</span>
         {props.onReset && (
           <button type="button" onClick={props.onReset} className="font-semibold text-brand-700 underline">{t.common.reset}</button>
@@ -303,31 +303,31 @@ function Breakdown({ sim }: { sim: Simulation }) {
 
   return (
     <section className={`${card} mt-4 p-4`}>
-      <h2 className="text-lg font-bold text-brand-900">{t.product.breakdownTitle}</h2>
-      <p className="text-xs text-neutral-500">
+      <h2 className="text-xl font-light text-ink">{t.product.breakdownTitle}</h2>
+      <p className="text-xs text-ink-2">
         {fmt(t.product.breakdownSub, { price: formatRupees(sim.inputs.selling_price_paise), pct: Math.round(sim.estimates.rto_rate * 100) })}
       </p>
       <ul className="mt-3 flex flex-col gap-2">
         {rows.map((r) => (
           <li key={r.label}>
             <div className="flex justify-between text-sm">
-              <span className="text-neutral-700">{r.kind === "out" ? "− " : ""}{r.label}</span>
+              <span className="text-ink/85">{r.kind === "out" ? "− " : ""}{r.label}</span>
               <span className="tabular-nums">{formatRupees(r.value)}</span>
             </div>
-            <div className="mt-1 h-2 rounded-full bg-neutral-100">
+            <div className="mt-1 h-2 rounded-full bg-white/[0.06]">
               <div
-                className={`h-2 rounded-full ${r.kind === "in" ? "bg-gradient-to-r from-brand-500 to-fuchsia-500" : "bg-brand-200"}`}
+                className={`h-2 rounded-full ${r.kind === "in" ? "bg-gradient-to-r from-brand-500 to-orange-500" : "bg-brand-200"}`}
                 style={{ width: `${Math.min(100, (r.value / scale) * 100)}%` }}
               />
             </div>
           </li>
         ))}
-        <li className="border-t border-brand-50 pt-2">
+        <li className="border-t border-white/[0.07] pt-2">
           <div className="flex justify-between text-sm font-bold">
             <span>{t.product.yourProfit}</span>
-            <span className={`tabular-nums ${losing ? "text-red-600" : "text-emerald-700"}`}>{formatRupees(sim.profit_paise)}</span>
+            <span className={`tabular-nums ${losing ? "text-red-400" : "text-emerald-400"}`}>{formatRupees(sim.profit_paise)}</span>
           </div>
-          <div className="mt-1 h-2 rounded-full bg-neutral-100">
+          <div className="mt-1 h-2 rounded-full bg-white/[0.06]">
             <div
               className={`h-2 rounded-full ${losing ? "bg-red-500" : "bg-emerald-500"}`}
               style={{ width: `${Math.min(100, (Math.abs(sim.profit_paise) / scale) * 100)}%` }}
@@ -376,11 +376,11 @@ function SaveButton({ productId }: { productId: string }) {
         onClick={toggle}
         disabled={saved === null}
         aria-pressed={!!saved}
-        className={`${btnSecondary} w-full ${saved ? "bg-amber-50 text-amber-700 ring-amber-200" : ""}`}
+        className={`${btnSecondary} w-full ${saved ? "bg-amber-400/10 text-amber-300 ring-amber-400/25" : ""}`}
       >
         {saved ? t.product.saved : t.product.save}
       </button>
-      {error && <p role="alert" className="mt-1 text-xs text-red-700">{error}</p>}
+      {error && <p role="alert" className="mt-1 text-xs text-red-400">{error}</p>}
     </div>
   );
 }
@@ -403,10 +403,10 @@ function RemoveOwn({ id }: { id: string }) {
   }
   return (
     <div className="mt-6">
-      <button onClick={remove} disabled={busy} className="flex h-11 w-full items-center justify-center gap-2 rounded-xl text-sm font-semibold text-red-700 ring-1 ring-red-200 disabled:opacity-50">
+      <button onClick={remove} disabled={busy} className="flex h-11 w-full items-center justify-center gap-2 rounded-xl text-sm font-semibold text-red-400 ring-1 ring-red-500/30 disabled:opacity-50">
         <Trash2 className="h-4 w-4" aria-hidden /> {busy ? t.product.removing : t.product.remove}
       </button>
-      {error && <p role="alert" className="mt-2 text-sm text-red-700">{error}</p>}
+      {error && <p role="alert" className="mt-2 text-sm text-red-400">{error}</p>}
     </div>
   );
 }

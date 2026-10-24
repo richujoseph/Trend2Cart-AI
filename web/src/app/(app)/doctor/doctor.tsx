@@ -129,7 +129,7 @@ export default function Doctor() {
     <>
       <PageHero icon={Stethoscope} title={t.doctor.title} subtitle={t.doctor.subtitle} tone="ocean">
         {history && history.length > 0 ? <HealthSummary history={history} /> : history && <HowItWorks />}
-        <a href="#checkup" className="mt-4 inline-flex h-11 items-center gap-2 rounded-xl bg-white px-5 text-sm font-bold text-teal-700 shadow-md">
+        <a href="#checkup" className={`${btnPrimary} mt-5 min-h-11`}>
           <PlayCircle className="h-4 w-4" aria-hidden /> {history?.length ? t.doctor.start : t.doctor.startFirst}
         </a>
       </PageHero>
@@ -137,15 +137,15 @@ export default function Doctor() {
       {history && history.length > 0 && <Insights history={history} />}
 
       <section id="checkup" className={`${card} mt-6 scroll-mt-20 overflow-hidden`}>
-        <div className="flex items-center justify-between gap-2 border-b border-brand-50 p-4">
-          <h2 className="text-lg font-bold text-brand-900">{t.doctor.newCheckup}</h2>
-          <span className="text-xs font-semibold text-neutral-500">{fmt(t.doctor.stepOf, { n: step })}</span>
+        <div className="flex items-center justify-between gap-2 border-b border-white/[0.07] p-4">
+          <h2 className="text-xl font-light text-ink">{t.doctor.newCheckup}</h2>
+          <span className="text-xs font-semibold text-ink-2">{fmt(t.doctor.stepOf, { n: step })}</span>
         </div>
         <ol className="grid grid-cols-3 gap-1 px-4 pt-3" aria-label={t.newReel.stepsLabel}>
           {t.doctor.steps.map((label, i) => (
             <li key={label} aria-current={step === i + 1 ? "step" : undefined}>
-              <span className={`block h-1.5 rounded-full ${i + 1 <= step ? "bg-gradient-to-r from-teal-500 to-brand-600" : "bg-brand-50"}`} />
-              <span className={`mt-1 block text-[11px] ${i + 1 === step ? "font-bold text-brand-900" : "text-neutral-500"}`}>{label}</span>
+              <span className={`block h-1.5 rounded-full ${i + 1 <= step ? "bg-gradient-to-r from-[#b8321a] to-brand-600" : "bg-brand-50"}`} />
+              <span className={`mt-1 block text-[11px] ${i + 1 === step ? "font-normal text-ink" : "text-ink-2"}`}>{label}</span>
             </li>
           ))}
         </ol>
@@ -155,12 +155,12 @@ export default function Doctor() {
             <fieldset className="min-w-0">
               <legend className="mb-2 text-sm font-bold">{t.doctor.whichReel}</legend>
               {!reels && <div className="h-20 animate-pulse rounded-2xl bg-brand-50" />}
-              {reels?.length === 0 && <p className="mb-2 text-xs text-neutral-500">{t.doctor.noReelsYet}</p>}
+              {reels?.length === 0 && <p className="mb-2 text-xs text-ink-2">{t.doctor.noReelsYet}</p>}
               <div className="flex flex-col gap-2">
                 {reels?.slice(0, 8).map((r) => (
                   <label
                     key={r.id}
-                    className={`flex cursor-pointer items-center gap-3 rounded-2xl bg-white p-2 transition ${source === r.id ? "ring-2 ring-teal-500 shadow-md" : "ring-1 ring-brand-900/5"}`}
+                    className={`flex cursor-pointer items-center gap-3 rounded-2xl bg-white/[0.04] p-2 transition ${source === r.id ? "ring-2 ring-brand-500 shadow-md" : "ring-1 ring-white/[0.07]"}`}
                   >
                     <input type="radio" name="reel" className="sr-only" checked={source === r.id} onChange={() => setSource(r.id)} />
                     <span className="relative h-16 w-11 shrink-0 overflow-hidden rounded-lg bg-brand-700">
@@ -168,11 +168,11 @@ export default function Doctor() {
                     </span>
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-sm font-bold">{r.products?.name ?? t.doctor.reel}</span>
-                      <span className="block text-xs text-neutral-500">{languageLabel(r.language)} · {date(r.created_at)}</span>
+                      <span className="block text-xs text-ink-2">{languageLabel(r.language)} · {date(r.created_at)}</span>
                     </span>
                   </label>
                 ))}
-                <label className={`flex cursor-pointer items-center gap-3 rounded-2xl bg-white p-3 transition ${source === "other" ? "ring-2 ring-teal-500 shadow-md" : "ring-1 ring-brand-900/5"}`}>
+                <label className={`flex cursor-pointer items-center gap-3 rounded-2xl bg-white/[0.04] p-3 transition ${source === "other" ? "ring-2 ring-brand-500 shadow-md" : "ring-1 ring-white/[0.07]"}`}>
                   <input type="radio" name="reel" className="sr-only" checked={source === "other"} onChange={() => setSource("other")} />
                   <span className="text-sm font-bold">{t.doctor.otherReel}</span>
                 </label>
@@ -198,7 +198,7 @@ export default function Doctor() {
                   {FIELDS.map(({ key, icon: Icon }) => (
                     <label key={key} className="flex flex-col gap-1">
                       <span className="flex items-center gap-1 text-sm font-semibold">
-                        <Icon className="h-4 w-4 text-teal-600" aria-hidden /> {t.doctor[key]}
+                        <Icon className="h-4 w-4 text-brand-500" aria-hidden /> {t.doctor[key]}
                       </span>
                       <input
                         inputMode="numeric"
@@ -207,14 +207,14 @@ export default function Doctor() {
                         placeholder="0"
                         className={`${input} tabular-nums`}
                       />
-                      <span className="text-[11px] leading-tight text-neutral-500">{t.doctor[`${key}Hint`]}</span>
+                      <span className="text-[11px] leading-tight text-ink-2">{t.doctor[`${key}Hint`]}</span>
                     </label>
                   ))}
                 </div>
-                {warning && <p className="mt-2 text-sm text-red-700">{warning}</p>}
+                {warning && <p className="mt-2 text-sm text-red-400">{warning}</p>}
                 <details className="mt-3 rounded-xl bg-brand-50/60 p-3 text-sm">
                   <summary className="cursor-pointer font-semibold text-brand-800">{t.doctor.whereFind}</summary>
-                  <ul className="mt-2 list-disc space-y-1 pl-5 text-neutral-600">
+                  <ul className="mt-2 list-disc space-y-1 pl-5 text-ink-2">
                     <li>{t.doctor.findViews}</li>
                     <li>{t.doctor.findClicks}</li>
                     <li>{t.doctor.findOrders}</li>
@@ -222,13 +222,13 @@ export default function Doctor() {
                 </details>
               </fieldset>
               {n.views > 0 && !warning && (
-                <div className="mt-4 rounded-2xl bg-gradient-to-br from-teal-50 to-brand-50 p-3" aria-live="polite">
+                <div className="mt-4 rounded-2xl bg-gradient-to-br from-brand-50 to-brand-50 p-3" aria-live="polite">
                   <div className="flex items-center gap-3">
                     {previewHealth !== null && <ScoreRing value={previewHealth} size={64} label={t.doctor.healthLabel} />}
                     <div className="min-w-0">
-                      <p className="text-sm font-bold text-brand-900">{t.doctor.previewTitle}</p>
-                      <p className="text-xs text-neutral-600">{t.checkup[`title${verdictKey(weakest(preview))}`]}</p>
-                      <p className="text-[11px] text-neutral-500">{t.doctor.previewHint}</p>
+                      <p className="text-sm font-normal text-ink">{t.doctor.previewTitle}</p>
+                      <p className="text-xs text-ink-2">{t.checkup[`title${verdictKey(weakest(preview))}`]}</p>
+                      <p className="text-[11px] text-ink-2">{t.doctor.previewHint}</p>
                     </div>
                   </div>
                   <FunnelView counts={n} rates={preview} weak={weakest(preview)} compact />
@@ -240,8 +240,8 @@ export default function Doctor() {
           {step === 3 && (
             <fieldset className="min-w-0">
               <legend className="flex items-center gap-1 text-sm font-bold">
-                <IndianRupee className="h-4 w-4 text-teal-600" aria-hidden /> {t.doctor.money}{" "}
-                <span className="font-normal text-neutral-500">{t.common.optional}</span>
+                <IndianRupee className="h-4 w-4 text-brand-500" aria-hidden /> {t.doctor.money}{" "}
+                <span className="font-normal text-ink-2">{t.common.optional}</span>
               </legend>
               <div className="mt-2 grid grid-cols-2 gap-3">
                 <label className="flex flex-col gap-1">
@@ -253,7 +253,7 @@ export default function Doctor() {
                     placeholder={product ? String(product.selling_price_paise / 100) : t.doctor.marketPrice}
                     className={`${input} tabular-nums`}
                   />
-                  <span className="text-[11px] leading-tight text-neutral-500">
+                  <span className="text-[11px] leading-tight text-ink-2">
                     {product ? fmt(t.doctor.blankMarket, { price: formatRupees(product.selling_price_paise) }) : t.doctor.blankMarketGeneric}
                   </span>
                 </label>
@@ -266,16 +266,16 @@ export default function Doctor() {
                     placeholder="0"
                     className={`${input} tabular-nums`}
                   />
-                  <span className="text-[11px] leading-tight text-neutral-500">{t.doctor.adSpendHint}</span>
+                  <span className="text-[11px] leading-tight text-ink-2">{t.doctor.adSpendHint}</span>
                 </label>
               </div>
-              <p className="mt-3 rounded-xl bg-brand-50/60 p-3 text-sm text-neutral-700">
+              <p className="mt-3 rounded-xl bg-brand-50/60 p-3 text-sm text-ink/85">
                 {fmt(t.doctor.summary, { views: n.views.toLocaleString("en-IN"), clicks: n.clicks, orders: n.orders, returns: n.returns })}
               </p>
             </fieldset>
           )}
 
-          {error && <p role="alert" className="mt-3 rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</p>}
+          {error && <p role="alert" className="mt-3 rounded-xl bg-red-500/10 p-3 text-sm text-red-400">{error}</p>}
           <div className="mt-4 flex gap-2">
             {step > 1 && (
               <button type="button" onClick={() => setStep((s) => s - 1)} disabled={busy} className={btnSecondary} aria-label={t.common.back}>
@@ -298,7 +298,7 @@ export default function Doctor() {
 
       {result && (
         <section id="diagnosis" className="mt-6 scroll-mt-20 animate-rise" aria-live="polite">
-          <h2 className="mb-2 text-lg font-bold text-brand-900">{fmt(t.doctor.results, { name: result.products?.name ?? t.reel.yourReel })}</h2>
+          <h2 className="mb-2 text-xl font-light text-ink">{fmt(t.doctor.results, { name: result.products?.name ?? t.reel.yourReel })}</h2>
           <CheckupView c={result} previous={previousFor(result, history ?? [])} />
         </section>
       )}
@@ -306,7 +306,7 @@ export default function Doctor() {
       {past.length > 0 && (
         <section className="mt-8">
           <SectionTitle icon={BarChart3} title={t.doctor.past} />
-          <ol className="relative mt-3 flex flex-col gap-3 border-l-2 border-brand-100 pl-4">
+          <ol className="relative mt-3 flex flex-col gap-3 border-l-2 border-white/[0.08] pl-4">
             {past.map((h) => {
               const d = h.diagnoses[0];
               const expanded = open === h.id;
@@ -324,7 +324,7 @@ export default function Doctor() {
                       {health !== null && <ScoreRing value={health} size={44} />}
                       <span className="min-w-0 flex-1">
                         <span className="block truncate font-bold">{h.products?.name ?? t.doctor.reel}</span>
-                        <span className="block text-xs text-neutral-500">
+                        <span className="block text-xs text-ink-2">
                           {fmt(t.doctor.pastLine, { date: date(h.entered_at), views: h.views.toLocaleString("en-IN"), orders: h.orders })}
                           {d?.money && ` · ${signed(d.money.profit_paise)}`}
                         </span>
@@ -337,7 +337,7 @@ export default function Doctor() {
                       <ArrowRight aria-hidden className={`h-4 w-4 shrink-0 text-brand-400 transition ${expanded ? "rotate-90" : ""}`} />
                     </button>
                     {expanded && (
-                      <div className="border-t border-brand-50 p-3">
+                      <div className="border-t border-white/[0.07] p-3">
                         <CheckupView c={h} previous={previousFor(h, history ?? [])} />
                       </div>
                     )}
@@ -350,7 +350,7 @@ export default function Doctor() {
       )}
 
       {history && history.length === 0 && reels?.length === 0 && (
-        <p className="mt-6 text-center text-sm text-neutral-600">
+        <p className="mt-6 text-center text-sm text-ink-2">
           {t.doctor.noReels} <Link href="/reels/new" className="font-bold text-brand-700 underline">{t.doctor.makeFirst}</Link>
         </p>
       )}
@@ -373,7 +373,7 @@ function HowItWorks() {
     <ol className="mt-4 grid grid-cols-3 gap-2 text-center text-xs">
       {t.doctor.how.map((s, i) => (
         <li key={s} className="rounded-xl bg-white/15 p-2 ring-1 ring-white/25">
-          <span className="mx-auto mb-1 flex h-6 w-6 items-center justify-center rounded-full bg-white text-xs font-bold text-teal-700">{i + 1}</span>
+          <span className="mx-auto mb-1 flex h-6 w-6 items-center justify-center rounded-full bg-white/[0.04] text-xs font-bold text-brand-400">{i + 1}</span>
           {s}
         </li>
       ))}
@@ -409,7 +409,7 @@ function Kpi({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-xl bg-white/15 px-2.5 py-1.5 ring-1 ring-white/25">
       <dt className="text-[11px] text-white/80">{label}</dt>
-      <dd className="font-extrabold tabular-nums">{value}</dd>
+      <dd className="font-medium tabular-nums">{value}</dd>
     </div>
   );
 }
@@ -441,12 +441,12 @@ function Insights({ history }: { history: Checkup[] }) {
               const p = h.diagnoses[0].money!.profit_paise;
               return (
                 <div key={h.id} className="flex h-full flex-1 flex-col items-center justify-end gap-1">
-                  <span className={`text-[10px] font-bold tabular-nums ${p >= 0 ? "text-emerald-700" : "text-red-600"}`}>{signed(p)}</span>
+                  <span className={`text-[10px] font-bold tabular-nums ${p >= 0 ? "text-emerald-400" : "text-red-400"}`}>{signed(p)}</span>
                   <span
-                    className={`w-full max-w-10 rounded-t-lg ${p >= 0 ? "bg-gradient-to-t from-emerald-500 to-teal-400" : "bg-gradient-to-t from-red-500 to-rose-400"}`}
+                    className={`w-full max-w-10 rounded-t-lg ${p >= 0 ? "bg-gradient-to-t from-emerald-500 to-orange-400" : "bg-gradient-to-t from-red-500 to-rose-400"}`}
                     style={{ height: `${Math.max(6, (Math.abs(p) / max) * 80)}%` }}
                   />
-                  <span className="text-[10px] text-neutral-500">{date(h.entered_at)}</span>
+                  <span className="text-[10px] text-ink-2">{date(h.entered_at)}</span>
                 </div>
               );
             })}
@@ -464,12 +464,12 @@ function Insights({ history }: { history: Checkup[] }) {
                     <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] font-bold ${i === 0 ? "bg-amber-400 text-white" : "bg-brand-50 text-brand-700"}`}>{i + 1}</span>
                     <span className="truncate font-semibold">{l.name}</span>
                   </span>
-                  <span className={`shrink-0 font-bold tabular-nums ${l.profit >= 0 ? "text-emerald-700" : "text-red-600"}`}>{signed(l.profit)}</span>
+                  <span className={`shrink-0 font-bold tabular-nums ${l.profit >= 0 ? "text-emerald-400" : "text-red-400"}`}>{signed(l.profit)}</span>
                 </div>
                 <div className="ml-8 mt-1 h-1.5 rounded-full bg-brand-50">
                   <div className={`h-1.5 rounded-full ${l.profit >= 0 ? "bg-emerald-500" : "bg-red-500"}`} style={{ width: `${(Math.abs(l.profit) / top) * 100}%` }} />
                 </div>
-                <p className="ml-8 mt-0.5 flex items-center gap-1 text-[11px] text-neutral-500">
+                <p className="ml-8 mt-0.5 flex items-center gap-1 text-[11px] text-ink-2">
                   <PackageCheck className="h-3 w-3" aria-hidden /> {fmt(t.doctor.leaderRow, { orders: l.orders, n: l.checks })}
                 </p>
               </li>

@@ -28,7 +28,7 @@ function ActiveNav() {
 function Nav({ pathname }: { pathname: string }) {
   const { t } = useT();
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-20 border-t border-brand-900/5 bg-white/90 pb-[env(safe-area-inset-bottom)] backdrop-blur">
+    <nav className="fixed inset-x-0 bottom-0 z-20 border-t border-brand-900/5 bg-canvas/85 pb-[env(safe-area-inset-bottom)] backdrop-blur">
       <ul className="mx-auto grid max-w-md grid-cols-4 px-2">
         {TABS.map((tab) => {
           const active = pathname.startsWith(tab.href);
@@ -37,7 +37,7 @@ function Nav({ pathname }: { pathname: string }) {
               <Link
                 href={tab.href}
                 aria-current={active ? "page" : undefined}
-                className={`flex h-16 flex-col items-center justify-center gap-1 text-xs ${active ? "font-bold text-brand-700" : "text-neutral-500"}`}
+                className={`flex h-16 flex-col items-center justify-center gap-1 text-xs ${active ? "font-bold text-brand-700" : "text-ink-2"}`}
               >
                 <span className={`flex h-8 w-14 items-center justify-center rounded-full transition ${active ? "bg-brand-100" : ""}`}>
                   <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth={active ? 2.2 : 1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden>

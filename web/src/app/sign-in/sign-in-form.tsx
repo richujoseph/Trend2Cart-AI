@@ -65,15 +65,15 @@ export default function SignInForm() {
         {t.signIn.google}
       </button>
 
-      <div className="flex items-center gap-3 text-xs text-neutral-500">
+      <div className="flex items-center gap-3 text-xs text-ink-2">
         <span className="h-px flex-1 bg-brand-100" /> {t.signIn.orPhone} <span className="h-px flex-1 bg-brand-100" />
       </div>
 
       {!codeSent ? (
         <form onSubmit={sendCode} className="flex flex-col gap-3">
           <label htmlFor="phone" className="text-sm font-semibold">{t.signIn.mobile}</label>
-          <div className="flex h-12 items-center rounded-xl border border-brand-100 bg-white focus-within:border-brand-500 focus-within:ring-4 focus-within:ring-brand-500/15">
-            <span className="pl-3 pr-2 text-neutral-500">+91</span>
+          <div className="flex h-12 items-center rounded-xl border border-white/[0.08] bg-white/[0.04] focus-within:border-brand-500 focus-within:ring-4 focus-within:ring-brand-500/15">
+            <span className="pl-3 pr-2 text-ink-2">+91</span>
             <input
               id="phone"
               type="tel"
@@ -82,7 +82,7 @@ export default function SignInForm() {
               maxLength={10}
               value={phone}
               onChange={(e) => setPhone(e.target.value.replace(/\D/g, ""))}
-              className="h-full flex-1 bg-transparent pr-3 text-neutral-900 outline-none"
+              className="h-full flex-1 bg-transparent pr-3 text-ink outline-none"
               placeholder="98765 43210"
             />
           </div>
@@ -111,7 +111,7 @@ export default function SignInForm() {
         </form>
       )}
 
-      {shownError && <p role="alert" className="rounded-xl bg-red-50 p-3 text-sm text-red-700">{shownError}</p>}
+      {shownError && <p role="alert" className="rounded-xl bg-red-500/10 p-3 text-sm text-red-400">{shownError}</p>}
     </div>
   );
 }

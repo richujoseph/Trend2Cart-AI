@@ -25,10 +25,10 @@ export default function CheckupView({ c, previous }: { c: Checkup; previous?: Ch
   const health = healthScore(d.rates);
   return (
     <div className="flex flex-col gap-3">
-      <div className={`flex items-center gap-4 rounded-2xl bg-gradient-to-br ${tone.banner} p-4 text-white shadow-lg shadow-brand-900/10`}>
+      <div className={`flex items-center gap-4 rounded-2xl bg-gradient-to-br ${tone.banner} p-4 text-white shadow-lg shadow-black/40`}>
         {health !== null && <ScoreRing value={health} size={84} label={t.doctor.healthLabel} light />}
         <div className="min-w-0">
-          <p className="text-lg font-extrabold leading-tight">{t.checkup[`title${verdictKey(d.stage)}`]}</p>
+          <p className="text-lg font-medium leading-tight">{t.checkup[`title${verdictKey(d.stage)}`]}</p>
           <p className="mt-1 text-sm text-white/95">{d.explanation}</p>
         </div>
       </div>
@@ -48,8 +48,8 @@ function Card({ title, icon: Icon, children, aside }: { title: string; icon: Luc
   return (
     <section className={`${card} p-4`}>
       <div className="flex items-center justify-between gap-2">
-        <h3 className="flex items-center gap-1.5 font-bold text-brand-900">
-          <Icon className="h-5 w-5 shrink-0 text-teal-600" aria-hidden /> {title}
+        <h3 className="flex items-center gap-1.5 font-normal text-ink">
+          <Icon className="h-5 w-5 shrink-0 text-brand-500" aria-hidden /> {title}
         </h3>
         {aside}
       </div>
@@ -84,33 +84,33 @@ export function FunnelView({ counts, rates, weak, compact = false }: {
               <div className="flex w-full items-center justify-center gap-2 py-1.5 text-xs">
                 {s && step.stage ? (
                   <>
-                    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-bold ${bad ? "bg-amber-100 text-amber-900" : ok ? "bg-emerald-100 text-emerald-800" : "bg-neutral-100 text-neutral-700"}`}>
+                    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-bold ${bad ? "bg-amber-400/15 text-amber-200" : ok ? "bg-emerald-400/15 text-emerald-300" : "bg-white/[0.06] text-ink/85"}`}>
                       {bad ? <TriangleAlert className="h-3 w-3" aria-hidden /> : ok ? <CircleCheck className="h-3 w-3" aria-hidden /> : null}
                       {percent(s.rate)}
                     </span>
                     {!compact && (
-                      <span className="text-neutral-500">
+                      <span className="text-ink-2">
                         {fmt(s.lower_is_better ? t.checkup.usualUnder : t.checkup.usualAbout, { pct: percent(s.benchmark) })}
                       </span>
                     )}
                   </>
                 ) : (
-                  <span className="text-neutral-400">{t.checkup.notEnough}</span>
+                  <span className="text-ink-3">{t.checkup.notEnough}</span>
                 )}
               </div>
             )}
             <div
-              className={`flex items-center justify-between rounded-xl px-3 py-2 text-sm ${bad ? "bg-gradient-to-r from-amber-400 to-orange-400 text-white" : i === 0 ? "bg-gradient-to-r from-teal-500 to-brand-600 text-white" : "bg-brand-50 text-brand-900"}`}
+              className={`flex items-center justify-between rounded-xl px-3 py-2 text-sm ${bad ? "bg-gradient-to-r from-amber-400 to-orange-400 text-white" : i === 0 ? "bg-gradient-to-r from-[#b8321a] to-brand-600 text-white" : "bg-brand-50 text-brand-900"}`}
               style={{ width: `${step.width}%` }}
             >
               <span className="truncate font-semibold">{step.label}</span>
-              <span className="ml-2 font-extrabold tabular-nums">{step.count.toLocaleString("en-IN")}</span>
+              <span className="ml-2 font-medium tabular-nums">{step.count.toLocaleString("en-IN")}</span>
             </div>
           </li>
         );
       })}
       {!compact && (
-        <li className="mt-3 flex flex-wrap items-center justify-center gap-1 text-[11px] text-neutral-500">
+        <li className="mt-3 flex flex-wrap items-center justify-center gap-1 text-[11px] text-ink-2">
           <EstimateTag /> {t.checkup.benchmarkNote}
         </li>
       )}
@@ -131,17 +131,17 @@ function MoneyCard({ money: m, returns }: { money: Money; returns: number }) {
   const scale = Math.max(m.sales_paise, 1);
   return (
     <Card icon={Wallet} title={t.checkup.moneyTitle}>
-      <p className={`mt-2 text-4xl font-extrabold tabular-nums ${gain ? "text-emerald-600" : "text-red-600"}`}>{signed(m.profit_paise)}</p>
-      <p className="text-sm text-neutral-600">
+      <p className={`mt-2 text-4xl font-medium tabular-nums ${gain ? "text-emerald-400" : "text-red-400"}`}>{signed(m.profit_paise)}</p>
+      <p className="text-sm text-ink-2">
         {gain ? t.common.profit : t.common.loss} {m.ad_spend_paise ? t.checkup.afterCostsAds : t.checkup.afterCosts}
       </p>
-      <dl className="mt-3 flex flex-col gap-2 border-t border-brand-50 pt-3 text-sm">
+      <dl className="mt-3 flex flex-col gap-2 border-t border-white/[0.07] pt-3 text-sm">
         {rows.map(([label, value, note]) => (
           <div key={label}>
             <div className="flex justify-between gap-3">
-              <dt className="text-neutral-600">
+              <dt className="text-ink-2">
                 {label}
-                {note && <span className="block text-xs text-neutral-400">{note}</span>}
+                {note && <span className="block text-xs text-ink-3">{note}</span>}
               </dt>
               <dd className="shrink-0 tabular-nums">{signed(value)}</dd>
             </div>
@@ -153,16 +153,16 @@ function MoneyCard({ money: m, returns }: { money: Money; returns: number }) {
       </dl>
       <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
         <div className="rounded-xl bg-brand-50/70 p-2.5">
-          <p className="text-xs text-neutral-500">{t.checkup.perDelivered}</p>
-          <p className={`font-bold tabular-nums ${m.per_delivered_paise >= 0 ? "text-brand-900" : "text-red-700"}`}>{signed(m.per_delivered_paise)}</p>
+          <p className="text-xs text-ink-2">{t.checkup.perDelivered}</p>
+          <p className={`font-bold tabular-nums ${m.per_delivered_paise >= 0 ? "text-brand-900" : "text-red-400"}`}>{signed(m.per_delivered_paise)}</p>
         </div>
         <div className="rounded-xl bg-brand-50/70 p-2.5">
-          <p className="text-xs text-neutral-500">{t.checkup.lostReturns}</p>
-          <p className={`font-bold tabular-nums ${m.returns_cost_paise ? "text-red-700" : "text-brand-900"}`}>{signed(-m.returns_cost_paise)}</p>
+          <p className="text-xs text-ink-2">{t.checkup.lostReturns}</p>
+          <p className={`font-bold tabular-nums ${m.returns_cost_paise ? "text-red-400" : "text-brand-900"}`}>{signed(-m.returns_cost_paise)}</p>
         </div>
       </div>
       {m.per_delivered_paise > 0 && m.ad_spend_paise > 0 && (
-        <p className="mt-2 text-xs text-neutral-500">{fmt(t.checkup.breakEven, { n: Math.ceil(m.ad_spend_paise / m.per_delivered_paise) })}</p>
+        <p className="mt-2 text-xs text-ink-2">{fmt(t.checkup.breakEven, { n: Math.ceil(m.ad_spend_paise / m.per_delivered_paise) })}</p>
       )}
     </Card>
   );
@@ -180,14 +180,14 @@ function Progress({ now, before }: { now: Checkup; before: Checkup }) {
   if (!rows.length) return null;
   return (
     <Card icon={LineChart} title={t.checkup.sinceLast}>
-      <p className="text-xs text-neutral-500">{fmt(t.checkup.comparedWith, { date: date(before.entered_at) })}</p>
+      <p className="text-xs text-ink-2">{fmt(t.checkup.comparedWith, { date: date(before.entered_at) })}</p>
       <ul className="mt-2 flex flex-col gap-1.5 text-sm">
         {healthNow !== null && healthBefore !== null && (
           <li className="flex justify-between gap-2 font-semibold">
             <span>{t.doctor.healthLabel}</span>
             <span className="tabular-nums">
               {healthBefore} → <b>{healthNow}</b>{" "}
-              {healthNow !== healthBefore && <span className={healthNow > healthBefore ? "text-emerald-600" : "text-red-600"}>{healthNow > healthBefore ? "▲" : "▼"}</span>}
+              {healthNow !== healthBefore && <span className={healthNow > healthBefore ? "text-emerald-400" : "text-red-400"}>{healthNow > healthBefore ? "▲" : "▼"}</span>}
             </span>
           </li>
         )}
@@ -196,17 +196,17 @@ function Progress({ now, before }: { now: Checkup; before: Checkup }) {
           const better = k === "returns" ? diff < 0 : diff > 0;
           return (
             <li key={k} className="flex justify-between gap-2">
-              <span className="text-neutral-600">{t.checkup[`stage${stageKey(k)}`]}</span>
+              <span className="text-ink-2">{t.checkup[`stage${stageKey(k)}`]}</span>
               <span className="shrink-0 tabular-nums">
                 {percent(b[k]!.rate)} → <b>{percent(a[k]!.rate)}</b>{" "}
-                {Math.abs(diff) >= 0.0005 && <span className={better ? "text-emerald-600" : "text-red-600"}>{better ? "▲" : "▼"}</span>}
+                {Math.abs(diff) >= 0.0005 && <span className={better ? "text-emerald-400" : "text-red-400"}>{better ? "▲" : "▼"}</span>}
               </span>
             </li>
           );
         })}
         {profitNow !== undefined && profitBefore !== undefined && (
-          <li className="flex justify-between gap-2 border-t border-brand-50 pt-1.5">
-            <span className="text-neutral-600">{t.checkup.profitRow}</span>
+          <li className="flex justify-between gap-2 border-t border-white/[0.07] pt-1.5">
+            <span className="text-ink-2">{t.checkup.profitRow}</span>
             <span className="tabular-nums">{signed(profitBefore)} → <b>{signed(profitNow)}</b></span>
           </li>
         )}
@@ -237,18 +237,18 @@ function Fixes({ id, fixes }: { id: string; fixes: string[] }) {
     <Card
       icon={ListChecks}
       title={t.checkup.tryWeek}
-      aside={<span className="rounded-full bg-teal-50 px-2 py-0.5 text-xs font-bold text-teal-700">{fmt(t.checkup.done, { n: done.length, m: fixes.length })}</span>}
+      aside={<span className="rounded-full bg-brand-50 px-2 py-0.5 text-xs font-bold text-brand-400">{fmt(t.checkup.done, { n: done.length, m: fixes.length })}</span>}
     >
       <div className="mt-2 h-1.5 rounded-full bg-brand-50">
-        <div className="h-1.5 rounded-full bg-gradient-to-r from-teal-500 to-emerald-500 transition-all" style={{ width: `${(done.length / fixes.length) * 100}%` }} />
+        <div className="h-1.5 rounded-full bg-gradient-to-r from-[#b8321a] to-emerald-500 transition-all" style={{ width: `${(done.length / fixes.length) * 100}%` }} />
       </div>
       <ul className="mt-2 flex flex-col gap-1">
         {fixes.map((f, i) => (
           <li key={f}>
             <label className="flex cursor-pointer gap-3 rounded-xl p-2 text-sm transition hover:bg-brand-50/60">
-              <input type="checkbox" checked={done.includes(i)} onChange={() => toggle(i)} className="mt-0.5 h-5 w-5 shrink-0 accent-teal-600" />
-              <span className={done.includes(i) ? "text-neutral-400 line-through" : ""}>
-                <span className="mr-1 text-xs font-bold text-teal-700">{i === 0 ? t.checkup.first : `${i + 1}.`}</span>
+              <input type="checkbox" checked={done.includes(i)} onChange={() => toggle(i)} className="mt-0.5 h-5 w-5 shrink-0 accent-brand-600" />
+              <span className={done.includes(i) ? "text-ink-3 line-through" : ""}>
+                <span className="mr-1 text-xs font-bold text-brand-400">{i === 0 ? t.checkup.first : `${i + 1}.`}</span>
                 {f}
               </span>
             </label>
@@ -282,8 +282,8 @@ function Message({ title, text }: { title: string; text: string }) {
   const { t } = useT();
   return (
     <Card icon={MessageCircle} title={t.checkup.readyMessage}>
-      <p className="text-xs text-neutral-500">{title}</p>
-      <p className="mt-2 whitespace-pre-wrap rounded-2xl rounded-tl-sm bg-[#dcf8c6] p-3 text-sm text-neutral-900 shadow-sm">{text}</p>
+      <p className="text-xs text-ink-2">{title}</p>
+      <p className="mt-2 whitespace-pre-wrap rounded-2xl rounded-tl-sm bg-[#16382a] p-3 text-sm text-ink shadow-sm">{text}</p>
       <div className="mt-3 flex gap-2">
         <CopyButton text={text} />
         <a
@@ -303,7 +303,7 @@ function Hooks({ c, hooks }: { c: Checkup; hooks: string[] }) {
   const { t } = useT();
   return (
     <Card icon={Sparkles} title={t.checkup.hooksTitle}>
-      <p className="text-xs text-neutral-500">{t.checkup.hooksSub}</p>
+      <p className="text-xs text-ink-2">{t.checkup.hooksSub}</p>
       <ul className="mt-2 flex flex-col gap-2">
         {hooks.map((h) => {
           const params = new URLSearchParams({ hook: h, ...(c.product_id && { product: c.product_id }), ...(c.language && { lang: c.language }) });
@@ -312,7 +312,7 @@ function Hooks({ c, hooks }: { c: Checkup; hooks: string[] }) {
               <p className="font-semibold">“{h}”</p>
               <div className="mt-2 flex flex-wrap gap-2">
                 <CopyButton text={h} />
-                <Link href={`/reels/new?${params}`} className="flex h-10 items-center gap-1.5 rounded-lg bg-gradient-to-r from-brand-600 to-fuchsia-600 px-3 text-sm font-bold text-white">
+                <Link href={`/reels/new?${params}`} className="flex h-10 items-center gap-1.5 rounded-lg bg-gradient-to-r from-brand-600 to-orange-600 px-3 text-sm font-bold text-white">
                   <Clapperboard className="h-4 w-4" aria-hidden /> {t.checkup.makeWithThis}
                 </Link>
               </div>

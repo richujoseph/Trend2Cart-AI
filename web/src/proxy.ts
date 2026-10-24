@@ -26,7 +26,7 @@ export async function proxy(request: NextRequest) {
   const { data } = await supabase.auth.getClaims();
   const signedIn = !!data?.claims;
   const path = request.nextUrl.pathname;
-  const isPublic = PUBLIC_PATHS.some((p) => path.startsWith(p));
+  const isPublic = path === "/" || PUBLIC_PATHS.some((p) => path.startsWith(p)); // "/" is the landing page
 
   if (!signedIn && !isPublic) {
     return NextResponse.redirect(new URL("/sign-in", request.url));

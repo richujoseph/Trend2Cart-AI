@@ -125,12 +125,12 @@ export default function NewReel() {
     <form onSubmit={submit} className="flex flex-col gap-5">
       <div>
         <Link href="/reels" className="text-sm font-medium text-brand-700">{t.newReel.back}</Link>
-        <h1 className="mt-2 flex items-center gap-2 text-2xl font-extrabold tracking-tight text-brand-900"><Clapperboard className="h-6 w-6 text-brand-600" aria-hidden /> {t.newReel.title}</h1>
+        <h1 className="mt-2 flex items-center gap-2 text-3xl font-light tracking-tight text-ink"><Clapperboard className="h-6 w-6 text-brand-600" aria-hidden /> {t.newReel.title}</h1>
         {me && <QuotaLine me={me} />}
       </div>
 
       {outOfReels && (
-        <div role="status" className="rounded-2xl bg-amber-50 p-3 text-sm text-amber-950 ring-1 ring-amber-200">
+        <div role="status" className="rounded-2xl bg-amber-400/10 p-3 text-sm text-amber-100 ring-1 ring-amber-400/25">
           {t.newReel.outOfReels}
           <Link href="/pricing" className="mt-1 block font-bold underline">{t.newReel.getUnlimited99}</Link>
         </div>
@@ -145,12 +145,12 @@ export default function NewReel() {
               <button type="button" disabled={n >= step} onClick={() => setStep(n)} className="flex w-full min-w-0 items-center gap-1.5 text-left disabled:cursor-default">
                 <span
                   className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
-                    state === "done" ? "bg-emerald-500 text-white" : state === "current" ? "bg-gradient-to-br from-brand-600 to-fuchsia-600 text-white shadow-md shadow-brand-600/30" : "bg-white text-neutral-400 ring-1 ring-brand-100"
+                    state === "done" ? "bg-emerald-500 text-white" : state === "current" ? "bg-gradient-to-br from-brand-600 to-orange-600 text-white shadow-md shadow-[#dc4a26]/25" : "bg-white/[0.04] text-ink-3 ring-1 ring-brand-100"
                   }`}
                 >
                   {state === "done" ? "✓" : n}
                 </span>
-                <span className={`min-w-0 break-words text-[11px] leading-tight ${state === "current" ? "font-bold text-brand-900" : "text-neutral-500"}`}>{label}</span>
+                <span className={`min-w-0 break-words text-[11px] leading-tight ${state === "current" ? "font-normal text-ink" : "text-ink-2"}`}>{label}</span>
               </button>
             </li>
           );
@@ -162,7 +162,7 @@ export default function NewReel() {
           <ProductImage src={photos[0]?.preview ?? product.image_urls[0]} name={product.name} className="h-12 w-12 shrink-0 rounded-lg" />
           <div className="min-w-0 flex-1 text-sm">
             <p className="truncate font-bold">{product.name}</p>
-            <p className="truncate text-xs text-neutral-500">
+            <p className="truncate text-xs text-ink-2">
               {formatRupees(product.selling_price_paise)}
               {photos.length > 0 && ` · ${fmt(t.newReel.photoCount, { n: photos.length })}`}
               {step > 2 && audience && ` · ${fmt(t.reels.forAudience, { audience: audience.trim() })}`}
@@ -182,15 +182,15 @@ export default function NewReel() {
                 {products.map((p) => (
                   <label
                     key={p.id}
-                    className={`flex cursor-pointer items-center gap-3 rounded-2xl bg-white p-2 transition ${productId === p.id ? "ring-2 ring-brand-600 shadow-md shadow-brand-600/15" : "ring-1 ring-brand-900/5"}`}
+                    className={`flex cursor-pointer items-center gap-3 rounded-2xl bg-white/[0.04] p-2 transition ${productId === p.id ? "ring-2 ring-brand-600 shadow-md shadow-[#dc4a26]/25" : "ring-1 ring-white/[0.07]"}`}
                   >
                     <input type="radio" name="product" value={p.id} checked={productId === p.id} onChange={() => setProductId(p.id)} className="sr-only" />
                     <ProductImage src={p.image_urls[0]} name={p.name} className="h-14 w-14 shrink-0 rounded-xl" />
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-sm font-bold">{p.name}</span>
-                      <span className="block text-xs text-neutral-500">
+                      <span className="block text-xs text-ink-2">
                         {fmt(t.newReel.sellsAt, { price: formatRupees(p.selling_price_paise) })} ·{" "}
-                        <b className={p.profit_paise >= 0 ? "text-emerald-700" : "text-red-600"}>
+                        <b className={p.profit_paise >= 0 ? "text-emerald-400" : "text-red-400"}>
                           {p.profit_paise >= 0 ? t.common.profit : t.common.loss} {formatRupees(Math.abs(p.profit_paise))}{t.common.perOrder}
                         </b>
                       </span>
@@ -207,19 +207,19 @@ export default function NewReel() {
               </div>
             ) : (
               <div className="flex flex-col gap-2">
-                {[0, 1, 2].map((i) => <div key={i} className="h-[76px] animate-pulse rounded-2xl bg-white/70" />)}
+                {[0, 1, 2].map((i) => <div key={i} className="h-[76px] animate-pulse rounded-2xl bg-white/[0.04]" />)}
               </div>
             )}
           </fieldset>
 
           <div className="flex flex-col gap-2">
             <span className="text-sm font-bold">
-              <Camera className="inline h-4 w-4 text-brand-600" aria-hidden /> {t.newReel.photos} <span className="font-normal text-neutral-500">{t.newReel.recommended}</span>
+              <Camera className="inline h-4 w-4 text-brand-600" aria-hidden /> {t.newReel.photos} <span className="font-normal text-ink-2">{t.newReel.recommended}</span>
             </span>
-            <p className="text-xs text-neutral-500">{fmt(t.newReel.photosHint, { n: MAX_PHOTOS })}</p>
+            <p className="text-xs text-ink-2">{fmt(t.newReel.photosHint, { n: MAX_PHOTOS })}</p>
             <div className="grid grid-cols-4 gap-2">
               {photos.map((p) => (
-                <div key={p.path} className="relative aspect-square overflow-hidden rounded-xl bg-white">
+                <div key={p.path} className="relative aspect-square overflow-hidden rounded-xl bg-white/[0.04]">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={p.preview} alt={t.newReel.yourPhoto} className="h-full w-full object-cover" />
                   <button
@@ -233,7 +233,7 @@ export default function NewReel() {
                 </div>
               ))}
               {photos.length < MAX_PHOTOS && (
-                <label className="flex aspect-square cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-brand-200 bg-white/60 text-xs font-medium text-brand-700">
+                <label className="flex aspect-square cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-brand-200 bg-white/[0.03] text-xs font-medium text-brand-700">
                   <span className="text-2xl leading-none">{uploading ? "…" : "+"}</span>
                   {uploading ? t.newReel.uploading : t.newReel.add}
                   <input
@@ -250,8 +250,8 @@ export default function NewReel() {
                 </label>
               )}
             </div>
-            {photos.length === 0 && <p className="text-xs text-neutral-500">{t.newReel.noPhotos}</p>}
-            {photoError && <p role="alert" className="text-xs text-red-700">{photoError}</p>}
+            {photos.length === 0 && <p className="text-xs text-ink-2">{t.newReel.noPhotos}</p>}
+            {photoError && <p role="alert" className="text-xs text-red-400">{photoError}</p>}
           </div>
         </>
       )}
@@ -261,7 +261,7 @@ export default function NewReel() {
           <label className="flex flex-col gap-2">
             <span className="flex items-center gap-1.5 text-sm font-bold"><Users className="h-4 w-4 text-brand-600" aria-hidden /> {t.newReel.whoFor}</span>
             <input value={audience} onChange={(e) => setAudience(e.target.value)} maxLength={80} placeholder={t.newReel.audiencePlaceholder} className={input} />
-            <span className="text-xs text-neutral-500">{t.newReel.audienceHint}</span>
+            <span className="text-xs text-ink-2">{t.newReel.audienceHint}</span>
           </label>
           <div className="flex flex-wrap gap-2">
             {t.newReel.ideas.map((idea) => (
@@ -270,19 +270,19 @@ export default function NewReel() {
                 type="button"
                 aria-pressed={audience === idea}
                 onClick={() => setAudience(idea)}
-                className={`rounded-full px-3 py-1.5 text-xs font-medium transition ${audience === idea ? "bg-brand-700 text-white" : "bg-white text-neutral-700 ring-1 ring-brand-100"}`}
+                className={`rounded-full px-3 py-1.5 text-xs font-medium transition ${audience === idea ? "bg-brand-700 text-white" : "bg-white/[0.04] text-ink/85 ring-1 ring-brand-100"}`}
               >
                 {idea}
               </button>
             ))}
           </div>
           {hook && (
-            <div className="flex items-start justify-between gap-2 rounded-2xl bg-amber-50 p-3 text-sm ring-1 ring-amber-200">
+            <div className="flex items-start justify-between gap-2 rounded-2xl bg-amber-400/10 p-3 text-sm ring-1 ring-amber-400/25">
               <span>
-                <span className="block text-xs font-bold text-amber-900">{t.newReel.openingLine}</span>
+                <span className="block text-xs font-bold text-amber-200">{t.newReel.openingLine}</span>
                 “{hook}”
               </span>
-              <button type="button" onClick={() => setHook("")} aria-label={t.newReel.removeOpening} className="shrink-0 text-amber-900">
+              <button type="button" onClick={() => setHook("")} aria-label={t.newReel.removeOpening} className="shrink-0 text-amber-200">
                 ✕
               </button>
             </div>
@@ -295,7 +295,7 @@ export default function NewReel() {
           {!me.profile.region && (
             <fieldset className={`${card} p-3`}>
               <legend className="float-left flex w-full items-center gap-1.5 text-sm font-bold"><MapPin className="h-4 w-4 text-brand-600" aria-hidden /> {t.newReel.whereSell}</legend>
-              <p className="text-xs text-neutral-500">{t.newReel.whereSellHint}</p>
+              <p className="text-xs text-ink-2">{t.newReel.whereSellHint}</p>
               <div className="clear-both mt-2 grid grid-cols-2 gap-2 pt-1">
                 {REGIONS.map((r) => (
                   <button key={r.value} type="button" onClick={() => chooseRegion(r)} className={btnSecondary}>
@@ -303,7 +303,7 @@ export default function NewReel() {
                   </button>
                 ))}
               </div>
-              {regionError && <p role="alert" className="mt-1 text-xs text-red-700">{regionError}</p>}
+              {regionError && <p role="alert" className="mt-1 text-xs text-red-400">{regionError}</p>}
             </fieldset>
           )}
 
@@ -316,7 +316,7 @@ export default function NewReel() {
                   type="button"
                   aria-pressed={lang === l.value}
                   onClick={() => setLanguage(l.value)}
-                  className={`h-14 rounded-xl text-sm transition ${lang === l.value ? "bg-gradient-to-br from-brand-600 to-fuchsia-600 text-white shadow-md shadow-brand-600/25" : "bg-white ring-1 ring-brand-100"}`}
+                  className={`h-14 rounded-xl text-sm transition ${lang === l.value ? "bg-gradient-to-br from-brand-600 to-orange-600 text-white shadow-md shadow-[#dc4a26]/25" : "bg-white/[0.04] ring-1 ring-brand-100"}`}
                 >
                   <span className="block font-bold">{l.native}</span>
                   {l.native !== l.label && <span className="block text-xs opacity-75">{l.label}</span>}
@@ -334,7 +334,7 @@ export default function NewReel() {
                   type="button"
                   aria-pressed={templateId === tpl.id}
                   onClick={() => setTemplateId(tpl.id)}
-                  className={`rounded-2xl p-1 transition ${templateId === tpl.id ? "bg-white ring-2 ring-brand-600 shadow-md" : ""}`}
+                  className={`rounded-2xl p-1 transition ${templateId === tpl.id ? "bg-white/[0.04] ring-2 ring-brand-600 shadow-md" : ""}`}
                 >
                   <div className="relative mx-auto aspect-[9/16] w-full overflow-hidden rounded-xl" style={{ background: tpl.bg }}>
                     <span className="absolute left-1/2 top-[12%] -translate-x-1/2 rounded px-1 text-[10px] font-bold" style={{ background: tpl.accent, color: tpl.bg }}>
@@ -352,7 +352,7 @@ export default function NewReel() {
       )}
 
       {error && (
-        <div role="alert" className="rounded-2xl bg-red-50 p-3 text-sm text-red-700">
+        <div role="alert" className="rounded-2xl bg-red-500/10 p-3 text-sm text-red-400">
           {error.message}
           {error.limit && <Link href="/pricing" className="mt-2 block font-bold underline">{t.newReel.seePlan}</Link>}
         </div>
@@ -379,7 +379,7 @@ export default function NewReel() {
       {step === STEPS.length && outOfReels && (
         <Link href="/pricing" className="-mt-3 text-center text-sm font-bold text-brand-700 underline">{t.newReel.getUnlimited99}</Link>
       )}
-      {step === STEPS.length && !outOfReels && <p className="-mt-3 text-center text-xs text-neutral-500">{t.newReel.takes}</p>}
+      {step === STEPS.length && !outOfReels && <p className="-mt-3 text-center text-xs text-ink-2">{t.newReel.takes}</p>}
     </form>
   );
 }

@@ -34,7 +34,7 @@ export default function SearchResults() {
     <>
       <Link href="/products" className="text-sm font-medium text-brand-700">{t.search.back}</Link>
       <p className="mt-3 text-xs font-bold uppercase tracking-wide text-brand-500">{t.search.title}</p>
-      <h1 className="text-2xl font-extrabold capitalize tracking-tight text-brand-900">{q}</h1>
+      <h1 className="text-2xl font-medium capitalize tracking-tight text-brand-900">{q}</h1>
 
       {current?.error && <ErrorState message={current.error} onRetry={() => setAttempt((a) => a + 1)} />}
       {!current && <Checking />}
@@ -47,14 +47,14 @@ function Checking() {
   const { t } = useT();
   return (
     <div aria-busy className="mt-4">
-      <p className="flex items-center gap-2 text-sm text-neutral-600">
+      <p className="flex items-center gap-2 text-sm text-ink-2">
         <span className="h-4 w-4 animate-spin rounded-full border-2 border-brand-200 border-t-brand-600" aria-hidden />
         {t.search.checking}
       </p>
       <div className="mt-4 grid grid-cols-2 gap-3">
-        {[0, 1, 2, 3].map((i) => <div key={i} className="h-24 animate-pulse rounded-2xl bg-white/70" />)}
+        {[0, 1, 2, 3].map((i) => <div key={i} className="h-24 animate-pulse rounded-2xl bg-white/[0.04]" />)}
       </div>
-      <div className="mt-4 h-40 animate-pulse rounded-2xl bg-white/70" />
+      <div className="mt-4 h-40 animate-pulse rounded-2xl bg-white/[0.04]" />
     </div>
   );
 }
@@ -66,7 +66,7 @@ function Results({ d }: { d: Lookup }) {
   const region = { "Kerala + Tamil Nadu": t.search.regionKeralaTn, India: t.search.regionIndia, none: t.search.regionNone }[d.trend_region];
   return (
     <div className="animate-rise">
-      <p className="mt-1 text-xs text-neutral-500">
+      <p className="mt-1 text-xs text-ink-2">
         {d.cached ? fmt(t.search.cached, { date: date(d.fetched_at) }) : t.search.live} · Google Shopping India
       </p>
 
@@ -74,36 +74,36 @@ function Results({ d }: { d: Lookup }) {
         <div className={`${card} col-span-2 flex items-center gap-3 p-3`}>
           <ProductImage src={d.image_url ?? undefined} name={d.query} className="h-20 w-20 shrink-0 rounded-xl" />
           <div className="min-w-0">
-            <p className="text-xs text-neutral-500">{t.search.typicalPrice}</p>
+            <p className="text-xs text-ink-2">{t.search.typicalPrice}</p>
             {d.market_price_paise ? (
-              <p className="text-3xl font-extrabold tabular-nums text-brand-900">{formatRupees(d.market_price_paise)}</p>
+              <p className="text-3xl font-medium tabular-nums text-brand-900">{formatRupees(d.market_price_paise)}</p>
             ) : (
-              <p className="text-sm text-neutral-500">{t.search.tooFewPrices}</p>
+              <p className="text-sm text-ink-2">{t.search.tooFewPrices}</p>
             )}
             {d.price_low_paise && d.price_high_paise && (
-              <p className="text-xs text-neutral-600">
+              <p className="text-xs text-ink-2">
                 {fmt(t.search.priceRange, { low: formatRupees(d.price_low_paise), high: formatRupees(d.price_high_paise) })}
               </p>
             )}
           </div>
         </div>
         <Stat label={t.search.sellers} value={String(d.sellers)} note={fmt(t.search.sellersValue, { n: d.listings_count })} />
-        <Stat label={t.search.competition} value={comp} note={`${d.competition_score}/100`} tone={d.competition_score >= 60 ? "text-red-600" : d.competition_score >= 30 ? "text-amber-600" : "text-emerald-700"} />
+        <Stat label={t.search.competition} value={comp} note={`${d.competition_score}/100`} tone={d.competition_score >= 60 ? "text-red-400" : d.competition_score >= 30 ? "text-amber-600" : "text-emerald-400"} />
         <div className={`${card} col-span-2 p-3`}>
           <div className="flex items-center justify-between gap-2">
             <div>
-              <p className="text-xs text-neutral-500">{t.search.interest}</p>
-              <p className="text-2xl font-extrabold tabular-nums text-brand-900">{d.trend_score}<span className="text-sm font-medium text-neutral-400">/100</span></p>
+              <p className="text-xs text-ink-2">{t.search.interest}</p>
+              <p className="text-2xl font-medium tabular-nums text-brand-900">{d.trend_score}<span className="text-sm font-medium text-ink-3">/100</span></p>
             </div>
             {d.trend_change_pct !== null && (
               <span className="flex flex-col items-end gap-0.5 text-right">
                 <ChangeBadge pct={d.trend_change_pct} />
-                <span className="text-[11px] text-neutral-500">{t.products.vsEarlier}</span>
+                <span className="text-[11px] text-ink-2">{t.products.vsEarlier}</span>
               </span>
             )}
           </div>
           <Sparkline points={d.weekly} className="mt-2 h-14 w-full" />
-          <p className="mt-1 text-[11px] text-neutral-500">{fmt(t.search.region, { region })}</p>
+          <p className="mt-1 text-[11px] text-ink-2">{fmt(t.search.region, { region })}</p>
         </div>
       </div>
 
@@ -118,8 +118,8 @@ function Results({ d }: { d: Lookup }) {
                 <ProductImage src={l.thumbnail ?? undefined} name={l.title} className="h-14 w-14 shrink-0 rounded-lg" />
                 <div className="min-w-0 flex-1">
                   <p className="line-clamp-2 text-sm font-medium leading-snug">{l.title}</p>
-                  <p className="text-xs text-neutral-500">
-                    <b className="text-neutral-900">{formatRupees(l.price_paise)}</b>
+                  <p className="text-xs text-ink-2">
+                    <b className="text-ink">{formatRupees(l.price_paise)}</b>
                     {l.source && ` · ${l.source}`}
                     {l.rating ? ` · ★ ${l.rating}` : ""}
                   </p>
@@ -143,9 +143,9 @@ function Results({ d }: { d: Lookup }) {
 function Stat({ label, value, note, tone = "text-brand-900" }: { label: string; value: string; note?: string; tone?: string }) {
   return (
     <div className={`${card} p-3`}>
-      <p className="text-xs text-neutral-500">{label}</p>
-      <p className={`text-xl font-extrabold ${tone}`}>{value}</p>
-      {note && <p className="text-[11px] text-neutral-500">{note}</p>}
+      <p className="text-xs text-ink-2">{label}</p>
+      <p className={`text-xl font-medium ${tone}`}>{value}</p>
+      {note && <p className="text-[11px] text-ink-2">{note}</p>}
     </div>
   );
 }
@@ -187,14 +187,14 @@ function Estimator({ d }: { d: Lookup }) {
 
   return (
     <section className={`${card} mt-6 overflow-hidden`}>
-      <div className="bg-gradient-to-r from-brand-50 to-fuchsia-50 p-4">
-        <h2 className="text-lg font-bold text-brand-900">{t.search.estimateTitle}</h2>
+      <div className="bg-gradient-to-r from-brand-50 to-orange-50 p-4">
+        <h2 className="text-xl font-light text-ink">{t.search.estimateTitle}</h2>
       </div>
       <div className="grid grid-cols-2 gap-3 p-4">
         <label className="col-span-2 flex flex-col gap-1">
           <span className="text-sm font-semibold">{t.search.supplierCost}</span>
           <input inputMode="decimal" value={cost} onChange={num(setCost, 7)} placeholder="0" className={`${input} tabular-nums`} />
-          <span className="flex flex-wrap justify-between gap-1 text-[11px] text-neutral-500">
+          <span className="flex flex-wrap justify-between gap-1 text-[11px] text-ink-2">
             {t.search.supplierHint}
             <a href={`https://dir.indiamart.com/search.mp?ss=${encodeURIComponent(d.query)}`} target="_blank" rel="noreferrer" className="font-semibold text-brand-700">
               {t.search.findSupplier}
@@ -204,29 +204,29 @@ function Estimator({ d }: { d: Lookup }) {
         <label className="flex flex-col gap-1">
           <span className="text-sm font-semibold">{t.search.sellPrice}</span>
           <input inputMode="decimal" value={price} onChange={num(setPrice, 7)} className={`${input} tabular-nums`} />
-          {d.market_price_paise && <span className="text-[11px] text-neutral-500">{fmt(t.search.sellHint, { price: formatRupees(d.market_price_paise) })}</span>}
+          {d.market_price_paise && <span className="text-[11px] text-ink-2">{fmt(t.search.sellHint, { price: formatRupees(d.market_price_paise) })}</span>}
         </label>
         <label className="flex flex-col gap-1">
           <span className="flex items-center gap-1 text-sm font-semibold">{t.search.rtoLabel} <EstimateTag /></span>
           <input inputMode="numeric" value={rto} onChange={num(setRto, 3)} className={`${input} tabular-nums`} />
-          <span className="text-[11px] text-neutral-500">{t.search.rtoHint}</span>
+          <span className="text-[11px] text-ink-2">{t.search.rtoHint}</span>
         </label>
         <label className="col-span-2 flex flex-col gap-1">
           <span className="flex items-center gap-1 text-sm font-semibold">{t.search.adLabel} <EstimateTag /></span>
           <input inputMode="decimal" value={ad} onChange={num(setAd, 6)} className={`${input} tabular-nums`} />
         </label>
       </div>
-      <div className={`border-t border-brand-50 p-4 ${losing ? "bg-red-50" : shown ? "bg-emerald-50" : ""}`} aria-live="polite">
-        {!shown && !error && <p className="text-sm text-neutral-600">{t.search.enterCost}</p>}
-        {error && <p role="alert" className="text-sm text-red-700">{error}</p>}
+      <div className={`border-t border-white/[0.07] p-4 ${losing ? "bg-red-500/10" : shown ? "bg-emerald-400/10" : ""}`} aria-live="polite">
+        {!shown && !error && <p className="text-sm text-ink-2">{t.search.enterCost}</p>}
+        {error && <p role="alert" className="text-sm text-red-400">{error}</p>}
         {shown && (
           <>
-            <p className="text-xs text-neutral-600">{t.search.profitPerOrder}</p>
-            <p className={`text-3xl font-extrabold tabular-nums ${losing ? "text-red-600" : "text-emerald-700"}`}>{formatRupees(shown.profit_paise)}</p>
-            <p className="mt-1 text-xs text-neutral-600">
+            <p className="text-xs text-ink-2">{t.search.profitPerOrder}</p>
+            <p className={`text-3xl font-medium tabular-nums ${losing ? "text-red-400" : "text-emerald-400"}`}>{formatRupees(shown.profit_paise)}</p>
+            <p className="mt-1 text-xs text-ink-2">
               {fmt(t.search.afterAll, { ship: formatRupees(shown.shipping_paise), fee: formatRupees(shown.fees_paise) })}
             </p>
-            {losing && <p className="mt-1 text-xs font-semibold text-red-700">{t.search.losing}</p>}
+            {losing && <p className="mt-1 text-xs font-semibold text-red-400">{t.search.losing}</p>}
           </>
         )}
       </div>
@@ -263,19 +263,19 @@ function AddToShop({ d, cost, price }: { d: Lookup; cost: number; price: number 
 
   if (added) {
     return (
-      <div className="flex items-center gap-3 border-t border-brand-50 bg-brand-50/60 p-4" role="status">
-        <CheckCircle2 className="h-6 w-6 shrink-0 text-emerald-600" aria-hidden />
-        <p className="flex-1 text-sm font-bold text-brand-900">{t.search.added}</p>
+      <div className="flex items-center gap-3 border-t border-white/[0.07] bg-brand-50/60 p-4" role="status">
+        <CheckCircle2 className="h-6 w-6 shrink-0 text-emerald-400" aria-hidden />
+        <p className="flex-1 text-sm font-normal text-ink">{t.search.added}</p>
         <Link href={`/products/${added}`} className="text-sm font-bold text-brand-700">{t.search.openProduct}</Link>
       </div>
     );
   }
   return (
-    <div className="border-t border-brand-50 p-4">
-      <p className="flex items-center gap-1.5 font-bold text-brand-900">
+    <div className="border-t border-white/[0.07] p-4">
+      <p className="flex items-center gap-1.5 font-normal text-ink">
         <PackagePlus className="h-5 w-5 text-brand-600" aria-hidden /> {t.search.addTitle}
       </p>
-      <p className="text-xs text-neutral-500">{t.search.addSub}</p>
+      <p className="text-xs text-ink-2">{t.search.addSub}</p>
       <div className="mt-3 grid grid-cols-2 gap-3">
         <label className="col-span-2 flex flex-col gap-1">
           <span className="text-sm font-semibold">{t.search.nameLabel}</span>
@@ -294,7 +294,7 @@ function AddToShop({ d, cost, price }: { d: Lookup; cost: number; price: number 
           </select>
         </label>
       </div>
-      {error && <p role="alert" className="mt-2 rounded-xl bg-red-50 p-2 text-sm text-red-700">{error}</p>}
+      {error && <p role="alert" className="mt-2 rounded-xl bg-red-500/10 p-2 text-sm text-red-400">{error}</p>}
       <button onClick={add} disabled={busy} className={`${btnPrimary} mt-3 w-full`}>
         <PackagePlus className="h-4 w-4" aria-hidden /> {busy ? t.search.adding : t.search.addButton}
       </button>

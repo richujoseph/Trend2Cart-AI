@@ -8,7 +8,7 @@ import { fmt, useT } from "@/lib/i18n";
 import { type Me, type Reel, STATUS_TONE, languageLabel } from "@/lib/reels";
 import { EmptyState, ErrorState } from "@/components/states";
 import QuotaLine from "@/components/quota-line";
-import { PageHero, card } from "@/components/ui";
+import { PageHero, btnPrimary, card } from "@/components/ui";
 
 export default function ReelsPage() {
   const { t, date } = useT();
@@ -44,7 +44,7 @@ export default function ReelsPage() {
     <>
       <PageHero icon={Clapperboard} title={t.reels.title} subtitle={t.reels.subtitle} tone="sunset">
         {me && <QuotaLine me={me} tone="light" />}
-        <Link href="/reels/new" className="mt-4 inline-flex h-11 items-center rounded-xl bg-white px-5 text-sm font-bold text-rose-600 shadow-md">
+        <Link href="/reels/new" className={`${btnPrimary} mt-5 min-h-11`}>
           {t.reels.newReel}
         </Link>
       </PageHero>
@@ -65,7 +65,7 @@ export default function ReelsPage() {
           {reels.map((r, i) => (
             <li key={r.id} className="animate-rise" style={{ animationDelay: `${Math.min(i, 8) * 40}ms` }}>
               <Link href={`/reels/${r.id}`} className={`${card} block overflow-hidden transition active:scale-[.98]`}>
-                <div className="relative aspect-[9/14] bg-gradient-to-br from-brand-700 to-fuchsia-600">
+                <div className="relative aspect-[9/14] bg-gradient-to-br from-brand-700 to-orange-600">
                   {r.status === "done" && r.video_url ? (
                     <video src={`${r.video_url}#t=1.5`} preload="metadata" muted playsInline className="h-full w-full object-cover" aria-hidden />
                   ) : (
@@ -84,10 +84,10 @@ export default function ReelsPage() {
                 </div>
                 <div className="p-2.5">
                   <p className="line-clamp-1 text-sm font-bold">{r.products?.name ?? "Reel"}</p>
-                  <p className="line-clamp-1 text-[11px] text-neutral-500">
+                  <p className="line-clamp-1 text-[11px] text-ink-2">
                     {languageLabel(r.language)} · {date(r.created_at)}
                   </p>
-                  {r.audience && <p className="line-clamp-1 text-[11px] text-neutral-400">{fmt(t.reels.forAudience, { audience: r.audience })}</p>}
+                  {r.audience && <p className="line-clamp-1 text-[11px] text-ink-3">{fmt(t.reels.forAudience, { audience: r.audience })}</p>}
                 </div>
               </Link>
             </li>

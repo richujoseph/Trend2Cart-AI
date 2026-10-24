@@ -46,10 +46,10 @@ export type Checkup = {
 
 // Text is in the i18n dictionary (t.checkup.title*/short*/stage*/msg*).
 export const VERDICT_TONE: Record<Verdict, { tone: string; banner: string; dot: string }> = {
-  interest: { tone: "bg-amber-100 text-amber-900", banner: "from-amber-500 to-orange-500", dot: "bg-amber-500" },
-  conversion: { tone: "bg-orange-100 text-orange-900", banner: "from-orange-500 to-rose-500", dot: "bg-orange-500" },
-  returns: { tone: "bg-red-100 text-red-800", banner: "from-rose-500 to-red-600", dot: "bg-red-500" },
-  healthy: { tone: "bg-emerald-100 text-emerald-800", banner: "from-emerald-500 to-teal-600", dot: "bg-emerald-500" },
+  interest: { tone: "bg-amber-400/15 text-amber-300", banner: "from-[#5a1a0c] via-[#a3360f] to-[#e07a2c]", dot: "bg-amber-400" },
+  conversion: { tone: "bg-orange-400/15 text-orange-300", banner: "from-[#5a130c] via-[#a82a16] to-[#ef6a3c]", dot: "bg-orange-400" },
+  returns: { tone: "bg-red-500/15 text-red-300", banner: "from-[#3f0808] via-[#8f1414] to-[#d6331f]", dot: "bg-red-500" },
+  healthy: { tone: "bg-emerald-400/15 text-emerald-300", banner: "from-[#06281c] via-[#0b5a3c] to-[#16a06a]", dot: "bg-emerald-400" },
 };
 
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);

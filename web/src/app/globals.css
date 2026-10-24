@@ -1,27 +1,46 @@
 @import "tailwindcss";
 
 @theme inline {
-  --font-sans: var(--font-jakarta), var(--font-malayalam), var(--font-devanagari), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-inter), var(--font-malayalam), var(--font-devanagari), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono);
 }
 
-/* Brand: violet with a warm orange accent (Reel templates use bold colours too). */
+/* Premium dark theme: warm black, crimson → ember accents, glass surfaces, light large type.
+   brand-* is an accent scale for a dark UI: 50–200 are dark tinted surfaces/lines, 400–700 the ember accent,
+   800–900 light text. */
 @theme {
-  --color-brand-50: #f5f3ff;
-  --color-brand-100: #ede9fe;
-  --color-brand-200: #ddd6fe;
-  --color-brand-300: #c4b5fd;
-  --color-brand-500: #8b5cf6;
-  --color-brand-600: #7c3aed;
-  --color-brand-700: #6d28d9;
-  --color-brand-800: #5b21b6;
-  --color-brand-900: #4c1d95;
-  --color-canvas: #f6f4fb;
+  --color-canvas: #080505;
+  --color-surface: #120c0b;
+  --color-raised: #1a1210;
+  --color-line: rgb(255 255 255 / 0.08);
+  --color-ink: #f5efeb;
+  --color-ink-2: #a79d98;
+  --color-ink-3: #6e6561;
+
+  --color-brand-50: #1e110e;
+  --color-brand-100: #2a1511;
+  --color-brand-200: #3c1c16;
+  --color-brand-300: #8a3a28;
+  --color-brand-400: #f2896a;
+  --color-brand-500: #ee6640;
+  --color-brand-600: #dc4a26;
+  --color-brand-700: #f07a55;
+  --color-brand-800: #f6b49d;
+  --color-brand-900: #f5efeb;
+}
+
+html {
+  color-scheme: dark;
 }
 
 body {
   background: var(--color-canvas);
-  color: #1c1626;
+  color: var(--color-ink);
+}
+
+::selection {
+  background: #dc4a26;
+  color: #fff;
 }
 
 /* Malayalam and Devanagari need a little more line height than Latin. */
@@ -30,12 +49,24 @@ body {
 }
 
 @keyframes rise {
-  from { opacity: 0; transform: translateY(6px); }
+  from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: none; }
 }
 .animate-rise {
-  animation: rise 0.35s ease-out both;
+  animation: rise 0.45s cubic-bezier(.2,.7,.2,1) both;
+}
+@keyframes drift {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(-12px, 8px, 0); }
+}
+.animate-drift {
+  animation: drift 14s ease-in-out infinite;
 }
 @media (prefers-reduced-motion: reduce) {
-  .animate-rise { animation: none; }
+  .animate-rise, .animate-drift { animation: none; }
+}
+
+select option {
+  background: #1a1210;
+  color: #f5efeb;
 }

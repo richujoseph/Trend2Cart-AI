@@ -83,11 +83,11 @@ export default function ProductsPage() {
         ))}
       </div>
       <label className="mt-3 flex items-center justify-between gap-2 text-sm">
-        <span className="text-neutral-600">{t.products.sortLabel}</span>
+        <span className="text-ink-2">{t.products.sortLabel}</span>
         <select
           value={sort}
           onChange={(e) => setSort(e.target.value as Sort)}
-          className="h-10 rounded-xl bg-white px-3 text-sm font-semibold text-brand-800 outline-none ring-1 ring-brand-100"
+          className="h-10 rounded-xl bg-white/[0.04] px-3 text-sm font-semibold text-brand-800 outline-none ring-1 ring-brand-100"
         >
           {SORTS.map((s) => <option key={s} value={s}>{t.products.sorts[s]}</option>)}
         </select>
@@ -122,7 +122,7 @@ function SearchBox() {
         e.preventDefault();
         if (q.trim().length >= 3) router.push(`/products/search?q=${encodeURIComponent(q.trim())}`);
       }}
-      className="mt-4 flex h-12 items-center gap-2 rounded-2xl bg-white p-1.5 pl-3 shadow-lg shadow-brand-900/20"
+      className="mt-4 flex h-12 items-center gap-2 rounded-2xl bg-white/[0.04] p-1.5 pl-3 shadow-lg shadow-black/40"
     >
       <Search aria-hidden className="h-5 w-5 shrink-0 text-brand-500" />
       <input
@@ -131,9 +131,9 @@ function SearchBox() {
         maxLength={60}
         placeholder={t.products.searchPlaceholder}
         aria-label={t.products.searchPlaceholder}
-        className="min-w-0 flex-1 bg-transparent text-sm text-neutral-900 outline-none placeholder:text-neutral-400"
+        className="min-w-0 flex-1 bg-transparent text-sm text-ink outline-none placeholder:text-ink-3"
       />
-      <button disabled={q.trim().length < 3} className="h-9 shrink-0 rounded-xl bg-gradient-to-r from-brand-600 to-fuchsia-600 px-4 text-sm font-bold text-white disabled:opacity-40">
+      <button disabled={q.trim().length < 3} className="h-9 shrink-0 rounded-xl bg-gradient-to-r from-brand-600 to-orange-600 px-4 text-sm font-bold text-white disabled:opacity-40">
         {t.products.search}
       </button>
     </form>
@@ -144,7 +144,7 @@ function Spotlight({ p }: { p: ProductListItem }) {
   const { t } = useT();
   const margin = Math.round((p.profit_paise / p.selling_price_paise) * 100);
   return (
-    <section className="mt-6 overflow-hidden rounded-3xl bg-white shadow-lg shadow-brand-900/10 ring-1 ring-brand-900/5 animate-rise">
+    <section className="mt-6 overflow-hidden rounded-3xl bg-white/[0.04] shadow-lg shadow-black/40 ring-1 ring-white/[0.07] animate-rise">
       <div className="flex items-center gap-2 bg-gradient-to-r from-amber-400 via-orange-400 to-rose-400 px-4 py-2 text-sm font-bold text-white">
         <Trophy className="h-4 w-4" aria-hidden /> {t.products.topPick}
         <span className="ml-auto text-xs font-medium text-white/90">{t.products.topPickWhy}</span>
@@ -153,19 +153,19 @@ function Spotlight({ p }: { p: ProductListItem }) {
         <ProductImage src={p.image_urls[0]} name={p.name} className="h-28 w-28 shrink-0 rounded-2xl" />
         <div className="min-w-0 flex-1">
           <p className="text-[11px] font-semibold uppercase tracking-wide text-brand-500">{t.categories[p.category]}</p>
-          <h2 className="line-clamp-2 text-lg font-extrabold leading-tight text-brand-900">{p.name}</h2>
-          <p className="mt-1 text-2xl font-extrabold tabular-nums text-emerald-600">
+          <h2 className="line-clamp-2 text-lg font-medium leading-tight text-brand-900">{p.name}</h2>
+          <p className="mt-1 text-2xl font-medium tabular-nums text-emerald-400">
             {formatRupees(p.profit_paise)}
-            <span className="ml-1 text-xs font-medium text-neutral-500">{t.products.profitPerOrder}</span>
+            <span className="ml-1 text-xs font-medium text-ink-2">{t.products.profitPerOrder}</span>
           </p>
           <Signals p={p} margin={margin} />
         </div>
       </Link>
-      <div className="grid grid-cols-2 gap-2 border-t border-brand-50 p-3">
+      <div className="grid grid-cols-2 gap-2 border-t border-white/[0.07] p-3">
         <Link href={`/products/${p.id}`} className="flex h-11 items-center justify-center rounded-xl bg-brand-50 text-sm font-bold text-brand-800">
           {t.products.view}
         </Link>
-        <Link href={`/reels/new?product=${p.id}`} className="flex h-11 items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-brand-600 to-fuchsia-600 text-sm font-bold text-white">
+        <Link href={`/reels/new?product=${p.id}`} className="flex h-11 items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-brand-600 to-orange-600 text-sm font-bold text-white">
           <Clapperboard className="h-4 w-4" aria-hidden /> {t.product.makeReel}
         </Link>
       </div>
@@ -179,17 +179,17 @@ function Signals({ p, margin }: { p: ProductListItem; margin: number }) {
   const comp = p.competition_score;
   return (
     <div className="mt-2 flex flex-wrap gap-1.5 text-[11px] font-semibold">
-      <span className={`rounded-full px-2 py-0.5 ${margin > 0 ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"}`}>
+      <span className={`rounded-full px-2 py-0.5 ${margin > 0 ? "bg-emerald-400/10 text-emerald-400" : "bg-red-500/10 text-red-400"}`}>
         {fmt(t.products.margin, { pct: margin })}
       </span>
       {p.trend_score !== null && (
-        <span className={`inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 ${p.trend_score >= 50 ? "bg-sky-50 text-sky-700" : "bg-neutral-100 text-neutral-600"}`}>
+        <span className={`inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 ${p.trend_score >= 50 ? "bg-sky-400/10 text-sky-300" : "bg-white/[0.06] text-ink-2"}`}>
           {p.trend_score >= 50 ? <TrendingUp className="h-3 w-3" aria-hidden /> : <TrendingDown className="h-3 w-3" aria-hidden />}
           {t.products.searches} {p.trend_score}
         </span>
       )}
       {comp !== null && (
-        <span className={`inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 ${comp >= 60 ? "bg-red-50 text-red-700" : comp >= 30 ? "bg-amber-50 text-amber-700" : "bg-emerald-50 text-emerald-700"}`}>
+        <span className={`inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 ${comp >= 60 ? "bg-red-500/10 text-red-400" : comp >= 30 ? "bg-amber-400/10 text-amber-300" : "bg-emerald-400/10 text-emerald-400"}`}>
           <Users className="h-3 w-3" aria-hidden />
           {comp >= 60 ? t.search.compHigh : comp >= 30 ? t.search.compMedium : t.search.compLow}
         </span>
@@ -227,14 +227,14 @@ function TrendingStrip() {
   return (
     <section className="mt-6">
       <SectionTitle icon={Flame} title={t.products.trendingTitle} subtitle={t.products.trendingSub} />
-      {failed && <p className="mt-2 text-sm text-neutral-500">{t.products.trendingEmpty}</p>}
+      {failed && <p className="mt-2 text-sm text-ink-2">{t.products.trendingEmpty}</p>}
       {!failed && !data?.items.length && (
         <div className="-mx-4 mt-3 flex gap-3 overflow-hidden px-4">
-          {[0, 1, 2].map((i) => <div key={i} className="h-[108px] w-40 shrink-0 animate-pulse rounded-2xl bg-white/70" />)}
+          {[0, 1, 2].map((i) => <div key={i} className="h-[108px] w-40 shrink-0 animate-pulse rounded-2xl bg-white/[0.04]" />)}
         </div>
       )}
       {!failed && data && !data.items.length && data.refreshing && (
-        <p className="mt-2 text-xs text-neutral-500">{t.products.trendingLoading}</p>
+        <p className="mt-2 text-xs text-ink-2">{t.products.trendingLoading}</p>
       )}
       {!!data?.items.length && (
         <ul className="-mx-4 mt-3 flex snap-x gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:none]">
@@ -245,9 +245,9 @@ function TrendingStrip() {
                 className={`${card} flex h-[108px] w-40 flex-col justify-between p-3 transition active:scale-[.98]`}
               >
                 <div>
-                  <p className="flex items-center gap-1 text-[10px] font-bold text-orange-600">#{i + 1}</p>
+                  <p className="flex items-center gap-1 text-[10px] font-bold text-orange-400">#{i + 1}</p>
                   <p className="line-clamp-1 font-bold capitalize text-brand-900">{item.term}</p>
-                  {item.category && <p className="text-[11px] text-neutral-500">{t.categories[item.category]}</p>}
+                  {item.category && <p className="text-[11px] text-ink-2">{t.categories[item.category]}</p>}
                 </div>
                 <div className="flex items-end justify-between gap-1">
                   <ChangeBadge pct={item.change_pct} />
@@ -283,12 +283,12 @@ function ProductCard({ product: p }: { product: ProductListItem }) {
       </div>
       <div className="flex flex-1 flex-col p-2.5">
         <p className="text-[10px] font-semibold uppercase tracking-wide text-brand-500">{t.categories[p.category]}</p>
-        <h3 className="line-clamp-2 text-sm font-bold leading-snug text-neutral-900">{p.name}</h3>
-        <p className={`mt-auto pt-1 text-lg font-extrabold tabular-nums ${losing ? "text-red-600" : "text-emerald-700"}`}>
+        <h3 className="line-clamp-2 text-sm font-bold leading-snug text-ink">{p.name}</h3>
+        <p className={`mt-auto pt-1 text-lg font-medium tabular-nums ${losing ? "text-red-400" : "text-emerald-400"}`}>
           {formatRupees(p.profit_paise)}
-          <span className="ml-0.5 text-[10px] font-medium text-neutral-500">{t.common.perOrder}</span>
+          <span className="ml-0.5 text-[10px] font-medium text-ink-2">{t.common.perOrder}</span>
         </p>
-        <p className="text-[11px] text-neutral-500">
+        <p className="text-[11px] text-ink-2">
           {fmt(t.products.sellsAt, { price: formatRupees(p.selling_price_paise) })} · {fmt(t.products.margin, { pct: margin })}
         </p>
         {p.loss_trap && <span className="mt-1"><LossTrapTag /></span>}

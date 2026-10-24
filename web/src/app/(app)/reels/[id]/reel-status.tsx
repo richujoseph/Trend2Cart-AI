@@ -77,9 +77,9 @@ export default function ReelStatus() {
       <Link href="/reels" className="text-sm font-medium text-brand-700">{t.reel.back}</Link>
       <div className="mt-2 flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <h1 className="text-2xl font-extrabold tracking-tight text-brand-900">{reel?.products?.name ?? t.reel.yourReel}</h1>
+          <h1 className="text-3xl font-light tracking-tight text-ink">{reel?.products?.name ?? t.reel.yourReel}</h1>
           {reel && (
-            <p className="text-sm text-neutral-500">
+            <p className="text-sm text-ink-2">
               {languageLabel(reel.language)}
               {reel.audience ? ` · ${fmt(t.reels.forAudience, { audience: reel.audience })}` : ""}
             </p>
@@ -94,23 +94,23 @@ export default function ReelStatus() {
 
       {working && (
         <section className={`${card} mt-5 overflow-hidden`} aria-live="polite">
-          <div className="bg-gradient-to-r from-brand-600 via-fuchsia-600 to-orange-500 p-4 text-white">
+          <div className="bg-gradient-to-r from-brand-600 via-orange-600 to-orange-500 p-4 text-white">
             <p className="text-lg font-bold">{fmt(t.reel.making, { s: seconds })}</p>
             <p className="text-sm text-white/85">
               {reel?.status === "queued" ? t.reel.waitingSlot : t.reel.usuallyReady} {t.reel.canLeave}
             </p>
             <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-white/25">
-              <div className="h-full rounded-full bg-white transition-all duration-700" style={{ width: `${((current + 1) / (STAGES.length + 1)) * 100}%` }} />
+              <div className="h-full rounded-full bg-white/[0.04] transition-all duration-700" style={{ width: `${((current + 1) / (STAGES.length + 1)) * 100}%` }} />
             </div>
           </div>
           {reel?.status === "queued" && seconds > 45 && (
-            <p className="m-4 mb-0 rounded-xl bg-amber-50 p-3 text-sm text-amber-900">{t.reel.offline}</p>
+            <p className="m-4 mb-0 rounded-xl bg-amber-400/10 p-3 text-sm text-amber-200">{t.reel.offline}</p>
           )}
           <ol className="flex flex-col gap-3 p-4 text-sm">
             {STAGES.map((stage, i) => {
               const state = i < current ? "done" : i === current ? "active" : "todo";
               return (
-                <li key={stage} className={`flex items-center gap-3 ${state === "todo" ? "text-neutral-400" : "text-neutral-900"}`}>
+                <li key={stage} className={`flex items-center gap-3 ${state === "todo" ? "text-ink-3" : "text-ink"}`}>
                   <span
                     aria-hidden
                     className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
@@ -131,7 +131,7 @@ export default function ReelStatus() {
       {reel?.status === "done" && reel.video_url && <DoneReel reel={reel} />}
 
       {reel?.status === "failed" && (
-        <section className="mt-5 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-800" role="alert">
+        <section className="mt-5 rounded-2xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-300" role="alert">
           <p>{reel.error ?? t.reel.failedDefault}</p>
           <button onClick={retry} disabled={retrying} className="mt-3 h-11 rounded-xl bg-red-700 px-5 font-bold text-white disabled:opacity-50">
             {retrying ? t.newReel.starting : t.common.tryAgain}
@@ -180,7 +180,7 @@ function DoneReel({ reel }: { reel: Reel }) {
 
   return (
     <>
-      <div className="mx-auto mt-5 w-full max-w-[17rem] rounded-[2rem] bg-gradient-to-br from-brand-600 via-fuchsia-600 to-orange-400 p-1.5 shadow-xl shadow-brand-900/20">
+      <div className="mx-auto mt-5 w-full max-w-[17rem] rounded-[2rem] bg-gradient-to-br from-brand-600 via-orange-600 to-orange-400 p-1.5 shadow-xl shadow-black/40">
         <video src={reel.video_url!} controls playsInline preload="metadata" className="aspect-[9/16] w-full rounded-[1.6rem] bg-black" />
       </div>
       <div className="mt-4 grid grid-cols-2 gap-2">
@@ -197,11 +197,11 @@ function DoneReel({ reel }: { reel: Reel }) {
           {sharing ? t.reel.preparing : t.reel.share}
         </button>
       </div>
-      <p className="mt-2 text-center text-xs text-neutral-500">{shareError ? t.reel.shareFailed : t.reel.postHint}</p>
+      <p className="mt-2 text-center text-xs text-ink-2">{shareError ? t.reel.shareFailed : t.reel.postHint}</p>
 
       <section className={`${card} mt-5 p-4`}>
         <div className="flex items-center justify-between">
-          <h2 className="flex items-center gap-1.5 font-bold text-brand-900"><PenLine className="h-4 w-4 text-brand-600" aria-hidden /> {t.reel.captionTitle}</h2>
+          <h2 className="flex items-center gap-1.5 font-normal text-ink"><PenLine className="h-4 w-4 text-brand-600" aria-hidden /> {t.reel.captionTitle}</h2>
           <button onClick={copy} className={btnSmall}>
             {copied ? t.common.copied : t.common.copy}
           </button>
@@ -209,7 +209,7 @@ function DoneReel({ reel }: { reel: Reel }) {
         <p className="mt-2 whitespace-pre-wrap rounded-xl bg-brand-50/60 p-3 text-sm">{text}</p>
       </section>
 
-      <Link href={`/doctor?reel=${reel.id}`} className="mt-4 block rounded-2xl bg-gradient-to-r from-teal-500 to-cyan-600 p-4 text-sm text-white shadow-md shadow-teal-600/20">
+      <Link href={`/doctor?reel=${reel.id}`} className="mt-4 block rounded-2xl bg-gradient-to-r from-[#b8321a] to-brand-600 p-4 text-sm text-white shadow-lg shadow-black/40">
         <span className="flex items-center gap-1.5 font-bold"><Stethoscope className="h-4 w-4" aria-hidden /> {t.reel.checkHow}</span>
         <span className="block text-white/85">{t.reel.checkHowSub}</span>
       </Link>
