@@ -38,5 +38,6 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)"],
+  // Static media (incl. the landing page's demo Reels in /public/landing) is public and skips the auth check.
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|landing/|.*\\.(?:svg|png|jpg|jpeg|gif|webp|mp4)$).*)"],
 };
