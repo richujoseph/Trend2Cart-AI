@@ -23,8 +23,8 @@ export default function CheckupView({ c, previous }: { c: Checkup; previous?: Ch
   if (!d) return null;
   const health = healthScore(d.rates);
   return (
-    <div className="flex flex-col gap-4">
-      <div className={`${glassCard} relative isolate flex items-center gap-4 overflow-hidden p-5`}>
+    <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
+      <div className={`${glassCard} relative isolate flex items-center gap-4 overflow-hidden p-5 lg:col-span-2`}>
         <RibbonBackground variant="subtle" className="-z-10" />
         {health !== null && <ScoreRing value={health} size={80} label={t.doctor.healthLabel} />}
         <div className="min-w-0">

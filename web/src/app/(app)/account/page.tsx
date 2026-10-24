@@ -10,6 +10,7 @@ import { LANGUAGES, type Me, REGIONS } from "@/lib/reels";
 import { saveProfile, useLanguage } from "@/lib/profile";
 import { createClient } from "@/lib/supabase/client";
 import QuotaLine from "@/components/quota-line";
+import DetailsForm from "./details-form";
 import { PageHero, btnPrimary, btnSecondary, card } from "@/components/ui";
 
 const PLAN_KEY = { free: "planFree", pro: "planPro", founding: "planFounding" } as const;
@@ -76,7 +77,11 @@ export default function AccountPage() {
       {!me && !error && <p className="mt-4 text-sm text-ink-2">{t.common.loading}</p>}
       {me && (
         <>
-          <section className={`${card} mt-4 p-4`}>
+          <div className="mt-4">
+            <DetailsForm me={me} onSaved={(d) => setMe({ ...me, profile: { ...me.profile, ...d } })} />
+          </div>
+          <div className="mt-4 grid gap-4 lg:grid-cols-3 lg:items-stretch">
+          <section className={`${card} p-6`}>
             <div className="flex items-center justify-between">
               <span className="text-sm text-ink-2">{t.account.plan}</span>
               <span className="rounded-full bg-brand-100 px-3 py-1 text-sm font-bold text-brand-800">{t.account[PLAN_KEY[me.profile.plan]]}</span>
@@ -89,8 +94,8 @@ export default function AccountPage() {
             )}
           </section>
 
-          <fieldset className={`${card} mt-4 p-4`}>
-            <legend className="float-left flex w-full items-center gap-1.5 font-normal text-ink"><Languages className="h-5 w-5 text-brand-600" aria-hidden /> {t.account.language}</legend>
+          <fieldset className={`${card} p-6`}>
+            <legend className="float-left flex w-full items-center gap-2 text-lg font-bold text-ink"><Languages className="h-5 w-5 text-charcoal" strokeWidth={2} aria-hidden /> {t.account.language}</legend>
             <p className="text-xs text-ink-2">{t.account.languageHint}</p>
             <div className="clear-both mt-3 grid grid-cols-3 gap-2 pt-1">
               {LANGUAGES.map((l) => (
@@ -102,8 +107,8 @@ export default function AccountPage() {
             {langError && <p role="alert" className="mt-2 text-xs text-red">{langError}</p>}
           </fieldset>
 
-          <fieldset className={`${card} mt-4 p-4`}>
-            <legend className="float-left flex w-full items-center gap-1.5 font-normal text-ink"><MapPin className="h-5 w-5 text-brand-600" aria-hidden /> {t.account.whereSell}</legend>
+          <fieldset className={`${card} p-6`}>
+            <legend className="float-left flex w-full items-center gap-2 text-lg font-bold text-ink"><MapPin className="h-5 w-5 text-charcoal" strokeWidth={2} aria-hidden /> {t.account.whereSell}</legend>
             <div className="clear-both mt-3 grid grid-cols-2 gap-2 pt-1">
               {REGIONS.map((r) => (
                 <button
@@ -119,6 +124,7 @@ export default function AccountPage() {
               ))}
             </div>
           </fieldset>
+          </div>
           {saved && !langError && <p className="mt-2 text-center text-xs font-semibold text-profit">{t.common.saved}</p>}
         </>
       )}
@@ -127,7 +133,7 @@ export default function AccountPage() {
           {t.account.copyToken}
         </button>
       )}
-      <button onClick={signOut} className={`${btnSecondary} mt-6 w-full`}>
+      <button onClick={signOut} className={`${btnSecondary} mt-6 w-full lg:w-auto lg:px-10`}>
         {t.account.signOut}
       </button>
     </>

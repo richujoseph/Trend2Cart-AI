@@ -20,7 +20,7 @@ export function ErrorState({ message, onRetry }: { message: string; onRetry?: ()
 export function EmptyState({ title, body, icon: Icon = Sparkles }: { title: string; body: string; icon?: LucideIcon }) {
   return (
     <div className="mt-6 rounded-2xl border-2 border-dashed border-brand-200 bg-card-muted p-6 text-center">
-      <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-100 text-brand-600">
+      <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-100 text-charcoal">
         <Icon className="h-6 w-6" aria-hidden />
       </span>
       <p className="mt-2 font-bold text-brand-900">{title}</p>

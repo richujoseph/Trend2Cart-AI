@@ -48,7 +48,7 @@ function Nav({ pathname }: { pathname: string }) {
     );
   };
   return (
-    <nav className="fixed inset-x-2 bottom-[max(0.5rem,env(safe-area-inset-bottom))] z-20 mx-auto max-w-md">
+    <nav className="fixed inset-x-2 bottom-[max(0.5rem,env(safe-area-inset-bottom))] z-20 mx-auto max-w-md lg:hidden">
       <ul className="relative grid h-16 grid-cols-5 items-center rounded-full bg-charcoal px-2 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.35)]">
         {LEFT.map(item)}
         <li className="flex justify-center">

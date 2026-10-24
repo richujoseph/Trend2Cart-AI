@@ -6,9 +6,20 @@ import { type Lang, pendingLanguage, rememberPendingLanguage, showLanguage, useT
 import { createClient } from "@/lib/supabase/client";
 import type { Me } from "@/lib/reels";
 
-/** Save the seller's preferences on the server (it confirms the save, so a failure is never silent). */
-export async function saveProfile(fields: { language?: Lang; region?: string }): Promise<void> {
+export type ProfileFields = {
+  language?: Lang;
+  region?: string;
+  display_name?: string;
+  business_name?: string;
+  whatsapp?: string;
+  city?: string;
+};
+
+/** Save the seller's preferences/details on the server (it confirms the save, so a failure is never silent).
+ *  Fires "t2c-profile" so the header can refresh the seller's name. */
+export async function saveProfile(fields: ProfileFields): Promise<void> {
   await apiFetch("/me", { method: "PATCH", body: JSON.stringify(fields) });
+  window.dispatchEvent(new Event("t2c-profile"));
 }
 
 /** Switch the app language now and save it to the seller's profile; reverts if saving fails. */

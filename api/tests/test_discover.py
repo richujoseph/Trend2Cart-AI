@@ -189,3 +189,14 @@ def test_update_me_saves_language(client, auth_headers, monkeypatch):
 def test_candidates_are_unique():
     terms = [t for t, _ in discover.CANDIDATES]
     assert len(terms) == len(set(terms)) == 30
+
+
+def test_update_me_saves_details_and_clears_empty(client, auth_headers, monkeypatch):
+    from app import main
+
+    saved = []
+    monkeypatch.setattr(main, "service_update", lambda t, rid, f: saved.append(f))
+    r = client.patch("/me", headers=auth_headers, json={"display_name": "  Anu   Joseph ", "whatsapp": "9876543210", "city": ""})
+    assert r.status_code == 200 and saved == [{"display_name": "Anu Joseph", "whatsapp": "9876543210", "city": None}]
+    bad = client.patch("/me", headers=auth_headers, json={"whatsapp": "12345"})
+    assert bad.status_code == 422

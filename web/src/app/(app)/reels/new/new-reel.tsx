@@ -122,7 +122,7 @@ export default function NewReel() {
   if (loadError) return <ErrorState message={loadError} onRetry={() => window.location.reload()} />;
 
   return (
-    <form onSubmit={submit} className="relative isolate flex flex-col gap-6">
+    <form onSubmit={submit} className="relative isolate flex flex-col gap-6 lg:mx-auto lg:max-w-3xl">
       <RibbonBackground variant="subtle" className="-z-10 -mx-5 -mt-4 h-72" />
       <div>
         <Link href="/reels" className={`${btn.ghost} -ml-3`}>{t.newReel.back}</Link>
@@ -181,7 +181,7 @@ export default function NewReel() {
           <fieldset className="min-w-0">
             <legend className="mb-3 text-2xl font-black text-ink">{t.newReel.whichProduct}</legend>
             {products ? (
-              <div className="flex flex-col gap-2">
+              <div className="grid gap-2 lg:grid-cols-2 lg:gap-3">
                 {products.map((p) => (
                   <label
                     key={p.id}
@@ -364,7 +364,7 @@ export default function NewReel() {
       )}
 
       {/* Stays above the floating nav (and its raised red button) so Next is always in reach on a long list. */}
-      <div className="sticky bottom-[calc(6.75rem+env(safe-area-inset-bottom))] rounded-[24px] z-10 -mx-5 flex gap-3 border-t border-sage/30 bg-canvas/80 px-5 py-3 backdrop-blur-xl">
+      <div className="sticky bottom-[calc(6.75rem+env(safe-area-inset-bottom))] z-10 -mx-5 rounded-[24px] lg:bottom-6 lg:mx-0 lg:border lg:shadow-[0_20px_50px_-12px_rgba(0,0,0,0.12)] flex gap-3 border-t border-sage/30 bg-canvas/80 px-5 py-3 backdrop-blur-xl">
         {step > 1 && (
           <button type="button" onClick={() => setStep((s) => s - 1)} className={btn.glass}>
             {t.common.back}

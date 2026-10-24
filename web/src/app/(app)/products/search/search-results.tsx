@@ -10,7 +10,7 @@ import { CATEGORIES, type Category, formatRupees } from "@/lib/products";
 import { ApiError } from "@/lib/api";
 import { CheckCircle2, PackagePlus } from "lucide-react";
 import { ErrorState, ProductImage } from "@/components/states";
-import { ChangeBadge, EstimateTag, SectionTitle, Sparkline, btnPrimary, btnSecondary, card, input } from "@/components/ui";
+import { ChangeBadge, EstimateTag, SectionTitle, Sparkline, btnPrimary, btnSecondary, card, input, tile } from "@/components/ui";
 
 export default function SearchResults() {
   const { t } = useT();
@@ -70,8 +70,9 @@ function Results({ d }: { d: Lookup }) {
         {d.cached ? fmt(t.search.cached, { date: date(d.fetched_at) }) : t.search.live} · Google Shopping India
       </p>
 
+      <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:items-start lg:gap-8">
       <div className="mt-4 grid grid-cols-2 gap-3">
-        <div className={`${card} col-span-2 flex items-center gap-3 p-3`}>
+        <div className={`${tile} col-span-2 flex items-center gap-3 p-4`}>
           <ProductImage src={d.image_url ?? undefined} name={d.query} className="h-20 w-20 shrink-0 rounded-xl" />
           <div className="min-w-0">
             <p className="text-xs text-ink-2">{t.search.typicalPrice}</p>
@@ -89,7 +90,7 @@ function Results({ d }: { d: Lookup }) {
         </div>
         <Stat label={t.search.sellers} value={String(d.sellers)} note={fmt(t.search.sellersValue, { n: d.listings_count })} />
         <Stat label={t.search.competition} value={comp} note={`${d.competition_score}/100`} tone={d.competition_score >= 60 ? "text-red" : d.competition_score >= 30 ? "text-charcoal" : "text-profit"} />
-        <div className={`${card} col-span-2 p-3`}>
+        <div className={`${tile} col-span-2 p-4`}>
           <div className="flex items-center justify-between gap-2">
             <div>
               <p className="text-xs text-ink-2">{t.search.interest}</p>
@@ -107,14 +108,17 @@ function Results({ d }: { d: Lookup }) {
         </div>
       </div>
 
-      <Estimator d={d} />
+      <div className="lg:sticky lg:top-28 lg:[&>section]:mt-4">
+        <Estimator d={d} />
+      </div>
+      </div>
 
       {d.listings.length > 0 && (
         <section className="mt-6">
           <SectionTitle title={t.search.listingsTitle} subtitle={t.search.listingsSub} />
-          <ul className="mt-3 flex flex-col gap-2">
+          <ul className="mt-3 grid gap-2 lg:grid-cols-2 lg:gap-3">
             {d.listings.map((l, i) => (
-              <li key={`${l.title}-${i}`} className={`${card} flex items-center gap-3 p-2.5`}>
+              <li key={`${l.title}-${i}`} className={`${tile} flex items-center gap-3 p-3`}>
                 <ProductImage src={l.thumbnail ?? undefined} name={l.title} className="h-14 w-14 shrink-0 rounded-lg" />
                 <div className="min-w-0 flex-1">
                   <p className="line-clamp-2 text-sm font-medium leading-snug">{l.title}</p>
@@ -142,7 +146,7 @@ function Results({ d }: { d: Lookup }) {
 
 function Stat({ label, value, note, tone = "text-brand-900" }: { label: string; value: string; note?: string; tone?: string }) {
   return (
-    <div className={`${card} p-3`}>
+    <div className={`${tile} p-4`}>
       <p className="text-xs text-ink-2">{label}</p>
       <p className={`text-xl font-medium ${tone}`}>{value}</p>
       {note && <p className="text-[11px] text-ink-2">{note}</p>}
@@ -273,7 +277,7 @@ function AddToShop({ d, cost, price }: { d: Lookup; cost: number; price: number 
   return (
     <div className="border-t border-sage/30 p-4">
       <p className="flex items-center gap-1.5 font-normal text-ink">
-        <PackagePlus className="h-5 w-5 text-brand-600" aria-hidden /> {t.search.addTitle}
+        <PackagePlus className="h-5 w-5 text-charcoal" aria-hidden /> {t.search.addTitle}
       </p>
       <p className="text-xs text-ink-2">{t.search.addSub}</p>
       <div className="mt-3 grid grid-cols-2 gap-3">

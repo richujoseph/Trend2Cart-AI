@@ -15,6 +15,8 @@ export const card = `rounded-[40px] bg-white ring-1 ring-sage/30 ${SHADOW}`;
 export const glassCard = `glass rounded-[40px] ${SHADOW}`;
 export const dataCard = `rounded-[40px] bg-white text-charcoal ring-1 ring-sage/30 ${SHADOW}`;
 export const cardLight = dataCard;
+/** Nested / small item (24px), per the spec's radius scale. */
+export const tile = "rounded-[24px] bg-white ring-1 ring-sage/30";
 
 /** Pills: light = primary action (red), dark = charcoal, glass = white with sage border, ghost = text. */
 export const btn = {
@@ -114,19 +116,22 @@ export function TopBar() {
   // The clock is read in the browser only (prerendering can't depend on the time of day).
   const hour = useSyncExternalStore(noop, () => new Date().getHours(), () => null);
   useEffect(() => {
-    apiFetch<Me>("/me").then(setMe).catch(() => {});
+    const load = () => apiFetch<Me>("/me").then(setMe).catch(() => {});
+    load();
+    window.addEventListener("t2c-profile", load); // name edited in Account
+    return () => window.removeEventListener("t2c-profile", load);
   }, []);
-  const name = me?.email ? me.email.split("@")[0].replace(/[._-]+/g, " ") : me?.phone ? `+${me.phone.slice(-4).padStart(me.phone.length, "•")}` : "";
+  const name = me?.profile.display_name || (me?.email ? me.email.split("@")[0].replace(/[._-]+/g, " ") : me?.phone ? `+${me.phone.slice(-4).padStart(me.phone.length, "•")}` : "");
   const greeting = hour === null ? "\u00a0" : hour < 12 ? t.common.greetMorning : hour < 17 ? t.common.greetAfternoon : t.common.greetEvening;
   return (
     <header className="sticky top-0 z-20 bg-canvas/85 backdrop-blur-md">
-      <div className="mx-auto flex max-w-md items-center justify-between gap-3 px-5 pb-3 pt-[max(1rem,env(safe-area-inset-top))]">
+      <div className="mx-auto flex max-w-md items-center justify-between gap-3 px-5 pb-3 pt-[max(1rem,env(safe-area-inset-top))] lg:max-w-6xl lg:px-10 lg:pt-7">
         <div className="min-w-0">
           <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-ink-3">{greeting}</p>
-          <p className="truncate text-2xl font-black capitalize leading-tight text-charcoal">{name || "Trend2Cart"}</p>
+          <p className="truncate font-[family-name:var(--font-display)] text-2xl font-semibold capitalize leading-tight tracking-tight text-charcoal lg:text-3xl">{name || "Trend2Cart"}</p>
         </div>
         <div className="flex shrink-0 items-center gap-2">
-          <LanguageSelect />
+          <span className="lg:hidden"><LanguageSelect /></span>
           <Link href="/account" aria-label={t.nav.account} className="relative">
             <span className="flex h-12 w-12 items-center justify-center rounded-full border-2 border-white bg-charcoal text-lg font-black uppercase text-white shadow-md">
               {(name || "T").charAt(0)}
@@ -155,8 +160,8 @@ export function PageHero({ title, subtitle, children, icon: Icon }: {
           <Icon className="h-7 w-7 text-charcoal" strokeWidth={2} aria-hidden />
         </span>
       )}
-      <h1 className="text-[32px] font-black leading-[1.1] text-charcoal">{title}</h1>
-      {subtitle && <p className="mt-2 max-w-[34ch] text-[15px] leading-relaxed text-ink-2">{subtitle}</p>}
+      <h1 className="text-[32px] font-black leading-[1.1] text-charcoal lg:text-5xl">{title}</h1>
+      {subtitle && <p className="mt-2 max-w-[34ch] text-[15px] leading-relaxed text-ink-2 lg:max-w-[52ch] lg:text-base">{subtitle}</p>}
       {children}
     </section>
   );

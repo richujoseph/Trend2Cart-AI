@@ -61,7 +61,7 @@ export default function ReelsPage() {
       {!reels && !error && <ListSkeleton />}
       {reels?.length === 0 && <EmptyState icon={Clapperboard} title={t.reels.emptyTitle} body={t.reels.emptyBody} />}
       {reels && reels.length > 0 && (
-        <ul className="mt-5 grid grid-cols-2 gap-3">
+        <ul className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 lg:gap-5">
           {reels.map((r, i) => (
             <li key={r.id} className="animate-rise" style={{ animationDelay: `${Math.min(i, 8) * 40}ms` }}>
               <Link href={`/reels/${r.id}`} className={`${card} block overflow-hidden transition active:scale-[.98]`}>
@@ -100,7 +100,7 @@ export default function ReelsPage() {
 
 function ListSkeleton() {
   return (
-    <ul className="mt-5 grid grid-cols-2 gap-3" aria-busy>
+    <ul className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 lg:gap-5" aria-busy>
       {[0, 1, 2, 3].map((i) => (
         <li key={i} className={`${card} animate-pulse overflow-hidden`}>
           <div className="aspect-[9/14] bg-brand-50" />

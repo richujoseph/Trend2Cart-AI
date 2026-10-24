@@ -180,9 +180,10 @@ function DoneReel({ reel }: { reel: Reel }) {
   }
 
   return (
-    <>
-      <div className="mx-auto mt-6 w-full max-w-[17rem] rounded-[2.5rem] bg-charcoal p-1.5 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.25)]">
-        <video src={reel.video_url!} controls playsInline preload="metadata" className="aspect-[9/16] w-full rounded-[1.6rem] bg-black" />
+    <div className="lg:mt-4 lg:grid lg:grid-cols-[minmax(0,20rem)_minmax(0,1fr)] lg:items-start lg:gap-10">
+      <div className="min-w-0">
+      <div className="mx-auto mt-6 w-full max-w-[17rem] rounded-[2.5rem] bg-charcoal p-1.5 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.25)] lg:max-w-none">
+        <video src={reel.video_url!} controls playsInline preload="metadata" className="aspect-[9/16] w-full rounded-[1.6rem] bg-charcoal" />
       </div>
       <div className="mt-5 grid grid-cols-2 gap-3">
         {/* Supabase Storage sends the file as a download when ?download= is set. */}
@@ -201,6 +202,8 @@ function DoneReel({ reel }: { reel: Reel }) {
       </div>
       <p className="mt-3 text-center text-[13px] text-ink-2">{shareError ? t.reel.shareFailed : t.reel.postHint}</p>
 
+      </div>
+      <div className="min-w-0">
       <section className={`${dataCard} mt-6 p-5`}>
         <div className="flex items-center justify-between gap-2">
           <h2 className="flex items-center gap-1.5 text-xl font-black"><PenLine className="h-4 w-4 text-rust-600" strokeWidth={1.5} aria-hidden /> {t.reel.captionTitle}</h2>
@@ -221,6 +224,7 @@ function DoneReel({ reel }: { reel: Reel }) {
         </span>
         <ArrowRight className="h-5 w-5 shrink-0 text-ink-2" strokeWidth={1.5} aria-hidden />
       </Link>
-    </>
+      </div>
+    </div>
   );
 }

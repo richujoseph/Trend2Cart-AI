@@ -43,7 +43,15 @@ export type Reel = {
 export type Me = {
   email: string | null;
   phone: string | null;
-  profile: { plan: "free" | "pro" | "founding"; language: Language; region: string | null };
+  profile: {
+    plan: "free" | "pro" | "founding";
+    language: Language;
+    region: string | null;
+    display_name?: string | null;
+    business_name?: string | null;
+    whatsapp?: string | null;
+    city?: string | null;
+  };
   reels: { limit: number | null; used: number; left: number | null; resets_at: string | null };
 };
 

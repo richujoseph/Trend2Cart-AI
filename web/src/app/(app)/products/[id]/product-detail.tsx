@@ -119,6 +119,8 @@ export default function ProductDetail() {
       <RibbonBackground variant="subtle" className="-mx-5 -mt-4 h-80" />
       <div className="relative">
         <BackLink />
+        <div className="lg:grid lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:items-start lg:gap-8">
+        <div className="min-w-0">
         <div className={`${glassCard} mt-3 flex gap-4 p-4`}>
           <span className="flex h-28 w-28 shrink-0 items-center justify-center rounded-[16px] bg-card-muted p-1.5">
             <ProductImage src={sim.image_urls[0]} name={sim.name} className="h-full w-full rounded-[12px]" />
@@ -172,8 +174,10 @@ export default function ProductDetail() {
 
         <Breakdown sim={sim} />
         {sim.mine && <RemoveOwn id={sim.id} />}
+        </div>
 
-        <section className={`${glassCard} mt-4 p-5`}>
+        <div className="min-w-0 lg:sticky lg:top-28">
+        <section className={`${glassCard} mt-4 p-5 lg:mt-3`}>
           <h2 className="text-2xl font-black text-ink">{t.product.yourNumbers}</h2>
           <p className="mt-1 text-[13px] text-ink-2">{t.product.yourNumbersSub}</p>
           <div className="mt-5 flex flex-col gap-6">
@@ -228,6 +232,8 @@ export default function ProductDetail() {
             return message && <p role="alert" className="mt-4 rounded-[16px] bg-loss/10 p-3 text-sm text-loss">{message}</p>;
           })()}
         </section>
+        </div>
+        </div>
       </div>
     </div>
   );

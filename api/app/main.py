@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from datetime import datetime, timezone
 from typing import Literal
@@ -51,6 +51,10 @@ FIELD_MESSAGES = {
     "clicks": "Clicks/DMs must be a whole number (0 or more).",
     "orders": "Orders must be a whole number (0 or more).",
     "returns": "Returns must be a whole number (0 or more).",
+    "whatsapp": "Enter a 10-digit Indian mobile number for WhatsApp, or leave it empty.",
+    "display_name": "Keep your name under 60 characters.",
+    "business_name": "Keep your shop name under 80 characters.",
+    "city": "Keep the city name under 60 characters.",
 }
 
 
@@ -96,12 +100,23 @@ def me(request: Request, user: dict = Depends(current_user)):
 class ProfileUpdate(BaseModel):
     language: Literal["ml", "hi", "en"] | None = None
     region: Literal["kerala", "tamil_nadu"] | None = None
+    # Seller details: "" clears a field.
+    display_name: str | None = Field(None, max_length=60)
+    business_name: str | None = Field(None, max_length=80)
+    whatsapp: str | None = Field(None, pattern=r"^([6-9]\d{9})?$")
+    city: str | None = Field(None, max_length=60)
+
+
+DETAILS = ("display_name", "business_name", "whatsapp", "city")
 
 
 @protected.patch("/me")
 def update_me(body: ProfileUpdate, user: dict = Depends(current_user)):
-    """Seller preferences. Server-side so a save either really happens or shows an error."""
+    """Seller preferences and details. Server-side so a save either really happens or shows an error."""
     fields = body.model_dump(exclude_none=True)
+    for k in DETAILS:
+        if k in fields:
+            fields[k] = " ".join(fields[k].split()) or None  # tidy spaces; empty clears
     if not fields:
         raise HTTPException(422, "Nothing to save.")
     try:

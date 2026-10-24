@@ -81,7 +81,7 @@ export default function PricingPage() {
     <>
       <PageHero icon={Crown} title={t.pricing.title} subtitle={t.pricing.subtitle} tone="sunset" />
 
-      <div className="mt-4 flex flex-col gap-3">
+      <div className="mt-4 grid gap-4 lg:grid-cols-2 lg:items-stretch">
         <Plan name={t.pricing.free} price="₹0" items={t.pricing.freeItems} current={me?.profile.plan === "free"} currentLabel={t.pricing.yourPlan} />
         <Plan name={t.pricing.founding} price="₹99" note={t.pricing.oneTime} items={t.pricing.foundingItems} current={!!founding} currentLabel={t.pricing.yourPlan} highlight>
           {!founding && (

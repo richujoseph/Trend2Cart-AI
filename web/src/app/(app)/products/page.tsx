@@ -74,9 +74,9 @@ export default function ProductsPage() {
 
   return (
     <>
-      <h1 className="text-[32px] font-black leading-[1.1] text-charcoal">{t.products.title}</h1>
+      <h1 className="text-[32px] font-black leading-[1.1] text-charcoal lg:text-5xl">{t.products.title}</h1>
       <p className="mt-1.5 text-[15px] leading-relaxed text-ink-2">{t.products.subtitle}</p>
-      <SearchBox />
+      <div className="lg:max-w-2xl"><SearchBox /></div>
       {counts && (
         <p className="mt-3 text-[10px] font-bold uppercase tracking-[0.14em] text-ink-3">
           {fmt(t.products.statChecked, { n: counts.all.length })} · {fmt(t.products.statWinning, { n: winners })} · {t.products.statReal}
@@ -113,9 +113,10 @@ export default function ProductsPage() {
         })}
       </ul>
 
-      {spotlight && <Spotlight p={spotlight} />}
-
-      <TrendingStrip />
+      <div className="lg:mt-2 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] lg:items-start lg:gap-8">
+        {spotlight && <Spotlight p={spotlight} />}
+        <TrendingStrip />
+      </div>
 
       <div className="mt-8">
         <SectionTitle
@@ -142,7 +143,7 @@ export default function ProductsPage() {
       {items?.length === 0 && filter === "mine" && <EmptyState icon={Store} title={t.products.noMineTitle} body={t.products.noMineBody} />}
       {items?.length === 0 && filter !== "saved" && filter !== "mine" && <EmptyState title={t.products.noneTitle} body={t.products.noneBody} />}
       {rest && rest.length > 0 && (
-        <ul className="mt-4 flex flex-col gap-3">
+        <ul className="mt-4 grid gap-3 lg:grid-cols-2 lg:gap-4">
           {rest.map((p, i) => (
             <li key={p.id} className="animate-rise" style={{ animationDelay: `${Math.min(i, 8) * 30}ms` }}>
               <FeedItem product={p} />
@@ -246,21 +247,21 @@ function TrendingStrip() {
   }, []);
 
   return (
-    <section className="mt-8">
+    <section className="mt-8 min-w-0 lg:mt-6">
       <SectionTitle icon={Flame} subtitle={t.products.trendingSub} title={t.products.trendingTitle} />
       {failed && <p className="mt-2 text-sm text-ink-2">{t.products.trendingEmpty}</p>}
       {!failed && !data?.items.length && (
         <div className="-mx-5 mt-3 flex gap-3 overflow-hidden px-5">
-          {[0, 1].map((i) => <div key={i} className="skeleton-light h-36 w-[78%] shrink-0 rounded-[24px]" />)}
+          {[0, 1].map((i) => <div key={i} className="skeleton-light h-36 w-[78%] shrink-0 rounded-[24px] lg:w-[48%]" />)}
         </div>
       )}
       {!failed && data && !data.items.length && data.refreshing && (
         <p className="mt-2 text-xs text-ink-2">{t.products.trendingLoading}</p>
       )}
       {!!data?.items.length && (
-        <ul className="-mx-5 mt-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-5 pb-2 [scrollbar-width:none]">
+        <ul className="-mx-5 mt-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-5 pb-2 [scrollbar-width:none] lg:mx-0 lg:px-0">
           {data.items.slice(0, 12).map((item, i) => (
-            <li key={item.term} className="w-[78%] shrink-0 snap-start">
+            <li key={item.term} className="w-[78%] shrink-0 snap-start lg:w-[48%]">
               <Link
                 href={`/products/search?q=${encodeURIComponent(item.term)}`}
                 className="flex h-full flex-col rounded-[24px] border border-sage/30 bg-white p-5 transition hover:border-charcoal"
@@ -323,7 +324,7 @@ function FeedItem({ product: p }: { product: ProductListItem }) {
 
 function FeedSkeleton() {
   return (
-    <ul className="mt-4 flex flex-col gap-3" aria-busy>
+    <ul className="mt-4 grid gap-3 lg:grid-cols-2" aria-busy>
       {[0, 1, 2, 3].map((i) => <li key={i} className="skeleton-light h-[88px] rounded-[24px]" />)}
     </ul>
   );

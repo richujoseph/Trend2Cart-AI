@@ -127,12 +127,14 @@ export default function Doctor() {
 
   return (
     <>
-      <section className="relative isolate -mx-5 -mt-4 px-5 pb-2 pt-6">
+      <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:items-start lg:gap-8">
+      <div className="min-w-0">
+      <section className="relative isolate -mx-5 -mt-4 px-5 pb-2 pt-6 lg:mx-0 lg:mt-0 lg:px-0">
         <RibbonBackground variant="section" className="-z-10" />
         <span className="glass inline-flex h-10 w-10 items-center justify-center rounded-full">
           <Stethoscope className="h-5 w-5 text-ink" strokeWidth={1.5} aria-hidden />
         </span>
-        <h1 className="mt-4 text-[34px] font-black leading-[1.1] tracking-tight text-ink">{t.doctor.title}</h1>
+        <h1 className="mt-4 text-[34px] font-black leading-[1.1] tracking-tight text-ink lg:text-5xl">{t.doctor.title}</h1>
         <p className="mt-2 max-w-[34ch] text-[15px] leading-relaxed text-ink-2">{t.doctor.subtitle}</p>
         {history && history.length > 0 ? <HealthSummary history={history} /> : history && <HowItWorks />}
         <a href="#checkup" className={`${btn.light} mt-5`}>
@@ -141,8 +143,10 @@ export default function Doctor() {
       </section>
 
       {history && history.length > 0 && <Insights history={history} />}
+      </div>
+      <div className="min-w-0 lg:sticky lg:top-28">
 
-      <section id="checkup" className={`${glassCard} mt-8 scroll-mt-20 overflow-hidden`}>
+      <section id="checkup" className={`${glassCard} mt-8 scroll-mt-20 overflow-hidden lg:mt-0`}>
         <div className="flex items-center justify-between gap-2 border-b border-sage/30 p-5">
           <h2 className="text-2xl font-black text-ink">{t.doctor.newCheckup}</h2>
           <span className="text-[13px] tabular-nums text-ink-2">{fmt(t.doctor.stepOf, { n: step })}</span>
@@ -301,6 +305,8 @@ export default function Doctor() {
           </div>
         </div>
       </section>
+      </div>
+      </div>
 
       {result && (
         <section id="diagnosis" className="mt-6 scroll-mt-20 animate-rise" aria-live="polite">
