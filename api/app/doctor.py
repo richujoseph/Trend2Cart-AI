@@ -7,7 +7,10 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, Field
 
 from app.deps import current_user
-from core.doctor import FunnelError, diagnose, money_result, write_advice
+from core.doctor import (
+    CONVERSION_BENCHMARK, CONVERSION_SOURCE, INTEREST_BENCHMARK, INTEREST_SOURCE,
+    FunnelError, diagnose, money_result, write_advice,
+)
 from core.llm import LLMError
 from core.supabase import SupabaseError, rest_get, service_insert
 
@@ -97,6 +100,21 @@ def run_doctor(body: Results, request: Request, user: dict = Depends(current_use
             "stage": result["stage"], "explanation": advice.explanation, "fixes": advice.fixes,
             "new_hooks": advice.hooks, "rates": result["stages"], "message": advice.message, "money": money,
         }],
+    }
+
+
+@router.get("/benchmarks")
+def benchmarks(request: Request):
+    """The usual rates the Doctor compares against, so the page can preview a check-up as the seller types."""
+    try:
+        rows = rest_get("category_assumptions", request.state.token, {"select": "category,rto_rate"})
+    except httpx.HTTPError:
+        raise HTTPException(503, BUSY)
+    return {
+        "interest": {"rate": INTEREST_BENCHMARK, "source": INTEREST_SOURCE},
+        "conversion": {"rate": CONVERSION_BENCHMARK, "source": CONVERSION_SOURCE},
+        "returns_by_category": {r["category"]: float(r["rto_rate"]) for r in rows},
+        "returns_default": OVERALL_RTO[0],
     }
 
 

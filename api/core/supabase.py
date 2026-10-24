@@ -129,12 +129,19 @@ def service_upsert(table: str, rows: list[dict], on_conflict: str) -> None:
     _check(resp, f"Uploading {table}")
 
 
-def service_delete_except(table: str, keep_ids: list[str]) -> int:
-    """Delete every row whose id is not in keep_ids (service-role key). Returns how many were deleted."""
+def service_delete_except(table: str, keep_ids: list[str], where: dict | None = None) -> int:
+    """Delete every row whose id is not in keep_ids, optionally only rows matching `where` (PostgREST filters).
+    Service-role key. Returns how many were deleted."""
     resp = _http().delete(
         _rest_url(table),
-        params={"id": f"not.in.({','.join(keep_ids)})"},
+        params={"id": f"not.in.({','.join(keep_ids)})"} | (where or {}),
         headers=_service_headers(Prefer="return=representation"),
         timeout=30,
     )
     return len(_check(resp, f"Removing old {table} rows").json())
+
+
+def service_delete(table: str, filters: dict) -> int:
+    """Delete rows matching PostgREST filters (service-role key). Returns how many were deleted."""
+    resp = _http().delete(_rest_url(table), params=filters, headers=_service_headers(Prefer="return=representation"), timeout=15)
+    return len(_check(resp, f"Removing {table} rows").json())

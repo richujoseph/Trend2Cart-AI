@@ -1,5 +1,6 @@
 "use client";
 
+import { Languages, MapPin, UserRound } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -68,7 +69,7 @@ export default function AccountPage() {
 
   return (
     <>
-      <PageHero title={t.account.title} subtitle={t.account.subtitle}>
+      <PageHero icon={UserRound} title={t.account.title} subtitle={t.account.subtitle}>
         {me && <p className="mt-3 truncate text-sm font-semibold">{me.email || (me.phone ? `+${me.phone}` : "")}</p>}
       </PageHero>
       {error && <p role="alert" className="mt-4 rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</p>}
@@ -89,7 +90,7 @@ export default function AccountPage() {
           </section>
 
           <fieldset className={`${card} mt-4 p-4`}>
-            <legend className="float-left w-full font-bold text-brand-900">🗣️ {t.account.language}</legend>
+            <legend className="float-left flex w-full items-center gap-1.5 font-bold text-brand-900"><Languages className="h-5 w-5 text-brand-600" aria-hidden /> {t.account.language}</legend>
             <p className="text-xs text-neutral-500">{t.account.languageHint}</p>
             <div className="clear-both mt-3 grid grid-cols-3 gap-2 pt-1">
               {LANGUAGES.map((l) => (
@@ -102,7 +103,7 @@ export default function AccountPage() {
           </fieldset>
 
           <fieldset className={`${card} mt-4 p-4`}>
-            <legend className="float-left w-full font-bold text-brand-900">📍 {t.account.whereSell}</legend>
+            <legend className="float-left flex w-full items-center gap-1.5 font-bold text-brand-900"><MapPin className="h-5 w-5 text-brand-600" aria-hidden /> {t.account.whereSell}</legend>
             <div className="clear-both mt-3 grid grid-cols-2 gap-2 pt-1">
               {REGIONS.map((r) => (
                 <button

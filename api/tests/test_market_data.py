@@ -140,3 +140,8 @@ def test_sparse_state_data_falls_back_to_india_and_uses_trend_keyword(monkeypatc
     snap = market_data.fetch_market_snapshot("pull string vegetable chopper", "vegetable chopper")
     assert calls == [("vegetable chopper,vegetable chopper", "IN-KL,IN-TN"), ("vegetable chopper", "IN")]
     assert snap.trend_region == "India" and snap.trend_score == 50
+
+
+def test_market_price_ignores_listings_above_ceiling():
+    # ₹150 neck fan: ₹2,999 branded models are a different product class
+    assert market_price_paise([299, 349, 399, 2999, 3299, 3499], ceiling_paise=150 * 8 * 100) == 34900

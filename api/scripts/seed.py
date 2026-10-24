@@ -107,7 +107,8 @@ def main() -> None:
     try:
         service_upsert("category_assumptions", CATEGORY_ASSUMPTIONS, on_conflict="category")
         service_upsert("products", products, on_conflict="id")
-        removed = service_delete_except("products", [p["id"] for p in products])
+        # Only the curated catalog: products sellers added themselves (owner_id set) are theirs to keep.
+        removed = service_delete_except("products", [p["id"] for p in products], where={"owner_id": "is.null"})
     except RuntimeError as e:
         sys.exit(str(e))
     priced = sum(1 for p in products if p["selling_price_paise"] is not None)

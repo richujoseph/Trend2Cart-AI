@@ -1,5 +1,6 @@
 "use client";
 
+import { CircleAlert, Clapperboard, Loader } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { apiFetch } from "@/lib/api";
@@ -41,7 +42,7 @@ export default function ReelsPage() {
 
   return (
     <>
-      <PageHero title={t.reels.title} subtitle={t.reels.subtitle} tone="sunset">
+      <PageHero icon={Clapperboard} title={t.reels.title} subtitle={t.reels.subtitle} tone="sunset">
         {me && <QuotaLine me={me} tone="light" />}
         <Link href="/reels/new" className="mt-4 inline-flex h-11 items-center rounded-xl bg-white px-5 text-sm font-bold text-rose-600 shadow-md">
           {t.reels.newReel}
@@ -58,7 +59,7 @@ export default function ReelsPage() {
         />
       )}
       {!reels && !error && <ListSkeleton />}
-      {reels?.length === 0 && <EmptyState icon="🎬" title={t.reels.emptyTitle} body={t.reels.emptyBody} />}
+      {reels?.length === 0 && <EmptyState icon={Clapperboard} title={t.reels.emptyTitle} body={t.reels.emptyBody} />}
       {reels && reels.length > 0 && (
         <ul className="mt-5 grid grid-cols-2 gap-3">
           {reels.map((r, i) => (
@@ -69,7 +70,7 @@ export default function ReelsPage() {
                     <video src={`${r.video_url}#t=1.5`} preload="metadata" muted playsInline className="h-full w-full object-cover" aria-hidden />
                   ) : (
                     <span className="flex h-full items-center justify-center text-4xl" aria-hidden>
-                      {r.status === "failed" ? "⚠️" : "⏳"}
+                      {r.status === "failed" ? <CircleAlert className="h-9 w-9 text-white" aria-hidden /> : <Loader className="h-9 w-9 animate-spin text-white" aria-hidden />}
                     </span>
                   )}
                   <span className={`absolute left-2 top-2 rounded-full px-2 py-0.5 text-[11px] font-bold shadow ${STATUS_TONE[r.status].tone}`}>

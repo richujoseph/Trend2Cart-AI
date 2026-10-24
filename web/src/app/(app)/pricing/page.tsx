@@ -1,5 +1,6 @@
 "use client";
 
+import { Crown } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ApiError, apiFetch } from "@/lib/api";
@@ -78,7 +79,7 @@ export default function PricingPage() {
 
   return (
     <>
-      <PageHero title={`⭐ ${t.pricing.title}`} subtitle={t.pricing.subtitle} tone="sunset" />
+      <PageHero icon={Crown} title={t.pricing.title} subtitle={t.pricing.subtitle} tone="sunset" />
 
       <div className="mt-4 flex flex-col gap-3">
         <Plan name={t.pricing.free} price="₹0" items={t.pricing.freeItems} current={me?.profile.plan === "free"} currentLabel={t.pricing.yourPlan} />

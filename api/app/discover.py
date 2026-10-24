@@ -2,6 +2,7 @@
 
 import logging
 import threading
+import time
 from datetime import datetime, timedelta, timezone
 
 import httpx
@@ -10,6 +11,7 @@ from pydantic import BaseModel, Field
 
 from app.deps import current_user
 from core.discover import fetch_trending, lookup_product, normalize_query
+from core.market_data import searches_left
 from core.profit import calculate_profit, cod_fee_paise, shipping_paise
 from core.supabase import SupabaseError, service_get, service_insert, service_upsert
 
@@ -20,6 +22,10 @@ FRESH_FOR = timedelta(days=7)
 DAILY_LOOKUPS = 10  # new (uncached) searches per seller per 24 h; each costs 2–3 of the 250 free SerpApi searches a month
 DEFAULT_RTO = 0.22  # GoKwik 2026 (via base.com): COD RTO in India is 20–25%. Shown as an editable estimate.
 BUSY = "We couldn't check the market right now. Please try again in a minute."
+RESERVE = 15  # keep a few SerpApi searches for the weekly trending refresh and the demo
+OUT_OF_SEARCHES = "Market search has reached its limit for this month. Saved searches and trending still work."
+RETRY_TRENDING_AFTER = 3600  # seconds; a failed refresh must not retry on every page view
+_trending_failed_at = 0.0
 _refreshing = False
 _lock = threading.Lock()
 
@@ -65,6 +71,16 @@ def search(q: str = Query(max_length=100), user: dict = Depends(current_user)):
         if row:  # an old result is better than nothing
             return row["data"] | {"cached": True}
         raise HTTPException(429, f"You've done {DAILY_LOOKUPS} new searches today. Try again tomorrow, or open a trending product.")
+    left = searches_left()
+    if left is not None and left < RESERVE:
+        if row:
+            return row["data"] | {"cached": True}
+        raise HTTPException(503, OUT_OF_SEARCHES)
+    try:
+        # Counted before calling: a failed search still uses SerpApi credits.
+        service_insert("market_lookup_log", {"user_id": user["sub"], "query": query})
+    except (httpx.HTTPError, SupabaseError):
+        raise HTTPException(503, BUSY)
     try:
         data = lookup_product(query)
     except (RuntimeError, httpx.HTTPError) as e:
@@ -74,7 +90,6 @@ def search(q: str = Query(max_length=100), user: dict = Depends(current_user)):
         raise HTTPException(503, _friendly(e) if isinstance(e, RuntimeError) else BUSY)
     try:
         _save(key, data)
-        service_insert("market_lookup_log", {"user_id": user["sub"], "query": query})
     except (httpx.HTTPError, SupabaseError):
         log.warning("couldn't cache lookup %r", query)
     return data | {"cached": False}
@@ -84,12 +99,13 @@ TRENDING_KEY = "trending:india"
 
 
 def _refresh_trending() -> None:
-    global _refreshing
+    global _refreshing, _trending_failed_at
     try:
         _save(TRENDING_KEY, fetch_trending())
         log.info("trending refreshed")
     except Exception:
-        log.exception("trending refresh failed")
+        _trending_failed_at = time.monotonic()
+        log.exception("trending refresh failed; next try in an hour")
     finally:
         with _lock:
             _refreshing = False
@@ -103,14 +119,17 @@ def trending(background: BackgroundTasks):
     except (httpx.HTTPError, SupabaseError):
         raise HTTPException(503, BUSY)
     stale = not row or not _is_fresh(row)
-    if stale:
+    left = searches_left()
+    can_refresh = (time.monotonic() - _trending_failed_at > RETRY_TRENDING_AFTER or not _trending_failed_at) \
+        and (left is None or left >= 6)
+    if stale and can_refresh:
         with _lock:
             start, _refreshing = not _refreshing, True
         if start:  # serve what we have; the weekly refresh (6 searches) runs after the response
             background.add_task(_refresh_trending)
     if not row:
-        return {"region": "India", "items": [], "fetched_at": None, "refreshing": True}
-    return row["data"] | {"refreshing": stale}
+        return {"region": "India", "items": [], "fetched_at": None, "refreshing": can_refresh}
+    return row["data"] | {"refreshing": stale and can_refresh}
 
 
 class Estimate(BaseModel):

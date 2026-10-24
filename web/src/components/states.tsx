@@ -1,5 +1,6 @@
 "use client";
 
+import { Sparkles, type LucideIcon } from "lucide-react";
 import { useT } from "@/lib/i18n";
 
 export function ErrorState({ message, onRetry }: { message: string; onRetry?: () => void }) {
@@ -16,10 +17,12 @@ export function ErrorState({ message, onRetry }: { message: string; onRetry?: ()
   );
 }
 
-export function EmptyState({ title, body, icon = "✨" }: { title: string; body: string; icon?: string }) {
+export function EmptyState({ title, body, icon: Icon = Sparkles }: { title: string; body: string; icon?: LucideIcon }) {
   return (
     <div className="mt-6 rounded-2xl border-2 border-dashed border-brand-200 bg-white/60 p-6 text-center">
-      <p className="text-3xl" aria-hidden>{icon}</p>
+      <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-100 text-brand-600">
+        <Icon className="h-6 w-6" aria-hidden />
+      </span>
       <p className="mt-2 font-bold text-brand-900">{title}</p>
       <p className="mt-1 text-sm text-neutral-600">{body}</p>
     </div>

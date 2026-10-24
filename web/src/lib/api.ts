@@ -8,8 +8,12 @@ export class ApiError extends Error {
   }
 }
 
-/** Call the FastAPI backend as the signed-in user. Throws ApiError with a seller-friendly message. */
-export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
+const DEFAULT_TIMEOUT_MS = 25_000;
+
+/** Call the FastAPI backend as the signed-in user. Throws ApiError with a seller-friendly message.
+ *  Gives up after timeoutMs (status 0) so a stuck request never leaves a spinner forever. */
+export async function apiFetch<T>(path: string, init: RequestInit & { timeoutMs?: number } = {}): Promise<T> {
+  const { timeoutMs = DEFAULT_TIMEOUT_MS, ...rest } = init;
   const { data } = await createClient().auth.getSession();
   const token = data.session?.access_token;
   if (!token) throw new ApiError(messagesNow().api.signIn, 401);
@@ -17,15 +21,17 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise
   let res: Response;
   try {
     res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}${path}`, {
-      ...init,
+      ...rest,
+      signal: AbortSignal.timeout(timeoutMs),
       headers: {
-        ...(init.body ? { "Content-Type": "application/json" } : {}),
-        ...init.headers,
+        ...(rest.body ? { "Content-Type": "application/json" } : {}),
+        ...rest.headers,
         Authorization: `Bearer ${token}`,
       },
     });
-  } catch {
-    throw new ApiError(messagesNow().api.network, 0);
+  } catch (err) {
+    const timedOut = (err as Error).name === "TimeoutError";
+    throw new ApiError(timedOut ? messagesNow().api.timeout : messagesNow().api.network, 0);
   }
   if (!res.ok) {
     const body = await res.json().catch(() => null);
@@ -34,5 +40,5 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise
       res.status,
     );
   }
-  return res.json();
+  return res.status === 204 ? (undefined as T) : res.json();
 }

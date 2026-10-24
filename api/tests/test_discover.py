@@ -80,6 +80,9 @@ def api(monkeypatch):
         {r["key"]: {"data": r["data"], "fetched_at": r["fetched_at"]} for r in rows}))
     monkeypatch.setattr(route, "service_insert", lambda t, row: state["log"].append(row))
     monkeypatch.setattr(route, "lookup_product", lookup)
+    monkeypatch.setattr(route, "searches_left", lambda: state.get("left", 200))
+    monkeypatch.setattr(route, "_trending_failed_at", 0.0)
+    monkeypatch.setattr(route, "_refreshing", False)
     state["now"] = now
     return state
 
@@ -106,6 +109,38 @@ def test_search_daily_cap(client, auth_headers, api):
 def test_search_rejects_junk(client, auth_headers, api):
     r = client.get("/discover/search", params={"q": "!!"}, headers=auth_headers)
     assert r.status_code == 422 and "product name" in r.json()["detail"]
+
+
+def test_search_stops_near_monthly_limit(client, auth_headers, api):
+    api["left"] = 10
+    r = client.get("/discover/search", params={"q": "neck fan"}, headers=auth_headers)
+    assert r.status_code == 503 and "limit for this month" in r.json()["detail"] and api["lookups"] == 0
+
+
+def test_failed_search_still_counts_toward_daily_limit(client, auth_headers, api, monkeypatch):
+    from app import discover as route
+
+    def broke(q):
+        raise RuntimeError("SerpApi error (500): boom")
+
+    monkeypatch.setattr(route, "lookup_product", broke)
+    client.get("/discover/search", params={"q": "neck fan"}, headers=auth_headers)
+    assert api["log"] == [{"user_id": "u1", "query": "neck fan"}]
+
+
+def test_failed_trending_refresh_waits_an_hour(client, auth_headers, api, monkeypatch):
+    from app import discover as route
+
+    calls = []
+
+    def broke():
+        calls.append(1)
+        raise RuntimeError("SerpApi down")
+
+    monkeypatch.setattr(route, "fetch_trending", broke)
+    client.get("/discover/trending", headers=auth_headers)
+    r = client.get("/discover/trending", headers=auth_headers)
+    assert calls == [1] and r.json()["refreshing"] is False  # no retry storm; the page stops waiting
 
 
 def test_search_out_of_serpapi_searches(client, auth_headers, api, monkeypatch):

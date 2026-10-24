@@ -86,14 +86,17 @@ def score(
     selling_price_paise: int,
     trend_score: int,
     competition_score: int,
-    supplier_reliability: int,
+    supplier_reliability: int | None,
 ) -> int:
     raw = (
         Decimal("0.50") * Decimal(str(profit_component(profit_paise, selling_price_paise)))
         + Decimal("0.25") * trend_score
         + Decimal("0.15") * (100 - competition_score)
-        + Decimal("0.10") * supplier_reliability
     )
+    if supplier_reliability is None:  # seller's own supplier, unrated: score on the other 90%, never a guess
+        raw = raw / Decimal("0.90")
+    else:
+        raw += Decimal("0.10") * supplier_reliability
     return _paise(raw)  # same half-up rounding, to a whole score point
 
 

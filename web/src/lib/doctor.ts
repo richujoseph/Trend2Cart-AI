@@ -45,11 +45,11 @@ export type Checkup = {
 };
 
 // Text is in the i18n dictionary (t.checkup.title*/short*/stage*/msg*).
-export const VERDICT_TONE: Record<Verdict, { tone: string; banner: string; icon: string }> = {
-  interest: { tone: "bg-amber-100 text-amber-900", banner: "from-amber-400 to-orange-500", icon: "👀" },
-  conversion: { tone: "bg-amber-100 text-amber-900", banner: "from-orange-400 to-rose-500", icon: "💬" },
-  returns: { tone: "bg-red-100 text-red-800", banner: "from-rose-500 to-red-600", icon: "📦" },
-  healthy: { tone: "bg-emerald-100 text-emerald-800", banner: "from-emerald-500 to-teal-600", icon: "🎉" },
+export const VERDICT_TONE: Record<Verdict, { tone: string; banner: string; dot: string }> = {
+  interest: { tone: "bg-amber-100 text-amber-900", banner: "from-amber-500 to-orange-500", dot: "bg-amber-500" },
+  conversion: { tone: "bg-orange-100 text-orange-900", banner: "from-orange-500 to-rose-500", dot: "bg-orange-500" },
+  returns: { tone: "bg-red-100 text-red-800", banner: "from-rose-500 to-red-600", dot: "bg-red-500" },
+  healthy: { tone: "bg-emerald-100 text-emerald-800", banner: "from-emerald-500 to-teal-600", dot: "bg-emerald-500" },
 };
 
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
@@ -59,3 +59,53 @@ export const stageKey = (s: StageKey) => cap(s) as "Interest" | "Conversion" | "
 export const STAGES: StageKey[] = ["interest", "conversion", "returns"];
 
 export const percent = (rate: number) => `${(rate * 100).toFixed(rate < 0.1 ? 1 : 0)}%`;
+
+export type Benchmarks = {
+  interest: { rate: number; source: string };
+  conversion: { rate: number; source: string };
+  returns_by_category: Record<string, number>;
+  returns_default: number;
+};
+
+/** One stage vs its usual rate → 0–100 (at or above usual ≈ 80, a quarter better or more = 100). */
+export function stageScore(s: Stage): number {
+  if (s.ratio === null) return 100; // no returns at all
+  return Math.round((Math.min(s.ratio, 1.25) / 1.25) * 100);
+}
+
+/** Average of the judged stages; null when nothing could be judged. */
+export function healthScore(rates: Partial<Record<StageKey, Stage>> | null | undefined): number | null {
+  const stages = Object.values(rates ?? {}) as Stage[];
+  if (!stages.length) return null;
+  return Math.round(stages.reduce((sum, s) => sum + stageScore(s), 0) / stages.length);
+}
+
+/** Same rules as api/core/doctor.py diagnose(), so the preview matches the final result. */
+export function previewRates(
+  n: { views: number; clicks: number; orders: number; returns: number },
+  b: Benchmarks,
+  category: string | undefined,
+): Partial<Record<StageKey, Stage>> {
+  if (n.views <= 0 || n.clicks > n.views || n.returns > n.orders) return {};
+  const rto = (category ? b.returns_by_category[category] : undefined) ?? b.returns_default;
+  const out: Partial<Record<StageKey, Stage>> = {};
+  const make = (rate: number, benchmark: number, source: string, lower = false): Stage => ({
+    rate, benchmark, source, lower_is_better: lower,
+    ratio: lower ? (rate > 0 ? benchmark / rate : null) : rate / benchmark,
+  });
+  out.interest = make(n.clicks / n.views, b.interest.rate, b.interest.source);
+  if (n.clicks > 0) out.conversion = make(n.orders / n.clicks, b.conversion.rate, b.conversion.source);
+  if (n.orders > 0) out.returns = make(n.returns / n.orders, rto, "", true);
+  return out;
+}
+
+/** The weakest stage below its usual rate, or "healthy". */
+export function weakest(rates: Partial<Record<StageKey, Stage>>): Verdict {
+  let worst: StageKey | null = null;
+  for (const k of STAGES) {
+    const s = rates[k];
+    if (!s || s.ratio === null || s.ratio >= 1) continue;
+    if (!worst || s.ratio < (rates[worst]!.ratio as number)) worst = k;
+  }
+  return worst ?? "healthy";
+}

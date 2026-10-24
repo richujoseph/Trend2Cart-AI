@@ -1,5 +1,6 @@
 "use client";
 
+import { Camera, Clapperboard, Languages, MapPin, Palette, Users } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -124,7 +125,7 @@ export default function NewReel() {
     <form onSubmit={submit} className="flex flex-col gap-5">
       <div>
         <Link href="/reels" className="text-sm font-medium text-brand-700">{t.newReel.back}</Link>
-        <h1 className="mt-2 text-2xl font-extrabold tracking-tight text-brand-900">🎬 {t.newReel.title}</h1>
+        <h1 className="mt-2 flex items-center gap-2 text-2xl font-extrabold tracking-tight text-brand-900"><Clapperboard className="h-6 w-6 text-brand-600" aria-hidden /> {t.newReel.title}</h1>
         {me && <QuotaLine me={me} />}
       </div>
 
@@ -213,7 +214,7 @@ export default function NewReel() {
 
           <div className="flex flex-col gap-2">
             <span className="text-sm font-bold">
-              📸 {t.newReel.photos} <span className="font-normal text-neutral-500">{t.newReel.recommended}</span>
+              <Camera className="inline h-4 w-4 text-brand-600" aria-hidden /> {t.newReel.photos} <span className="font-normal text-neutral-500">{t.newReel.recommended}</span>
             </span>
             <p className="text-xs text-neutral-500">{fmt(t.newReel.photosHint, { n: MAX_PHOTOS })}</p>
             <div className="grid grid-cols-4 gap-2">
@@ -258,7 +259,7 @@ export default function NewReel() {
       {step === 2 && (
         <>
           <label className="flex flex-col gap-2">
-            <span className="text-sm font-bold">🎯 {t.newReel.whoFor}</span>
+            <span className="flex items-center gap-1.5 text-sm font-bold"><Users className="h-4 w-4 text-brand-600" aria-hidden /> {t.newReel.whoFor}</span>
             <input value={audience} onChange={(e) => setAudience(e.target.value)} maxLength={80} placeholder={t.newReel.audiencePlaceholder} className={input} />
             <span className="text-xs text-neutral-500">{t.newReel.audienceHint}</span>
           </label>
@@ -293,7 +294,7 @@ export default function NewReel() {
         <>
           {!me.profile.region && (
             <fieldset className={`${card} p-3`}>
-              <legend className="float-left w-full text-sm font-bold">📍 {t.newReel.whereSell}</legend>
+              <legend className="float-left flex w-full items-center gap-1.5 text-sm font-bold"><MapPin className="h-4 w-4 text-brand-600" aria-hidden /> {t.newReel.whereSell}</legend>
               <p className="text-xs text-neutral-500">{t.newReel.whereSellHint}</p>
               <div className="clear-both mt-2 grid grid-cols-2 gap-2 pt-1">
                 {REGIONS.map((r) => (
@@ -307,7 +308,7 @@ export default function NewReel() {
           )}
 
           <fieldset className="flex flex-col gap-2">
-            <legend className="mb-2 text-sm font-bold">🗣️ {t.newReel.language}</legend>
+            <legend className="mb-2 flex items-center gap-1.5 text-sm font-bold"><Languages className="h-4 w-4 text-brand-600" aria-hidden /> {t.newReel.language}</legend>
             <div className="grid grid-cols-3 gap-2">
               {LANGUAGES.map((l) => (
                 <button
@@ -325,7 +326,7 @@ export default function NewReel() {
           </fieldset>
 
           <fieldset>
-            <legend className="mb-2 text-sm font-bold">🎨 {t.newReel.style}</legend>
+            <legend className="mb-2 flex items-center gap-1.5 text-sm font-bold"><Palette className="h-4 w-4 text-brand-600" aria-hidden /> {t.newReel.style}</legend>
             <div className="grid grid-cols-3 gap-2">
               {TEMPLATES.map((tpl) => (
                 <button
@@ -371,7 +372,7 @@ export default function NewReel() {
           </button>
         ) : (
           <button key="generate" disabled={busy || outOfReels || uploading || !me} className={`${btnPrimary} flex-1`}>
-            {busy ? t.newReel.starting : outOfReels ? t.newReel.noneLeft : `✨ ${t.newReel.generate}`}
+            {busy ? t.newReel.starting : outOfReels ? t.newReel.noneLeft : t.newReel.generate}
           </button>
         )}
       </div>

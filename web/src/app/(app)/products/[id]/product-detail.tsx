@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
+import { Trash2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { apiFetch } from "@/lib/api";
+import { ApiError, apiFetch } from "@/lib/api";
 import { type Messages } from "@/lib/i18n/en";
 import { fmt, useT } from "@/lib/i18n";
 import { type Simulation, formatRupees } from "@/lib/products";
@@ -117,7 +118,11 @@ export default function ProductDetail() {
         <div className="min-w-0 flex-1">
           <p className="text-[11px] font-semibold uppercase tracking-wide text-brand-500">{t.categories[sim.category]}</p>
           <h1 className="text-lg font-extrabold leading-tight text-brand-900">{sim.name}</h1>
-          {sim.supplier && <p className="mt-1 text-xs text-neutral-500">{fmt(t.product.supplier, { name: sim.supplier })}</p>}
+          {sim.mine ? (
+            <p className="mt-1 text-xs text-neutral-500">{t.product.unrated}</p>
+          ) : (
+            sim.supplier && <p className="mt-1 text-xs text-neutral-500">{fmt(t.product.supplier, { name: sim.supplier })}</p>
+          )}
           {sim.loss_trap && <div className="mt-1"><LossTrapTag /></div>}
         </div>
       </div>
@@ -144,11 +149,12 @@ export default function ProductDetail() {
       <div className="mt-3 grid grid-cols-2 gap-2">
         <SaveButton productId={sim.id} />
         <Link href={`/reels/new?product=${sim.id}`} className={btnPrimary}>
-          🎬 {t.product.makeReel}
+          {t.product.makeReel}
         </Link>
       </div>
 
       <Breakdown sim={sim} />
+      {sim.mine && <RemoveOwn id={sim.id} />}
 
       <section className={`${card} mt-4 p-4`}>
         <h2 className="text-lg font-bold text-brand-900">{t.product.yourNumbers}</h2>
@@ -375,6 +381,32 @@ function SaveButton({ productId }: { productId: string }) {
         {saved ? t.product.saved : t.product.save}
       </button>
       {error && <p role="alert" className="mt-1 text-xs text-red-700">{error}</p>}
+    </div>
+  );
+}
+
+function RemoveOwn({ id }: { id: string }) {
+  const { t } = useT();
+  const router = useRouter();
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  async function remove() {
+    setBusy(true);
+    setError(null);
+    try {
+      await apiFetch(`/products/mine/${id}`, { method: "DELETE" });
+      router.replace("/products");
+    } catch (err) {
+      setError((err as ApiError).message);
+      setBusy(false);
+    }
+  }
+  return (
+    <div className="mt-6">
+      <button onClick={remove} disabled={busy} className="flex h-11 w-full items-center justify-center gap-2 rounded-xl text-sm font-semibold text-red-700 ring-1 ring-red-200 disabled:opacity-50">
+        <Trash2 className="h-4 w-4" aria-hidden /> {busy ? t.product.removing : t.product.remove}
+      </button>
+      {error && <p role="alert" className="mt-2 text-sm text-red-700">{error}</p>}
     </div>
   );
 }

@@ -69,6 +69,14 @@ def test_doctor_uses_sellers_price_and_ad_spend(client, auth_headers, doctor_fak
     assert doctor_fakes[0][1]["selling_price_paise"] == 59900
 
 
+def test_doctor_benchmarks(client, auth_headers, doctor_fakes, monkeypatch):
+    from app import doctor
+
+    monkeypatch.setattr(doctor, "rest_get", lambda path, token, params=None: [{"category": "beauty", "rto_rate": "0.17"}])
+    b = client.get("/doctor/benchmarks", headers=auth_headers).json()
+    assert b["interest"]["rate"] == 0.045 and b["returns_by_category"] == {"beauty": 0.17} and b["returns_default"] == 0.22
+
+
 def test_doctor_daily_limit(client, auth_headers, doctor_fakes):
     doctor_fakes_recent[-1][0] = 20
     r = client.post("/doctor", headers=auth_headers, json={"reel_id": REEL_ID} | NUMBERS)

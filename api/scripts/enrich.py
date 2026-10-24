@@ -19,7 +19,7 @@ import sys
 from datetime import UTC, datetime, timedelta
 
 import seed
-from core.market_data import fetch_market_snapshot
+from core.market_data import COMPARABLE_MAX_MARKUP, fetch_market_snapshot
 
 FRESH_FOR = timedelta(days=7)
 
@@ -55,7 +55,9 @@ def main() -> None:
     failures = 0
     for row in todo:
         try:
-            snap = fetch_market_snapshot(row["search_keyword"], (row.get("trend_keyword") or "").strip() or None)
+            cost = int(row["supplier_price_paise"])
+            snap = fetch_market_snapshot(row["search_keyword"], (row.get("trend_keyword") or "").strip() or None,
+                                         ceiling_paise=cost * COMPARABLE_MAX_MARKUP)
         except RuntimeError as e:
             if "SERPAPI_API_KEY" in str(e):
                 sys.exit(str(e))
@@ -67,7 +69,8 @@ def main() -> None:
         if snap.market_price_paise is not None:
             row["selling_price_paise"] = str(snap.market_price_paise)
             row["selling_price_source"] = (
-                f"Median of {snap.listings} Google Shopping India listings — {snap.fetched_at:%Y-%m-%d}"
+                f"Median of comparable listings (≤{COMPARABLE_MAX_MARKUP}× wholesale cost) among {snap.listings} "
+                f"Google Shopping India listings — {snap.fetched_at:%Y-%m-%d}"
             )
         # else: too few listings to trust a new price; keep the existing researched price (if any).
         row["trend_score"] = str(snap.trend_score)

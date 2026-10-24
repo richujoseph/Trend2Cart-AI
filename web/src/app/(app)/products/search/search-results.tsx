@@ -6,9 +6,11 @@ import { useEffect, useRef, useState } from "react";
 import { apiFetch } from "@/lib/api";
 import type { Estimate, Lookup } from "@/lib/discover";
 import { fmt, useT } from "@/lib/i18n";
-import { formatRupees } from "@/lib/products";
+import { CATEGORIES, type Category, formatRupees } from "@/lib/products";
+import { ApiError } from "@/lib/api";
+import { CheckCircle2, PackagePlus } from "lucide-react";
 import { ErrorState, ProductImage } from "@/components/states";
-import { ChangeBadge, EstimateTag, SectionTitle, Sparkline, btnSecondary, card, input } from "@/components/ui";
+import { ChangeBadge, EstimateTag, SectionTitle, Sparkline, btnPrimary, btnSecondary, card, input } from "@/components/ui";
 
 export default function SearchResults() {
   const { t } = useT();
@@ -122,8 +124,8 @@ function Results({ d }: { d: Lookup }) {
                     {l.rating ? ` · ★ ${l.rating}` : ""}
                   </p>
                 </div>
-                {l.link && (
-                  <a href={l.link} target="_blank" rel="noreferrer" className="shrink-0 text-sm font-semibold text-brand-700">
+                {l.link?.startsWith("http") && (
+                  <a href={l.link} target="_blank" rel="noreferrer noopener" className="flex h-10 shrink-0 items-center px-2 text-sm font-semibold text-brand-700">
                     {t.search.open} ↗
                   </a>
                 )}
@@ -186,7 +188,7 @@ function Estimator({ d }: { d: Lookup }) {
   return (
     <section className={`${card} mt-6 overflow-hidden`}>
       <div className="bg-gradient-to-r from-brand-50 to-fuchsia-50 p-4">
-        <h2 className="text-lg font-bold text-brand-900">💰 {t.search.estimateTitle}</h2>
+        <h2 className="text-lg font-bold text-brand-900">{t.search.estimateTitle}</h2>
       </div>
       <div className="grid grid-cols-2 gap-3 p-4">
         <label className="col-span-2 flex flex-col gap-1">
@@ -228,6 +230,74 @@ function Estimator({ d }: { d: Lookup }) {
           </>
         )}
       </div>
+      {shown && <AddToShop d={d} cost={Math.round(Number(cost) * 100)} price={Math.round(Number(price) * 100)} />}
     </section>
+  );
+}
+
+function AddToShop({ d, cost, price }: { d: Lookup; cost: number; price: number }) {
+  const { t } = useT();
+  const [name, setName] = useState(d.query.replace(/\b\w/g, (c) => c.toUpperCase()));
+  const [category, setCategory] = useState<Category>("home_gadgets");
+  const [slabs, setSlabs] = useState(1);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [added, setAdded] = useState<string | null>(null);
+
+  async function add() {
+    if (name.trim().length < 3) return setError(t.search.errName);
+    setBusy(true);
+    setError(null);
+    try {
+      const r = await apiFetch<{ id: string }>("/products/mine", {
+        method: "POST",
+        body: JSON.stringify({ query: d.query, name: name.trim(), category, supplier_price_paise: cost, selling_price_paise: price, weight_slabs: slabs }),
+      });
+      setAdded(r.id);
+    } catch (err) {
+      setError((err as ApiError).message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  if (added) {
+    return (
+      <div className="flex items-center gap-3 border-t border-brand-50 bg-brand-50/60 p-4" role="status">
+        <CheckCircle2 className="h-6 w-6 shrink-0 text-emerald-600" aria-hidden />
+        <p className="flex-1 text-sm font-bold text-brand-900">{t.search.added}</p>
+        <Link href={`/products/${added}`} className="text-sm font-bold text-brand-700">{t.search.openProduct}</Link>
+      </div>
+    );
+  }
+  return (
+    <div className="border-t border-brand-50 p-4">
+      <p className="flex items-center gap-1.5 font-bold text-brand-900">
+        <PackagePlus className="h-5 w-5 text-brand-600" aria-hidden /> {t.search.addTitle}
+      </p>
+      <p className="text-xs text-neutral-500">{t.search.addSub}</p>
+      <div className="mt-3 grid grid-cols-2 gap-3">
+        <label className="col-span-2 flex flex-col gap-1">
+          <span className="text-sm font-semibold">{t.search.nameLabel}</span>
+          <input value={name} onChange={(e) => setName(e.target.value)} maxLength={80} className={input} />
+        </label>
+        <label className="flex flex-col gap-1">
+          <span className="text-sm font-semibold">{t.search.categoryLabel}</span>
+          <select value={category} onChange={(e) => setCategory(e.target.value as Category)} className={input}>
+            {CATEGORIES.map((c) => <option key={c} value={c}>{t.categories[c]}</option>)}
+          </select>
+        </label>
+        <label className="flex flex-col gap-1">
+          <span className="text-sm font-semibold">{t.search.weightLabel}</span>
+          <select value={slabs} onChange={(e) => setSlabs(Number(e.target.value))} className={input}>
+            {t.search.weights.map((w, i) => <option key={w} value={i + 1}>{w}</option>)}
+          </select>
+        </label>
+      </div>
+      {error && <p role="alert" className="mt-2 rounded-xl bg-red-50 p-2 text-sm text-red-700">{error}</p>}
+      <button onClick={add} disabled={busy} className={`${btnPrimary} mt-3 w-full`}>
+        <PackagePlus className="h-4 w-4" aria-hidden /> {busy ? t.search.adding : t.search.addButton}
+      </button>
+    </div>
   );
 }

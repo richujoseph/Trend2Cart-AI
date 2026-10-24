@@ -1,5 +1,7 @@
 """Conversion Doctor: rules find the weakest funnel stage; the LLM writes the fix and new hooks."""
 
+import time
+
 from pydantic import BaseModel, Field, ValidationError, ValidationInfo, field_validator, model_validator
 
 from core.llm import LLMError, complete_json
@@ -27,6 +29,9 @@ MESSAGES = {
     "returns": "a WhatsApp message to confirm each COD order before shipping it: product, price, and asking the buyer to reply YES",
     "healthy": "a WhatsApp message to delivered buyers asking for a photo or short review of the product",
 }
+
+
+ADVICE_BUDGET_SECONDS = 50
 
 
 class FunnelError(ValueError):
@@ -144,7 +149,10 @@ Never promise results, invent discounts, offers or delivery times, or suggest pa
             f"{numbers['returns']} returned\nStages:\n{stages}\n"
             f"Weakest stage: {result['stage']} — {result['summary']}")
     feedback = ""
-    for _ in range(2):
+    started = time.monotonic()
+    for attempt in range(2):
+        if attempt and time.monotonic() - started > ADVICE_BUDGET_SECONDS / 2:
+            break  # a second try would leave the seller waiting too long
         data = complete_json(system, user + feedback, temperature=0.7, usage=usage)
         try:
             return DoctorAdvice.model_validate(data, context={"language": language})

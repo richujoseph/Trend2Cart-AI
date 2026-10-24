@@ -21,8 +21,10 @@ export type ProductListItem = {
   selling_price_source: string | null;
   score: number | null; // null until trend + competition are checked
   profit_paise: number;
-  profit_rupees: number;
   loss_trap: boolean;
+  trend_score: number | null;
+  competition_score: number | null;
+  mine: boolean;
   estimates: Estimates;
 };
 
@@ -39,6 +41,7 @@ export type Simulation = {
   score: number | null;
   profit_paise: number;
   loss_trap: boolean;
+  mine: boolean;
   breakdown: {
     revenue: number;
     supplier_cost: number;

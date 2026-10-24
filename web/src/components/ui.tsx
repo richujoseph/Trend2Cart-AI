@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import type { LucideIcon } from "lucide-react";
 import { type Lang, useT } from "@/lib/i18n";
 import { useLanguage } from "@/lib/profile";
 
@@ -11,11 +12,11 @@ export const btnPrimary =
 export const btnSecondary =
   "inline-flex min-h-12 items-center justify-center gap-2 rounded-xl py-2 text-center leading-tight bg-white px-5 font-semibold text-brand-800 ring-1 ring-brand-200 transition active:scale-[.98] disabled:opacity-50";
 export const btnSmall =
-  "inline-flex h-9 shrink-0 items-center justify-center rounded-lg bg-white px-3 text-sm font-medium text-brand-800 ring-1 ring-brand-200 active:bg-brand-50";
+  "inline-flex h-10 shrink-0 items-center justify-center rounded-lg bg-white px-3 text-sm font-medium text-brand-800 ring-1 ring-brand-200 active:bg-brand-50";
 export const input =
   "h-12 w-full rounded-xl border border-brand-100 bg-white px-3 outline-none transition focus:border-brand-500 focus:ring-4 focus:ring-brand-500/15";
 export const chip = (active: boolean) =>
-  `h-9 shrink-0 rounded-full px-4 text-sm font-medium transition ${
+  `h-10 shrink-0 rounded-full px-4 text-sm font-medium transition ${
     active ? "bg-brand-700 text-white shadow-sm shadow-brand-700/30" : "bg-white text-neutral-700 ring-1 ring-brand-100"
   }`;
 
@@ -57,7 +58,7 @@ export function LanguageSelect({ tone = "light" }: { tone?: "light" | "dark" }) 
         <select
           value={lang}
           onChange={(e) => setLanguage(e.target.value as Lang)}
-          className={`h-9 appearance-none rounded-full pl-8 pr-3 text-sm font-semibold outline-none ${
+          className={`h-10 appearance-none rounded-full pl-8 pr-3 text-sm font-semibold outline-none ${
             tone === "dark" ? "bg-white/15 text-white ring-1 ring-white/30" : "bg-brand-50 text-brand-800 ring-1 ring-brand-100"
           }`}
         >
@@ -90,11 +91,12 @@ export function TopBar() {
 }
 
 /** Colourful page header for the main tabs. */
-export function PageHero({ title, subtitle, children, tone = "violet" }: {
+export function PageHero({ title, subtitle, children, tone = "violet", icon: Icon }: {
   title: string;
   subtitle?: string;
   children?: React.ReactNode;
   tone?: "violet" | "sunset" | "ocean";
+  icon?: LucideIcon;
 }) {
   const bg = {
     violet: "from-brand-700 via-brand-600 to-fuchsia-600",
@@ -106,7 +108,14 @@ export function PageHero({ title, subtitle, children, tone = "violet" }: {
       <span aria-hidden className="absolute -right-10 -top-12 h-40 w-40 rounded-full bg-white/10" />
       <span aria-hidden className="absolute -bottom-16 right-10 h-32 w-32 rounded-full bg-orange-300/20" />
       <div className="relative">
-        <h1 className="text-2xl font-extrabold leading-tight tracking-tight">{title}</h1>
+        <h1 className="flex items-center gap-2 text-2xl font-extrabold leading-tight tracking-tight">
+          {Icon && (
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/20 ring-1 ring-white/30">
+              <Icon className="h-5 w-5" aria-hidden />
+            </span>
+          )}
+          {title}
+        </h1>
         {subtitle && <p className="mt-1 text-sm text-white/85">{subtitle}</p>}
         {children}
       </div>
@@ -114,11 +123,19 @@ export function PageHero({ title, subtitle, children, tone = "violet" }: {
   );
 }
 
-export function SectionTitle({ title, subtitle, aside }: { title: string; subtitle?: string; aside?: React.ReactNode }) {
+export function SectionTitle({ title, subtitle, aside, icon: Icon }: {
+  title: string;
+  subtitle?: string;
+  aside?: React.ReactNode;
+  icon?: LucideIcon;
+}) {
   return (
     <div className="flex items-end justify-between gap-3">
-      <div>
-        <h2 className="text-lg font-bold tracking-tight text-brand-900">{title}</h2>
+      <div className="min-w-0">
+        <h2 className="flex items-center gap-1.5 text-lg font-bold tracking-tight text-brand-900">
+          {Icon && <Icon className="h-5 w-5 shrink-0 text-brand-600" aria-hidden />}
+          {title}
+        </h2>
         {subtitle && <p className="text-xs text-neutral-500">{subtitle}</p>}
       </div>
       {aside}
@@ -155,6 +172,29 @@ export function ChangeBadge({ pct, className = "" }: { pct: number | null; class
   return (
     <span className={`inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 text-xs font-bold tabular-nums ${up ? "bg-emerald-100 text-emerald-800" : "bg-red-100 text-red-700"} ${className}`}>
       {up ? "▲" : "▼"} {Math.abs(pct)}%
+    </span>
+  );
+}
+
+/** Circular 0–100 score, coloured by band. */
+export function ScoreRing({ value, size = 88, label, light = false }: { value: number; size?: number; label?: string; light?: boolean }) {
+  const r = 42;
+  const c = 2 * Math.PI * r;
+  const tone = value >= 70 ? "#10b981" : value >= 45 ? "#f59e0b" : "#ef4444";
+  return (
+    <span className="relative inline-flex shrink-0 items-center justify-center" style={{ width: size, height: size }}>
+      <svg viewBox="0 0 100 100" className="absolute inset-0 -rotate-90" aria-hidden>
+        <circle cx="50" cy="50" r={r} fill="none" strokeWidth="10" stroke={light ? "rgba(255,255,255,.25)" : "#ede9fe"} />
+        <circle
+          cx="50" cy="50" r={r} fill="none" strokeWidth="10" strokeLinecap="round" stroke={tone}
+          strokeDasharray={c} strokeDashoffset={c * (1 - Math.max(0, Math.min(value, 100)) / 100)}
+          style={{ transition: "stroke-dashoffset .6s ease" }}
+        />
+      </svg>
+      <span className="flex flex-col items-center leading-none">
+        <span className={`font-extrabold tabular-nums ${light ? "text-white" : "text-brand-900"}`} style={{ fontSize: size * 0.3 }}>{value}</span>
+        {label && <span className={`mt-0.5 text-[10px] font-semibold uppercase tracking-wide ${light ? "text-white/80" : "text-neutral-500"}`}>{label}</span>}
+      </span>
     </span>
   );
 }

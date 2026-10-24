@@ -10,6 +10,8 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from statistics import mean, median
 
+import time
+
 import httpx
 
 from core.config import get_settings
@@ -38,9 +40,14 @@ class MarketSnapshot:
 
 # ---------- Pure helpers (unit-tested) ----------
 
-def market_price_paise(prices_rupees: list[float]) -> int | None:
-    """Typical selling price: median after dropping bundles/accessories far from the middle."""
-    prices = [p for p in prices_rupees if p and p > 0]
+COMPARABLE_MAX_MARKUP = 8  # listings above 8× our wholesale cost are a different (branded/pro) product class
+
+
+def market_price_paise(prices_rupees: list[float], ceiling_paise: int | None = None) -> int | None:
+    """Typical selling price: median after dropping bundles/accessories far from the middle.
+    ceiling_paise: ignore listings above it (e.g. 8× the supplier cost), so a ₹150 neck fan isn't priced
+    against ₹3,000 branded models that Google Shopping mixes into the same search."""
+    prices = [p for p in prices_rupees if p and p > 0 and (ceiling_paise is None or p * 100 <= ceiling_paise)]
     if len(prices) < MIN_PRICES:
         return None
     mid = median(prices)
@@ -156,7 +163,7 @@ def fetch_region_series(terms: list[str], geo: str) -> dict[str, list[float]]:
     return series
 
 
-def fetch_market_snapshot(keyword: str, trend_keyword: str | None = None) -> MarketSnapshot:
+def fetch_market_snapshot(keyword: str, trend_keyword: str | None = None, ceiling_paise: int | None = None) -> MarketSnapshot:
     """keyword: specific product phrase for Shopping prices. trend_keyword: what people actually type
     into Google (usually broader, e.g. "vegetable chopper"); defaults to keyword."""
     shopping = fetch_shopping(keyword)
@@ -164,7 +171,7 @@ def fetch_market_snapshot(keyword: str, trend_keyword: str | None = None) -> Mar
 
     sellers = [r.get("source", "") for r in shopping]
     return MarketSnapshot(
-        market_price_paise=market_price_paise([r.get("extracted_price") for r in shopping]),
+        market_price_paise=market_price_paise([r.get("extracted_price") for r in shopping], ceiling_paise),
         competition_score=competition_score(sellers),
         trend_score=trend_score(series_by_geo),
         image_url=next((r["thumbnail"] for r in shopping if r.get("thumbnail")), None),
@@ -173,3 +180,23 @@ def fetch_market_snapshot(keyword: str, trend_keyword: str | None = None) -> Mar
         sellers=len({s.strip().lower() for s in sellers if s}),
         fetched_at=datetime.now(UTC),
     )
+
+
+_left_cache: tuple[float, int | None] = (0.0, None)
+
+
+def searches_left() -> int | None:
+    """SerpApi searches left this month (checked at most every 10 minutes; the check itself is free).
+    None when unknown, so a flaky account check never blocks sellers."""
+    global _left_cache
+    if time.monotonic() - _left_cache[0] < 600:
+        return _left_cache[1]
+    left = None
+    try:
+        key = get_settings().serpapi_api_key
+        if key:
+            left = httpx.get("https://serpapi.com/account.json", params={"api_key": key}, timeout=10).json().get("total_searches_left")
+    except (httpx.HTTPError, ValueError):
+        pass
+    _left_cache = (time.monotonic(), left)
+    return left

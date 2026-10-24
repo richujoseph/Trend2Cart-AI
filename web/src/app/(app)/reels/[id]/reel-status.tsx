@@ -1,5 +1,6 @@
 "use client";
 
+import { Download, PenLine, Stethoscope } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -185,7 +186,7 @@ function DoneReel({ reel }: { reel: Reel }) {
       <div className="mt-4 grid grid-cols-2 gap-2">
         {/* Supabase Storage sends the file as a download when ?download= is set. */}
         <a href={`${reel.video_url}?download=${encodeURIComponent(fileName)}`} className={btnPrimary}>
-          ⬇ {t.reel.download}
+          <Download className="h-4 w-4" aria-hidden /> {t.reel.download}
         </a>
         <button
           type="button"
@@ -200,7 +201,7 @@ function DoneReel({ reel }: { reel: Reel }) {
 
       <section className={`${card} mt-5 p-4`}>
         <div className="flex items-center justify-between">
-          <h2 className="font-bold text-brand-900">✍️ {t.reel.captionTitle}</h2>
+          <h2 className="flex items-center gap-1.5 font-bold text-brand-900"><PenLine className="h-4 w-4 text-brand-600" aria-hidden /> {t.reel.captionTitle}</h2>
           <button onClick={copy} className={btnSmall}>
             {copied ? t.common.copied : t.common.copy}
           </button>
@@ -209,7 +210,7 @@ function DoneReel({ reel }: { reel: Reel }) {
       </section>
 
       <Link href={`/doctor?reel=${reel.id}`} className="mt-4 block rounded-2xl bg-gradient-to-r from-teal-500 to-cyan-600 p-4 text-sm text-white shadow-md shadow-teal-600/20">
-        <span className="font-bold">📈 {t.reel.checkHow}</span>
+        <span className="flex items-center gap-1.5 font-bold"><Stethoscope className="h-4 w-4" aria-hidden /> {t.reel.checkHow}</span>
         <span className="block text-white/85">{t.reel.checkHowSub}</span>
       </Link>
     </>
