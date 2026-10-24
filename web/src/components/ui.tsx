@@ -14,7 +14,6 @@ const SHADOW = "shadow-[0_20px_50px_-12px_rgba(0,0,0,0.08)]";
 export const card = `rounded-[40px] bg-white ring-1 ring-sage/30 ${SHADOW}`;
 export const glassCard = `glass rounded-[40px] ${SHADOW}`;
 export const dataCard = `rounded-[40px] bg-white text-charcoal ring-1 ring-sage/30 ${SHADOW}`;
-export const cardLight = dataCard;
 /** Nested / small item (24px), per the spec's radius scale. */
 export const tile = "rounded-[24px] bg-white ring-1 ring-sage/30";
 
@@ -54,10 +53,6 @@ export function RibbonBackground({ variant = "section", className = "" }: { vari
       <div className="absolute -left-10 top-24 rounded-full bg-sage/15" style={{ width: 140 * scale, height: 140 * scale }} />
     </div>
   );
-}
-/** Same decoration for wide marketing sections. */
-export function Ribbons({ className = "" }: { className?: string; seed?: number }) {
-  return <RibbonBackground variant="hero" className={className} />;
 }
 
 export function Logo({ size = 32 }: { size?: number }) {
@@ -284,16 +279,6 @@ export function BentoMetric({ label, value, icon: Icon }: { label: string; value
         </span>
         {value}
       </p>
-    </div>
-  );
-}
-
-/** Label / value row, as in spec lists (landing page). */
-export function SpecRow({ label, value }: { label: string; value: React.ReactNode; dark?: boolean }) {
-  return (
-    <div className="flex items-baseline justify-between gap-3 border-t border-sage/30 py-2 text-sm">
-      <span className="font-semibold text-ink-2">{label}</span>
-      <span className="text-right font-bold tabular-nums text-charcoal">{value}</span>
     </div>
   );
 }

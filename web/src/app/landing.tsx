@@ -2,25 +2,35 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import {
-  ArrowRight, ArrowUpRight, BadgeIndianRupee, Clapperboard, Database, Languages, RotateCcw, Stethoscope,
-} from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { useT } from "@/lib/i18n";
-import { formatRupees } from "@/lib/products";
+import { formatRupees, formatRupeesWhole } from "@/lib/products";
 import { createClient } from "@/lib/supabase/client";
-import { LanguageSelect, Logo, Ribbons, SpecRow, btnPrimary, btnSecondary, card, cardLight } from "@/components/ui";
+import { LanguageSelect, Logo, btn } from "@/components/ui";
 
 type Stats = {
   products: number;
   profitable: number;
   loss_traps: number;
   best_profit_paise: number | null;
-  showcase: { name: string; category: string; image: string; profit_paise: number }[];
   shipping_paise: number;
   cod_min_paise: number;
 };
 
-const WHY_ICONS = [Database, BadgeIndianRupee, Languages, Clapperboard, Stethoscope];
+// One container, one section rhythm, typography first. No decorative imagery: every number is live data.
+const WRAP = "mx-auto w-full max-w-6xl px-5 md:px-10";
+
+function SectionHead({ id, eyebrow, title, body }: { id?: string; eyebrow: string; title: string; body?: string }) {
+  return (
+    <header id={id} className="scroll-mt-24 border-t border-sage/40 pt-8 md:grid md:grid-cols-12 md:gap-10">
+      <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-ink-3 md:col-span-3 md:pt-3">{eyebrow}</p>
+      <div className="mt-3 md:col-span-9 md:mt-0">
+        <h2 className="max-w-3xl text-[clamp(1.85rem,8vw,3.25rem)] font-semibold leading-[1.08] text-charcoal [overflow-wrap:anywhere]">{title}</h2>
+        {body && <p className="mt-5 max-w-2xl text-lg leading-relaxed text-ink-2">{body}</p>}
+      </div>
+    </header>
+  );
+}
 
 export default function Landing() {
   const { t } = useT();
@@ -37,26 +47,31 @@ export default function Landing() {
   }, []);
 
   const start = signedIn ? "/products" : "/sign-in";
-  const top = stats?.showcase[0];
+  const figures: [string, string][] = [
+    [L.numChecked, stats ? String(stats.products) : "–"],
+    [L.numProfitable, stats ? String(stats.profitable) : "–"],
+    [L.numTraps, stats ? String(stats.loss_traps) : "–"],
+    [L.numBest, stats?.best_profit_paise ? formatRupeesWhole(stats.best_profit_paise) : "–"],
+  ];
 
   return (
-    <div className="min-h-dvh bg-canvas text-ink">
-      {/* Nav */}
-      <header className="sticky top-0 z-30 border-b border-sage/30 bg-canvas/85 backdrop-blur-xl">
-        <nav className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 md:px-8">
-          <Link href="/" className="flex items-center gap-2">
+    <div className="min-h-dvh bg-canvas text-charcoal">
+      {/* Navigation */}
+      <header className="sticky top-0 z-30 border-b border-sage/30 bg-canvas/85 backdrop-blur-md">
+        <nav className={`${WRAP} flex h-16 items-center justify-between`}>
+          <Link href="/" className="flex items-center gap-2.5">
             <Logo size={30} />
-            <span className="text-[15px] font-medium tracking-tight">Trend2Cart</span>
+            <span className="font-[family-name:var(--font-display)] text-xl font-semibold tracking-tight">Trend2Cart</span>
           </Link>
-          <div className="hidden items-center gap-7 text-sm text-ink-2 md:flex">
-            <a href="#features" className="hover:text-ink">{L.navFeatures}</a>
-            <a href="#how" className="hover:text-ink">{L.navHow}</a>
-            <a href="#why" className="hover:text-ink">{L.navWhy}</a>
-            <a href="#pricing" className="hover:text-ink">{L.navPricing}</a>
+          <div className="hidden items-center gap-8 text-sm font-semibold text-ink-2 md:flex">
+            <a href="#features" className="transition hover:text-charcoal">{L.navFeatures}</a>
+            <a href="#how" className="transition hover:text-charcoal">{L.navHow}</a>
+            <a href="#why" className="transition hover:text-charcoal">{L.navWhy}</a>
+            <a href="#pricing" className="transition hover:text-charcoal">{L.navPricing}</a>
           </div>
           <div className="flex items-center gap-2">
             <LanguageSelect />
-            <Link href={start} className="hidden h-10 items-center rounded-full bg-red px-4 text-sm font-extrabold text-white sm:inline-flex">
+            <Link href={start} className="hidden h-11 items-center rounded-full bg-charcoal px-5 text-sm font-bold text-white transition hover:bg-black/85 sm:inline-flex">
               {signedIn ? L.openApp : L.signIn}
             </Link>
           </div>
@@ -64,219 +79,134 @@ export default function Landing() {
       </header>
 
       {/* Hero */}
-      <section className="relative overflow-hidden">
-        <Ribbons className="absolute inset-0 h-full w-full opacity-95 animate-drift" />
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-canvas" aria-hidden />
-        <div className="absolute inset-0 bg-gradient-to-r from-canvas/90 via-canvas/55 to-transparent md:via-canvas/30" aria-hidden />
-        <div className="relative mx-auto grid max-w-6xl gap-8 px-4 pb-16 pt-14 md:grid-cols-[1.25fr_1fr] md:px-8 md:pb-24 md:pt-24">
-          <div className="animate-rise">
-            <p className="text-xs uppercase tracking-[0.18em] text-ink-2">{L.eyebrow}</p>
-            <h1 className="mt-4 text-[44px] font-black leading-[1.02] tracking-tight md:text-7xl">{L.title}</h1>
-            <p className="mt-5 max-w-xl text-base leading-relaxed text-ink-2 md:text-lg">{L.sub}</p>
-            <div className="mt-8 flex flex-wrap gap-3">
-              <Link href={start} className={btnPrimary}>
-                {signedIn ? L.openApp : L.cta} <ArrowRight className="h-4 w-4" aria-hidden />
-              </Link>
-              <a href="#how" className={btnSecondary}>{L.ctaHow}</a>
-            </div>
-            <div className="mt-10 inline-flex items-center gap-3 rounded-full bg-card-muted py-1.5 pl-1.5 pr-4 ring-1 ring-sage/40 backdrop-blur">
-              <span className="flex -space-x-2">
-                {(stats?.showcase ?? []).slice(0, 4).map((p) => (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img key={p.name} src={p.image} alt="" className="h-8 w-8 rounded-full bg-white object-cover ring-2 ring-canvas" />
-                ))}
-              </span>
-              <span className="text-xs text-ink-2">{L.langs}</span>
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-3 md:pt-6">
-            <div className={`${card} p-4 animate-rise`} style={{ animationDelay: "120ms" }}>
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="text-lg font-black">{L.topToday}</p>
-                  <span className="mt-2 inline-block rounded-full px-2.5 py-0.5 text-[11px] text-ink-2 ring-1 ring-sage/40">Real Profit Score</span>
-                  {top ? (
-                    <>
-                      <p className="mt-3 line-clamp-2 text-sm text-ink">{top.name}</p>
-                      <p className="mt-1 text-2xl font-black tabular-nums text-profit">
-                        {formatRupees(top.profit_paise)} <span className="text-xs text-ink-2">{L.perOrder}</span>
-                      </p>
-                    </>
-                  ) : (
-                    <div className="mt-3 h-12 w-40 animate-pulse rounded-lg bg-white/5" />
-                  )}
-                </div>
-                {top && (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={top.image} alt={top.name} className="h-28 w-28 shrink-0 rounded-xl bg-white object-cover" />
-                )}
-              </div>
-            </div>
-            <div className={`${cardLight} p-4 animate-rise`} style={{ animationDelay: "220ms" }}>
-              <p className="pb-2 text-lg font-normal">{L.numbersTitle}</p>
-              <SpecRow dark label={L.numChecked} value={stats ? stats.products : "–"} />
-              <SpecRow dark label={L.numProfitable} value={stats ? stats.profitable : "–"} />
-              <SpecRow dark label={L.numTraps} value={stats ? stats.loss_traps : "–"} />
-              <SpecRow dark label={L.numBest} value={stats?.best_profit_paise ? formatRupees(stats.best_profit_paise) : "–"} />
-            </div>
-          </div>
+      <section className={`${WRAP} pb-20 pt-20 md:pb-28 md:pt-32`}>
+        <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-ink-3">{L.eyebrow}</p>
+        <h1 className="mt-6 max-w-4xl text-[clamp(2.25rem,10.5vw,5.5rem)] font-semibold leading-[1.04] text-charcoal [overflow-wrap:anywhere]">{L.title}</h1>
+        <p className="mt-8 max-w-2xl text-lg leading-relaxed text-ink-2 md:text-xl">{L.sub}</p>
+        <div className="mt-10 flex flex-wrap items-center gap-3">
+          <Link href={start} className={`${btn.light} px-7`}>
+            {signedIn ? L.openApp : L.cta} <ArrowRight className="h-4 w-4" strokeWidth={2.2} aria-hidden />
+          </Link>
+          <a href="#how" className={`${btn.glass} px-7`}>{L.ctaHow}</a>
+          <span className="ml-1 text-sm font-semibold text-ink-3">{L.langs}</span>
         </div>
+
+        {/* Live catalog figures */}
+        <dl className="mt-20 grid grid-cols-2 gap-px overflow-hidden border-y border-sage/40 bg-sage/40 md:grid-cols-4">
+          {figures.map(([label, value]) => (
+            <div key={label} className="bg-canvas py-7 pr-4 md:pl-8 md:first:pl-0 [&:nth-child(even)]:pl-5 md:[&:nth-child(even)]:pl-8">
+              <dt className="text-xs font-semibold text-ink-3">{label}</dt>
+              <dd className="mt-2 font-[family-name:var(--font-display)] text-4xl font-semibold tabular-nums tracking-tight md:text-5xl">{value}</dd>
+            </div>
+          ))}
+        </dl>
+        <p className="pt-4 text-xs text-ink-3">{L.numbersTitle}</p>
       </section>
 
-      {/* Statement with floating chips */}
-      <section className="relative mx-auto max-w-6xl px-4 py-20 text-center md:px-8 md:py-28">
-        <div className="absolute inset-x-0 top-1/2 -z-0 mx-auto h-64 max-w-3xl -translate-y-1/2 rounded-full bg-sage/30 blur-3xl" aria-hidden />
-        <h2 className="relative mx-auto max-w-3xl text-[38px] font-black leading-[1.05] tracking-tight md:text-6xl">{L.statement}</h2>
-        <div className="relative mt-10 flex flex-wrap justify-center gap-3">
-          {[L.chipSupplier, L.chipReels, L.chipCod].map((c, i) => {
-            const img = stats?.showcase[i + 1]?.image;
-            return (
-              <span key={c} className={`${card} flex items-center gap-2 py-1.5 pl-1.5 pr-4 text-xs text-ink-2 animate-rise`} style={{ animationDelay: `${i * 90}ms` }}>
-                {img ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={img} alt="" className="h-9 w-9 rounded-lg bg-white object-cover" />
-                ) : (
-                  <span className="h-9 w-9 rounded-lg bg-white/5" />
-                )}
-                {c}
-              </span>
-            );
-          })}
-        </div>
-      </section>
-
-      {/* Comprehensive solution */}
-      <section id="features" className="mx-auto max-w-6xl scroll-mt-20 px-4 md:px-8">
-        <h2 className="text-4xl font-black leading-tight tracking-tight md:text-5xl">{L.solutionTitle}</h2>
-        <div className="mt-8 grid gap-8 border-t border-sage/30 pt-8 md:grid-cols-2">
-          <p className="text-lg leading-relaxed text-ink-2">{L.solutionBody}</p>
-          <div className="grid grid-cols-[auto_1fr] gap-x-8 gap-y-6 text-sm">
-            <span className="text-ink-3">{L.featuresLabel}</span>
-            <ul className="space-y-1.5">{L.features.map((f) => <li key={f}>{f}</li>)}</ul>
-            <span className="text-ink-3">{L.builtLabel}</span>
-            <ul className="space-y-1.5">{L.built.map((f) => <li key={f}>{f}</li>)}</ul>
-          </div>
-        </div>
-
-        <div className="mt-12 grid gap-4 md:grid-cols-[1.4fr_1fr]">
-          <div className={`${card} relative overflow-hidden p-5`}>
-            <div className="relative z-10 max-w-[60%]">
-              <p className="text-2xl font-black">{L.reelsTitle}</p>
-              <p className="mt-2 text-sm leading-relaxed text-ink-2">{L.reelsBody}</p>
-              <Link href={start} className={`${btnPrimary} mt-6 min-h-10`}>
-                {L.reelsCta} <ArrowUpRight className="h-4 w-4" aria-hidden />
-              </Link>
-            </div>
-            <div className="absolute -right-6 top-4 bottom-4 flex w-[45%] rotate-[-6deg] gap-2">
-              {(stats?.showcase ?? []).slice(0, 2).map((p) => (
-                <div key={p.name} className="relative aspect-[9/16] flex-1 overflow-hidden rounded-2xl bg-charcoal ring-1 ring-sage/40">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={p.image} alt="" className="absolute inset-x-2 top-[18%] h-[45%] w-[calc(100%-16px)] rounded-lg bg-white object-cover" />
-                  <span className="absolute inset-x-2 bottom-[18%] h-1.5 rounded bg-white/80" />
-                  <span className="absolute inset-x-4 bottom-[12%] h-1.5 rounded bg-white/50" />
-                  <span className="absolute left-1/2 top-[7%] -translate-x-1/2 rounded bg-red px-1.5 text-[9px] font-medium text-white">₹</span>
-                </div>
-              ))}
-            </div>
-          </div>
-          <div className="flex flex-col gap-4">
-            <div className={`${cardLight} p-4`}>
-              <p className="pb-2 text-lg">{L.costsTitle}</p>
-              <SpecRow dark label={L.costShipping} value={stats ? formatRupees(stats.shipping_paise) : "–"} />
-              <SpecRow dark label={L.costCod} value={stats ? formatRupees(stats.cod_min_paise) : "–"} />
-              <SpecRow dark label={L.costReturns} value={L.costReturnsValue} />
-            </div>
-            <div className={`${cardLight} p-4`}>
-              <p className="pb-2 text-lg">{L.priceTitle}</p>
-              <SpecRow dark label={L.priceSupplier} value={L.priceSupplierValue} />
-              <SpecRow dark label={L.priceMarket} value={L.priceMarketValue} />
-              <SpecRow dark label={L.priceTrend} value={L.priceTrendValue} />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Why choose us */}
-      <section id="why" className="mx-auto mt-24 max-w-6xl scroll-mt-20 px-4 md:px-8">
-        <div className="overflow-hidden rounded-[40px] bg-white ring-1 ring-sage/30">
-          <div className="p-6 md:p-10">
-            <h2 className="text-4xl font-black leading-tight tracking-tight md:text-5xl">{L.whyTitle}</h2>
-          </div>
-          <div className="relative border-t border-sage/30 p-4 md:p-8">
-            <Ribbons seed={2.4} className="absolute inset-0 h-full w-full opacity-90" />
-            <div className="absolute inset-0 bg-transparent" aria-hidden />
-            <ul className="relative grid gap-3 md:grid-cols-3">
-              {L.why.map(([title, body], i) => {
-                const Icon = WHY_ICONS[i];
-                return (
-                  <li key={title} className={`rounded-2xl bg-transparent p-4 ring-1 ring-sage/40 backdrop-blur-xl ${i === 1 ? "md:translate-y-8" : ""} ${i === 4 ? "md:translate-y-8" : ""}`}>
-                    <p className="flex items-center gap-2 text-sm font-medium">
-                      <span className="flex h-8 w-8 items-center justify-center rounded-full bg-red/10">
-                        <Icon className="h-4 w-4 text-red" strokeWidth={2.2} aria-hidden />
-                      </span>
-                      {title}
-                    </p>
-                    <p className="mt-2 text-xs leading-relaxed text-ink-2">{body}</p>
-                  </li>
-                );
-              })}
+      {/* Features */}
+      <section className={`${WRAP} py-16 md:py-24`}>
+        <SectionHead id="features" eyebrow={L.navFeatures} title={L.solutionTitle} body={L.solutionBody} />
+        <ol className="mt-14 grid gap-px overflow-hidden rounded-[32px] bg-sage/40 ring-1 ring-sage/40 md:grid-cols-2 lg:grid-cols-3">
+          {L.why.map(([title, body], i) => (
+            <li key={title} className={`bg-white p-8 ${i === 4 ? "lg:col-span-1 md:col-span-2" : ""}`}>
+              <span className="font-[family-name:var(--font-display)] text-sm font-semibold tabular-nums text-ink-3">0{i + 1}</span>
+              <h3 className="mt-6 text-xl font-bold text-charcoal">{title}</h3>
+              <p className="mt-2 text-[15px] leading-relaxed text-ink-2">{body}</p>
+            </li>
+          ))}
+          <li className="hidden bg-charcoal p-8 text-white lg:flex lg:flex-col">
+            <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-sage">{L.builtLabel}</span>
+            <ul className="mt-6 space-y-3 text-[15px] font-semibold">
+              {L.built.map((b) => <li key={b} className="border-b border-white/10 pb-3 last:border-0">{b}</li>)}
             </ul>
-          </div>
-        </div>
+          </li>
+        </ol>
       </section>
 
       {/* How it works */}
-      <section id="how" className="mx-auto mt-24 max-w-6xl scroll-mt-20 px-4 md:px-8">
-        <h2 className="text-4xl font-black leading-tight tracking-tight md:text-5xl">{L.howTitle}</h2>
-        <ol className="mt-8 grid gap-4 border-t border-sage/30 pt-8 md:grid-cols-3">
+      <section className={`${WRAP} py-16 md:py-24`}>
+        <SectionHead id="how" eyebrow={L.navHow} title={L.howTitle} />
+        <ol className="mt-14 grid gap-10 md:grid-cols-3 md:gap-8">
           {L.how.map(([title, body], i) => (
-            <li key={title} className={`${card} p-5`}>
-              <span className="text-5xl font-black tabular-nums text-brand-500/80">0{i + 1}</span>
-              <p className="mt-4 text-lg font-black">{title}</p>
-              <p className="mt-1 text-sm text-ink-2">{body}</p>
+            <li key={title} className="border-t-2 border-charcoal pt-6">
+              <span className="font-[family-name:var(--font-display)] text-6xl font-semibold tabular-nums leading-none text-charcoal">{i + 1}</span>
+              <h3 className="mt-6 text-xl font-bold">{title}</h3>
+              <p className="mt-2 text-[15px] leading-relaxed text-ink-2">{body}</p>
             </li>
           ))}
         </ol>
       </section>
 
-      {/* Pricing */}
-      <section id="pricing" className="mx-auto mt-24 max-w-6xl scroll-mt-20 px-4 md:px-8">
-        <h2 className="text-4xl font-black leading-tight tracking-tight md:text-5xl">{L.pricingTitle}</h2>
-        <div className="mt-8 grid gap-4 border-t border-sage/30 pt-8 md:grid-cols-2">
-          <div className={`${card} p-6`}>
-            <p className="text-ink-2">{L.free}</p>
-            <p className="mt-2 text-5xl font-black">₹0</p>
-            <p className="mt-3 text-sm text-ink-2">{L.freeBody}</p>
-          </div>
-          <div className="relative overflow-hidden rounded-2xl p-6 ring-1 ring-sage/40">
-            <Ribbons seed={4.1} className="absolute inset-0 h-full w-full" />
-            <div className="absolute inset-0 bg-transparent" aria-hidden />
-            <div className="relative">
-              <p className="text-ink-2">{L.founding}</p>
-              <p className="mt-2 text-5xl font-black">₹99</p>
-              <p className="mt-3 text-sm text-ink/85">{L.foundingBody}</p>
+      {/* Transparent maths */}
+      <section className={`${WRAP} py-16 md:py-24`}>
+        <SectionHead id="why" eyebrow={L.navWhy} title={L.statement} />
+        <div className="mt-14 grid gap-5 md:grid-cols-2">
+          {[
+            { title: L.costsTitle, rows: [
+              [L.costShipping, stats ? formatRupees(stats.shipping_paise) : "–"],
+              [L.costCod, stats ? formatRupees(stats.cod_min_paise) : "–"],
+              [L.costReturns, L.costReturnsValue],
+            ] },
+            { title: L.priceTitle, rows: [
+              [L.priceSupplier, L.priceSupplierValue],
+              [L.priceMarket, L.priceMarketValue],
+              [L.priceTrend, L.priceTrendValue],
+            ] },
+          ].map((table) => (
+            <div key={table.title} className="rounded-[32px] bg-white p-8 ring-1 ring-sage/40">
+              <h3 className="font-[family-name:var(--font-display)] text-2xl font-semibold tracking-tight">{table.title}</h3>
+              <dl className="mt-6">
+                {table.rows.map(([label, value]) => (
+                  <div key={label} className="flex items-baseline justify-between gap-6 border-t border-sage/40 py-4 text-[15px]">
+                    <dt className="text-ink-2">{label}</dt>
+                    <dd className="text-right font-bold tabular-nums">{value}</dd>
+                  </div>
+                ))}
+              </dl>
             </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Pricing */}
+      <section className={`${WRAP} py-16 md:py-24`}>
+        <SectionHead id="pricing" eyebrow={L.navPricing} title={L.pricingTitle} />
+        <div className="mt-14 grid gap-5 md:grid-cols-2">
+          <div className="flex flex-col rounded-[32px] bg-white p-8 ring-1 ring-sage/40 md:p-10">
+            <p className="text-sm font-bold text-ink-2">{L.free}</p>
+            <p className="mt-4 font-[family-name:var(--font-display)] text-6xl font-semibold tabular-nums tracking-tight">₹0</p>
+            <p className="mt-4 max-w-sm text-[15px] leading-relaxed text-ink-2">{L.freeBody}</p>
+            <Link href={start} className={`${btn.glass} mt-10 self-start px-7`}>{L.cta}</Link>
+          </div>
+          <div className="flex flex-col rounded-[32px] bg-charcoal p-8 text-white md:p-10">
+            <p className="text-sm font-bold text-sage">{L.founding}</p>
+            <p className="mt-4 font-[family-name:var(--font-display)] text-6xl font-semibold tabular-nums tracking-tight">₹99</p>
+            <p className="mt-4 max-w-sm text-[15px] leading-relaxed text-white/75">{L.foundingBody}</p>
+            <Link href={start} className={`${btn.light} mt-10 self-start px-7`}>
+              {L.cta} <ArrowRight className="h-4 w-4" strokeWidth={2.2} aria-hidden />
+            </Link>
           </div>
         </div>
       </section>
 
-      {/* Final CTA */}
-      <section className="relative mx-auto mt-24 max-w-6xl px-4 pb-16 md:px-8">
-        <div className="relative overflow-hidden rounded-[32px] px-6 py-16 text-center ring-1 ring-sage/40">
-          <Ribbons seed={1.2} className="absolute inset-0 h-full w-full" />
-          <div className="absolute inset-0 bg-transparent" aria-hidden />
-          <div className="relative">
-            <h2 className="mx-auto max-w-2xl text-4xl font-black leading-tight tracking-tight md:text-5xl">{L.finalTitle}</h2>
-            <p className="mt-3 text-ink-2">{L.finalBody}</p>
-            <Link href={start} className={`${btnPrimary} mt-8`}>
-              {signedIn ? L.openApp : L.cta} <ArrowRight className="h-4 w-4" aria-hidden />
-            </Link>
-          </div>
+      {/* Closing call to action */}
+      <section className={`${WRAP} pb-10 pt-16 md:pt-24`}>
+        <div className="rounded-[40px] bg-charcoal px-8 py-16 text-white md:px-16 md:py-24">
+          <h2 className="max-w-3xl text-[clamp(1.85rem,8vw,3.75rem)] font-semibold leading-[1.05] [overflow-wrap:anywhere]">{L.finalTitle}</h2>
+          <p className="mt-5 text-lg text-white/70">{L.finalBody}</p>
+          <Link href={start} className={`${btn.light} mt-10 px-8`}>
+            {signedIn ? L.openApp : L.cta} <ArrowRight className="h-4 w-4" strokeWidth={2.2} aria-hidden />
+          </Link>
         </div>
-        <footer className="mt-10 flex items-center justify-between border-t border-sage/30 pt-6 text-xs text-ink-3">
-          <span className="flex items-center gap-2"><Logo size={22} /> {L.footer}</span>
-          <span className="flex items-center gap-1"><RotateCcw className="h-3 w-3" aria-hidden /> COD · RTO · GST</span>
+        <footer className="mt-10 flex flex-col gap-3 border-t border-sage/40 pt-8 text-sm text-ink-3 sm:flex-row sm:items-center sm:justify-between">
+          <span className="flex items-center gap-2.5">
+            <Logo size={22} /> {L.footer}
+          </span>
+          <span className="flex gap-6 font-semibold">
+            <a href="#features" className="hover:text-charcoal">{L.navFeatures}</a>
+            <a href="#pricing" className="hover:text-charcoal">{L.navPricing}</a>
+            <Link href={start} className="hover:text-charcoal">{signedIn ? L.openApp : L.signIn}</Link>
+          </span>
         </footer>
       </section>
     </div>
