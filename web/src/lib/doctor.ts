@@ -45,11 +45,11 @@ export type Checkup = {
 };
 
 // Text is in the i18n dictionary (t.checkup.title*/short*/stage*/msg*).
-export const VERDICT_TONE: Record<Verdict, { tone: string; banner: string; dot: string }> = {
-  interest: { tone: "bg-amber-400/15 text-amber-300", banner: "from-[#5a1a0c] via-[#a3360f] to-[#e07a2c]", dot: "bg-amber-400" },
-  conversion: { tone: "bg-orange-400/15 text-orange-300", banner: "from-[#5a130c] via-[#a82a16] to-[#ef6a3c]", dot: "bg-orange-400" },
-  returns: { tone: "bg-red-500/15 text-red-300", banner: "from-[#3f0808] via-[#8f1414] to-[#d6331f]", dot: "bg-red-500" },
-  healthy: { tone: "bg-emerald-400/15 text-emerald-300", banner: "from-[#06281c] via-[#0b5a3c] to-[#16a06a]", dot: "bg-emerald-400" },
+export const VERDICT_TONE: Record<Verdict, { tone: string; dot: string }> = {
+  interest: { tone: "bg-ember-400/15 text-ember-300", dot: "bg-ember-300" },
+  conversion: { tone: "bg-ember-400/15 text-ember-300", dot: "bg-ember-400" },
+  returns: { tone: "bg-loss/15 text-loss", dot: "bg-loss" },
+  healthy: { tone: "bg-profit/15 text-profit", dot: "bg-profit" },
 };
 
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);

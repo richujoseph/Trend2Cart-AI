@@ -67,3 +67,8 @@ const inrPaise = new Intl.NumberFormat("en-IN", { style: "currency", currency: "
 export function formatRupees(paise: number): string {
   return (paise % 100 === 0 ? inrWhole : inrPaise).format(paise / 100);
 }
+
+/** Headline figures in whole rupees (₹363, not ₹363.02); breakdowns keep paise so their rows add up. */
+export function formatRupeesWhole(paise: number): string {
+  return inrWhole.format(Math.round(paise / 100));
+}

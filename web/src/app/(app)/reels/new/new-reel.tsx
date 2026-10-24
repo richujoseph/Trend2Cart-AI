@@ -11,7 +11,7 @@ import { LANGUAGES, type Language, type Me, REGIONS, TEMPLATES } from "@/lib/ree
 import { saveProfile } from "@/lib/profile";
 import { ErrorState, LossTrapTag, ProductImage } from "@/components/states";
 import QuotaLine from "@/components/quota-line";
-import { btnPrimary, btnSecondary, card, input } from "@/components/ui";
+import { RibbonBackground, btn, glassCard, glassInput } from "@/components/ui";
 import { deleteSellerPhoto, uploadSellerPhoto } from "@/lib/photos";
 
 const MAX_PHOTOS = 4;
@@ -122,17 +122,18 @@ export default function NewReel() {
   if (loadError) return <ErrorState message={loadError} onRetry={() => window.location.reload()} />;
 
   return (
-    <form onSubmit={submit} className="flex flex-col gap-5">
+    <form onSubmit={submit} className="relative isolate flex flex-col gap-6">
+      <RibbonBackground variant="subtle" className="-z-10 -mx-5 -mt-4 h-72" />
       <div>
-        <Link href="/reels" className="text-sm font-medium text-brand-700">{t.newReel.back}</Link>
-        <h1 className="mt-2 flex items-center gap-2 text-3xl font-light tracking-tight text-ink"><Clapperboard className="h-6 w-6 text-brand-600" aria-hidden /> {t.newReel.title}</h1>
+        <Link href="/reels" className={`${btn.ghost} -ml-3`}>{t.newReel.back}</Link>
+        <h1 className="mt-2 flex items-center gap-2 text-3xl font-light tracking-tight text-ink"><Clapperboard className="h-6 w-6 text-ember-400" strokeWidth={1.5} aria-hidden /> {t.newReel.title}</h1>
         {me && <QuotaLine me={me} />}
       </div>
 
       {outOfReels && (
-        <div role="status" className="rounded-2xl bg-amber-400/10 p-3 text-sm text-amber-100 ring-1 ring-amber-400/25">
+        <div role="status" className={`${glassCard} p-4 text-[15px] text-ink`}>
           {t.newReel.outOfReels}
-          <Link href="/pricing" className="mt-1 block font-bold underline">{t.newReel.getUnlimited99}</Link>
+          <Link href="/pricing" className="mt-2 inline-flex min-h-11 items-center font-medium text-ember-300">{t.newReel.getUnlimited99}</Link>
         </div>
       )}
 
@@ -145,12 +146,12 @@ export default function NewReel() {
               <button type="button" disabled={n >= step} onClick={() => setStep(n)} className="flex w-full min-w-0 items-center gap-1.5 text-left disabled:cursor-default">
                 <span
                   className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
-                    state === "done" ? "bg-emerald-500 text-white" : state === "current" ? "bg-gradient-to-br from-brand-600 to-orange-600 text-white shadow-md shadow-[#dc4a26]/25" : "bg-white/[0.04] text-ink-3 ring-1 ring-brand-100"
+                    state === "done" ? "bg-white text-[#0b0706]" : state === "current" ? "bg-ember-400 text-[#0b0706]" : "glass text-ink-3"
                   }`}
                 >
                   {state === "done" ? "✓" : n}
                 </span>
-                <span className={`min-w-0 break-words text-[11px] leading-tight ${state === "current" ? "font-normal text-ink" : "text-ink-2"}`}>{label}</span>
+                <span className={`min-w-0 text-xs leading-tight ${state === "current" ? "font-medium text-ink" : "text-ink-2"}`}>{label}</span>
               </button>
             </li>
           );
@@ -158,17 +159,19 @@ export default function NewReel() {
       </ol>
 
       {step > 1 && product && (
-        <div className={`${card} flex items-center gap-3 p-2`}>
-          <ProductImage src={photos[0]?.preview ?? product.image_urls[0]} name={product.name} className="h-12 w-12 shrink-0 rounded-lg" />
+        <div className={`${glassCard} flex items-center gap-3 p-3`}>
+          <span className="flex h-12 w-12 shrink-0 rounded-[12px] bg-card-muted p-1">
+            <ProductImage src={photos[0]?.preview ?? product.image_urls[0]} name={product.name} className="h-full w-full rounded-[8px]" />
+          </span>
           <div className="min-w-0 flex-1 text-sm">
-            <p className="truncate font-bold">{product.name}</p>
+            <p className="truncate text-[15px] font-medium">{product.name}</p>
             <p className="truncate text-xs text-ink-2">
               {formatRupees(product.selling_price_paise)}
               {photos.length > 0 && ` · ${fmt(t.newReel.photoCount, { n: photos.length })}`}
               {step > 2 && audience && ` · ${fmt(t.reels.forAudience, { audience: audience.trim() })}`}
             </p>
           </div>
-          <button type="button" onClick={() => setStep(1)} className="shrink-0 px-2 text-sm font-semibold text-brand-700 underline">{t.common.change}</button>
+          <button type="button" onClick={() => setStep(1)} className="min-h-11 shrink-0 px-2 text-[15px] font-medium text-ember-300">{t.common.change}</button>
         </div>
       )}
 
@@ -176,21 +179,23 @@ export default function NewReel() {
         <>
           {/* min-w-0: fieldsets are as wide as their content by default, so long names would overflow the screen. */}
           <fieldset className="min-w-0">
-            <legend className="mb-2 text-sm font-bold">{t.newReel.whichProduct}</legend>
+            <legend className="mb-3 text-2xl font-light text-ink">{t.newReel.whichProduct}</legend>
             {products ? (
               <div className="flex flex-col gap-2">
                 {products.map((p) => (
                   <label
                     key={p.id}
-                    className={`flex cursor-pointer items-center gap-3 rounded-2xl bg-white/[0.04] p-2 transition ${productId === p.id ? "ring-2 ring-brand-600 shadow-md shadow-[#dc4a26]/25" : "ring-1 ring-white/[0.07]"}`}
+                    className={`glass flex cursor-pointer items-center gap-3 rounded-[24px] p-3 transition ${productId === p.id ? "ring-2 ring-ember-400" : ""}`}
                   >
                     <input type="radio" name="product" value={p.id} checked={productId === p.id} onChange={() => setProductId(p.id)} className="sr-only" />
-                    <ProductImage src={p.image_urls[0]} name={p.name} className="h-14 w-14 shrink-0 rounded-xl" />
+                    <span className="flex h-14 w-14 shrink-0 rounded-[14px] bg-card-muted p-1">
+                      <ProductImage src={p.image_urls[0]} name={p.name} className="h-full w-full rounded-[10px]" />
+                    </span>
                     <span className="min-w-0 flex-1">
-                      <span className="block truncate text-sm font-bold">{p.name}</span>
+                      <span className="block text-[15px] font-medium leading-snug">{p.name}</span>
                       <span className="block text-xs text-ink-2">
                         {fmt(t.newReel.sellsAt, { price: formatRupees(p.selling_price_paise) })} ·{" "}
-                        <b className={p.profit_paise >= 0 ? "text-emerald-400" : "text-red-400"}>
+                        <b className={`font-medium tabular-nums ${p.profit_paise >= 0 ? "text-profit" : "text-loss"}`}>
                           {p.profit_paise >= 0 ? t.common.profit : t.common.loss} {formatRupees(Math.abs(p.profit_paise))}{t.common.perOrder}
                         </b>
                       </span>
@@ -198,7 +203,7 @@ export default function NewReel() {
                     </span>
                     <span
                       aria-hidden
-                      className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs ${productId === p.id ? "bg-brand-600 text-white" : "ring-1 ring-brand-200"}`}
+                      className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs ${productId === p.id ? "bg-ember-400 text-[#0b0706]" : "ring-1 ring-white/20"}`}
                     >
                       {productId === p.id ? "✓" : ""}
                     </span>
@@ -207,19 +212,19 @@ export default function NewReel() {
               </div>
             ) : (
               <div className="flex flex-col gap-2">
-                {[0, 1, 2].map((i) => <div key={i} className="h-[76px] animate-pulse rounded-2xl bg-white/[0.04]" />)}
+                {[0, 1, 2].map((i) => <div key={i} className="skeleton-dark h-[82px] rounded-[24px]" />)}
               </div>
             )}
           </fieldset>
 
           <div className="flex flex-col gap-2">
-            <span className="text-sm font-bold">
-              <Camera className="inline h-4 w-4 text-brand-600" aria-hidden /> {t.newReel.photos} <span className="font-normal text-ink-2">{t.newReel.recommended}</span>
+            <span className="text-[15px] font-medium">
+              <Camera className="inline h-4 w-4 text-ember-400" strokeWidth={1.5} aria-hidden /> {t.newReel.photos} <span className="font-normal text-ink-2">{t.newReel.recommended}</span>
             </span>
             <p className="text-xs text-ink-2">{fmt(t.newReel.photosHint, { n: MAX_PHOTOS })}</p>
             <div className="grid grid-cols-4 gap-2">
               {photos.map((p) => (
-                <div key={p.path} className="relative aspect-square overflow-hidden rounded-xl bg-white/[0.04]">
+                <div key={p.path} className="glass relative aspect-square overflow-hidden rounded-[16px]">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={p.preview} alt={t.newReel.yourPhoto} className="h-full w-full object-cover" />
                   <button
@@ -233,7 +238,7 @@ export default function NewReel() {
                 </div>
               ))}
               {photos.length < MAX_PHOTOS && (
-                <label className="flex aspect-square cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-brand-200 bg-white/[0.03] text-xs font-medium text-brand-700">
+                <label className="flex aspect-square cursor-pointer flex-col items-center justify-center rounded-[16px] border border-dashed border-white/25 bg-white/[0.03] text-xs font-medium text-ink-2">
                   <span className="text-2xl leading-none">{uploading ? "…" : "+"}</span>
                   {uploading ? t.newReel.uploading : t.newReel.add}
                   <input
@@ -251,7 +256,7 @@ export default function NewReel() {
               )}
             </div>
             {photos.length === 0 && <p className="text-xs text-ink-2">{t.newReel.noPhotos}</p>}
-            {photoError && <p role="alert" className="text-xs text-red-400">{photoError}</p>}
+            {photoError && <p role="alert" className="text-[13px] text-loss">{photoError}</p>}
           </div>
         </>
       )}
@@ -259,9 +264,9 @@ export default function NewReel() {
       {step === 2 && (
         <>
           <label className="flex flex-col gap-2">
-            <span className="flex items-center gap-1.5 text-sm font-bold"><Users className="h-4 w-4 text-brand-600" aria-hidden /> {t.newReel.whoFor}</span>
-            <input value={audience} onChange={(e) => setAudience(e.target.value)} maxLength={80} placeholder={t.newReel.audiencePlaceholder} className={input} />
-            <span className="text-xs text-ink-2">{t.newReel.audienceHint}</span>
+            <span className="flex items-center gap-1.5 text-2xl font-light text-ink"><Users className="h-5 w-5 text-ember-400" strokeWidth={1.5} aria-hidden /> {t.newReel.whoFor}</span>
+            <input value={audience} onChange={(e) => setAudience(e.target.value)} maxLength={80} placeholder={t.newReel.audiencePlaceholder} className={`${glassInput} h-14`} />
+            <span className="text-[13px] text-ink-2">{t.newReel.audienceHint}</span>
           </label>
           <div className="flex flex-wrap gap-2">
             {t.newReel.ideas.map((idea) => (
@@ -270,19 +275,19 @@ export default function NewReel() {
                 type="button"
                 aria-pressed={audience === idea}
                 onClick={() => setAudience(idea)}
-                className={`rounded-full px-3 py-1.5 text-xs font-medium transition ${audience === idea ? "bg-brand-700 text-white" : "bg-white/[0.04] text-ink/85 ring-1 ring-brand-100"}`}
+                className={`min-h-11 rounded-full px-4 text-[13px] transition ${audience === idea ? "bg-white font-medium text-[#0b0706]" : "glass text-ink-2"}`}
               >
                 {idea}
               </button>
             ))}
           </div>
           {hook && (
-            <div className="flex items-start justify-between gap-2 rounded-2xl bg-amber-400/10 p-3 text-sm ring-1 ring-amber-400/25">
+            <div className={`${glassCard} flex items-start justify-between gap-2 p-4 text-[15px]`}>
               <span>
-                <span className="block text-xs font-bold text-amber-200">{t.newReel.openingLine}</span>
+                <span className="block text-xs font-medium text-ember-300">{t.newReel.openingLine}</span>
                 “{hook}”
               </span>
-              <button type="button" onClick={() => setHook("")} aria-label={t.newReel.removeOpening} className="shrink-0 text-amber-200">
+              <button type="button" onClick={() => setHook("")} aria-label={t.newReel.removeOpening} className="flex h-11 w-11 shrink-0 items-center justify-center text-ink-2">
                 ✕
               </button>
             </div>
@@ -293,22 +298,22 @@ export default function NewReel() {
       {step === 3 && me && (
         <>
           {!me.profile.region && (
-            <fieldset className={`${card} p-3`}>
-              <legend className="float-left flex w-full items-center gap-1.5 text-sm font-bold"><MapPin className="h-4 w-4 text-brand-600" aria-hidden /> {t.newReel.whereSell}</legend>
+            <fieldset className={`${glassCard} p-4`}>
+              <legend className="float-left flex w-full items-center gap-1.5 text-[15px] font-medium"><MapPin className="h-4 w-4 text-ember-400" strokeWidth={1.5} aria-hidden /> {t.newReel.whereSell}</legend>
               <p className="text-xs text-ink-2">{t.newReel.whereSellHint}</p>
               <div className="clear-both mt-2 grid grid-cols-2 gap-2 pt-1">
                 {REGIONS.map((r) => (
-                  <button key={r.value} type="button" onClick={() => chooseRegion(r)} className={btnSecondary}>
+                  <button key={r.value} type="button" onClick={() => chooseRegion(r)} className={btn.glass}>
                     {t.regions[r.value]}
                   </button>
                 ))}
               </div>
-              {regionError && <p role="alert" className="mt-1 text-xs text-red-400">{regionError}</p>}
+              {regionError && <p role="alert" className="mt-1 text-[13px] text-loss">{regionError}</p>}
             </fieldset>
           )}
 
           <fieldset className="flex flex-col gap-2">
-            <legend className="mb-2 flex items-center gap-1.5 text-sm font-bold"><Languages className="h-4 w-4 text-brand-600" aria-hidden /> {t.newReel.language}</legend>
+            <legend className="mb-3 flex items-center gap-1.5 text-2xl font-light text-ink"><Languages className="h-5 w-5 text-ember-400" strokeWidth={1.5} aria-hidden /> {t.newReel.language}</legend>
             <div className="grid grid-cols-3 gap-2">
               {LANGUAGES.map((l) => (
                 <button
@@ -316,9 +321,9 @@ export default function NewReel() {
                   type="button"
                   aria-pressed={lang === l.value}
                   onClick={() => setLanguage(l.value)}
-                  className={`h-14 rounded-xl text-sm transition ${lang === l.value ? "bg-gradient-to-br from-brand-600 to-orange-600 text-white shadow-md shadow-[#dc4a26]/25" : "bg-white/[0.04] ring-1 ring-brand-100"}`}
+                  className={`min-h-14 rounded-[16px] text-sm transition ${lang === l.value ? "bg-white text-[#0b0706]" : "glass text-ink"}`}
                 >
-                  <span className="block font-bold">{l.native}</span>
+                  <span className="block font-medium">{l.native}</span>
                   {l.native !== l.label && <span className="block text-xs opacity-75">{l.label}</span>}
                 </button>
               ))}
@@ -326,7 +331,7 @@ export default function NewReel() {
           </fieldset>
 
           <fieldset>
-            <legend className="mb-2 flex items-center gap-1.5 text-sm font-bold"><Palette className="h-4 w-4 text-brand-600" aria-hidden /> {t.newReel.style}</legend>
+            <legend className="mb-3 flex items-center gap-1.5 text-2xl font-light text-ink"><Palette className="h-5 w-5 text-ember-400" strokeWidth={1.5} aria-hidden /> {t.newReel.style}</legend>
             <div className="grid grid-cols-3 gap-2">
               {TEMPLATES.map((tpl) => (
                 <button
@@ -334,7 +339,7 @@ export default function NewReel() {
                   type="button"
                   aria-pressed={templateId === tpl.id}
                   onClick={() => setTemplateId(tpl.id)}
-                  className={`rounded-2xl p-1 transition ${templateId === tpl.id ? "bg-white/[0.04] ring-2 ring-brand-600 shadow-md" : ""}`}
+                  className={`rounded-[18px] p-1 transition ${templateId === tpl.id ? "ring-2 ring-ember-400" : ""}`}
                 >
                   <div className="relative mx-auto aspect-[9/16] w-full overflow-hidden rounded-xl" style={{ background: tpl.bg }}>
                     <span className="absolute left-1/2 top-[12%] -translate-x-1/2 rounded px-1 text-[10px] font-bold" style={{ background: tpl.accent, color: tpl.bg }}>
@@ -352,32 +357,32 @@ export default function NewReel() {
       )}
 
       {error && (
-        <div role="alert" className="rounded-2xl bg-red-500/10 p-3 text-sm text-red-400">
+        <div role="alert" className="rounded-[16px] bg-loss/10 p-4 text-[15px] text-loss">
           {error.message}
           {error.limit && <Link href="/pricing" className="mt-2 block font-bold underline">{t.newReel.seePlan}</Link>}
         </div>
       )}
 
       {/* Stays above the bottom nav so Next is always in reach on a long product list. */}
-      <div className="sticky bottom-[calc(4rem+env(safe-area-inset-bottom))] z-10 -mx-4 flex gap-2 bg-canvas/90 px-4 py-3 backdrop-blur">
+      <div className="sticky bottom-[calc(4rem+env(safe-area-inset-bottom))] z-10 -mx-5 flex gap-3 border-t border-white/[0.06] bg-canvas/80 px-5 py-3 backdrop-blur-xl">
         {step > 1 && (
-          <button type="button" onClick={() => setStep((s) => s - 1)} className={btnSecondary}>
+          <button type="button" onClick={() => setStep((s) => s - 1)} className={btn.glass}>
             {t.common.back}
           </button>
         )}
         {/* Separate keys: reusing one element would turn "Next" into the submit button mid-click and skip step 3. */}
         {step < STEPS.length ? (
-          <button key="next" type="button" onClick={next} disabled={uploading} className={`${btnPrimary} flex-1`}>
+          <button key="next" type="button" onClick={next} disabled={uploading} className={`${btn.light} flex-1`}>
             {uploading ? t.newReel.uploadingPhotos : `${t.common.next} →`}
           </button>
         ) : (
-          <button key="generate" disabled={busy || outOfReels || uploading || !me} className={`${btnPrimary} flex-1`}>
+          <button key="generate" disabled={busy || outOfReels || uploading || !me} className={`${btn.light} flex-1`}>
             {busy ? t.newReel.starting : outOfReels ? t.newReel.noneLeft : t.newReel.generate}
           </button>
         )}
       </div>
       {step === STEPS.length && outOfReels && (
-        <Link href="/pricing" className="-mt-3 text-center text-sm font-bold text-brand-700 underline">{t.newReel.getUnlimited99}</Link>
+        <Link href="/pricing" className="-mt-3 text-center text-[15px] font-medium text-ember-300">{t.newReel.getUnlimited99}</Link>
       )}
       {step === STEPS.length && !outOfReels && <p className="-mt-3 text-center text-xs text-ink-2">{t.newReel.takes}</p>}
     </form>

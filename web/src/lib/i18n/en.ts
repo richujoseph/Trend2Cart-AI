@@ -110,6 +110,7 @@ export const en = {
     unrated: "Your supplier · not rated, so the score uses profit, demand and competition only",
     remove: "Remove from my shop",
     removing: "Removing…",
+    marginLabel: "Margin",
   },
   search: {
     back: "← Products",

@@ -8,6 +8,25 @@ import { useLanguage } from "@/lib/profile";
 // Shared looks: warm black, crimson → ember accents, glass surfaces, pill buttons, light large type.
 export const card =
   "rounded-2xl bg-gradient-to-b from-white/[0.06] to-white/[0.02] ring-1 ring-white/[0.08] backdrop-blur-xl";
+/** Pill buttons (design spec): light = white on dark, dark = black on white cards, glass, ghost. */
+export const btn = {
+  light:
+    "inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-white px-6 py-2 text-center text-[15px] font-medium leading-tight text-[#0b0706] transition hover:bg-[#f5efec] active:scale-[.98] disabled:opacity-40",
+  dark:
+    "inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[#0b0706] px-6 py-2 text-center text-[15px] font-medium leading-tight text-white transition hover:bg-black active:scale-[.98] disabled:opacity-40",
+  glass:
+    "glass inline-flex min-h-12 items-center justify-center gap-2 rounded-full px-6 py-2 text-center text-[15px] font-medium leading-tight text-ink transition hover:bg-white/10 active:scale-[.98] disabled:opacity-40",
+  ghost:
+    "inline-flex min-h-11 items-center justify-center gap-1.5 rounded-full px-3 text-[15px] font-medium text-ink-2 transition hover:text-ink disabled:opacity-40",
+};
+/** Glass card for inputs and content on dark backgrounds. */
+export const glassCard = "glass rounded-[24px]";
+/** White data card for numbers and breakdowns. */
+export const dataCard = "rounded-[24px] bg-white text-[#0b0706] shadow-[0_8px_32px_rgba(0,0,0,0.35)]";
+/** Glass input on dark. */
+export const glassInput =
+  "glass h-12 w-full rounded-[16px] px-4 text-[15px] text-ink outline-none transition placeholder:text-ink-2 focus:border-ember-300/60";
+
 /** White stat card, like "Our impact in numbers" in the brand reference. */
 export const cardLight = "rounded-2xl bg-[#f6f1ed] text-[#160c0a] shadow-2xl shadow-black/40";
 export const btnPrimary =
@@ -180,10 +199,10 @@ export function SectionTitle({ title, subtitle, aside, icon: Icon }: {
   );
 }
 
-export function EstimateTag() {
+export function EstimateTag({ onWhite = false }: { onWhite?: boolean }) {
   const { t } = useT();
   return (
-    <span className="rounded-full bg-amber-400/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-amber-300 ring-1 ring-amber-400/25">
+    <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium uppercase tracking-wider ring-1 ${onWhite ? "text-rust-600 ring-rust-600/35" : "text-ember-300 ring-ember-300/40"}`}>
       {t.common.estimate}
     </span>
   );
@@ -214,24 +233,100 @@ export function ChangeBadge({ pct, className = "" }: { pct: number | null; class
 }
 
 /** Circular 0–100 score, coloured by band. */
-export function ScoreRing({ value, size = 88, label }: { value: number; size?: number; label?: string; light?: boolean }) {
+export function ScoreRing({ value, size = 88, label, onWhite = false }: { value: number; size?: number; label?: string; light?: boolean; onWhite?: boolean }) {
   const r = 42;
   const c = 2 * Math.PI * r;
-  const tone = value >= 70 ? "#34d399" : value >= 45 ? "#fbbf24" : "#f87171";
-  return (
+  // One warm family plus semantic green/red: good = profit green, middle = ember, weak = loss red.
+  const tone = value >= 70 ? (onWhite ? "#15803d" : "#4ade80") : value >= 45 ? "#f06a3a" : onWhite ? "#b91c1c" : "#f87171";
+  // Malayalam/Hindi labels are too long for the ring; they go underneath instead of being clipped.
+  const inside = !!label && label.length <= 7 && /^[\x00-\x7F]*$/.test(label);
+  const ring = (
     <span className="relative inline-flex shrink-0 items-center justify-center" style={{ width: size, height: size }}>
       <svg viewBox="0 0 100 100" className="absolute inset-0 -rotate-90" aria-hidden>
-        <circle cx="50" cy="50" r={r} fill="none" strokeWidth="7" stroke="rgba(255,255,255,.08)" />
+        <circle cx="50" cy="50" r={r} fill="none" strokeWidth="7" stroke={onWhite ? "rgba(0,0,0,.08)" : "rgba(255,255,255,.08)"} />
         <circle
           cx="50" cy="50" r={r} fill="none" strokeWidth="7" strokeLinecap="round" stroke={tone}
           strokeDasharray={c} strokeDashoffset={c * (1 - Math.max(0, Math.min(value, 100)) / 100)}
-          style={{ transition: "stroke-dashoffset .8s ease", filter: `drop-shadow(0 0 6px ${tone}55)` }}
+          style={{ transition: "stroke-dashoffset .8s ease" }}
         />
       </svg>
       <span className="flex flex-col items-center leading-none">
-        <span className="font-light tabular-nums text-ink" style={{ fontSize: size * 0.32 }}>{value}</span>
-        {label && <span className="mt-1 text-[9px] uppercase tracking-[0.14em] text-ink-2">{label}</span>}
+        <span className={`font-medium tabular-nums ${onWhite ? "text-[#0b0706]" : "text-ink"}`} style={{ fontSize: size * 0.3 }}>{value}</span>
+        {inside && <span className={`mt-1 text-[10px] uppercase tracking-[0.12em] ${onWhite ? "text-black/55" : "text-ink-2"}`}>{label}</span>}
       </span>
+    </span>
+  );
+  if (!label || inside) return ring;
+  return (
+    <span className="inline-flex shrink-0 flex-col items-center gap-1">
+      {ring}
+      <span className={`text-xs leading-tight ${onWhite ? "text-black/55" : "text-ink-2"}`}>{label}</span>
+    </span>
+  );
+}
+
+/** Flowing rust → ember waves behind a section. Pure SVG (a few KB), transform-only drift. */
+export function RibbonBackground({ variant = "section", className = "" }: { variant?: "hero" | "section" | "subtle"; className?: string }) {
+  const opacity = { hero: 1, section: 0.75, subtle: 0.4 }[variant];
+  const id = `rbg-${variant}`;
+  const waves = [0, 1, 2, 3].map((i) => {
+    const base = 60 + i * 55;
+    const top: string[] = [];
+    const bottom: string[] = [];
+    for (let k = 0; k <= 12; k++) {
+      const x = -40 + k * 40;
+      const y = base + (46 + i * 8) * Math.sin((x / 440) * Math.PI * 1.4 + i * 0.9) + 10 * Math.sin((x / 440) * Math.PI * 4 + i);
+      top.push(`${x},${y.toFixed(1)}`);
+      bottom.unshift(`${x},${(y + 34 + i * 6).toFixed(1)}`);
+    }
+    return `M${top.join(" L")} L${bottom.join(" L")} Z`;
+  });
+  return (
+    <div aria-hidden className={`pointer-events-none absolute inset-0 overflow-hidden ${className}`} style={{ opacity }}>
+      <svg viewBox="0 0 440 320" preserveAspectRatio="xMidYMid slice" className="h-full w-full animate-drift">
+        <defs>
+          <linearGradient id={id} x1="0" y1="0" x2="1" y2="0.6">
+            <stop offset="0" stopColor="#7a1f0e" stopOpacity="0.95" />
+            <stop offset="0.55" stopColor="#f06a3a" stopOpacity="0.9" />
+            <stop offset="1" stopColor="#f06a3a" stopOpacity="0" />
+          </linearGradient>
+          <radialGradient id={`${id}-glow`} cx="0.85" cy="0.1" r="0.6">
+            <stop offset="0" stopColor="#f06a3a" stopOpacity="0.25" />
+            <stop offset="1" stopColor="#f06a3a" stopOpacity="0" />
+          </radialGradient>
+          <filter id={`${id}-soft`}><feGaussianBlur stdDeviation="1.4" /></filter>
+        </defs>
+        <rect width="440" height="320" fill={`url(#${id}-glow)`} />
+        {waves.map((d, i) => (
+          <path key={i} d={d} fill={`url(#${id})`} opacity={0.35 + i * 0.15} filter={`url(#${id}-soft)`} />
+        ))}
+      </svg>
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-canvas" />
+    </div>
+  );
+}
+
+/** Label / value row on a white data card. */
+export function DataRow({ label, value, strong = false }: { label: string; value: React.ReactNode; strong?: boolean }) {
+  return (
+    <div className="flex items-baseline justify-between gap-3 border-t border-black/[0.08] py-2.5 text-[15px]">
+      <span className="text-black/55">{label}</span>
+      <span className={`text-right tabular-nums ${strong ? "font-medium text-black" : "text-black/85"}`}>{value}</span>
+    </div>
+  );
+}
+
+/** 3-bar level indicator (e.g. competition), neutral rather than alarming. */
+export function LevelBars({ level, onWhite = false }: { level: 1 | 2 | 3; onWhite?: boolean }) {
+  return (
+    <span className="inline-flex items-end gap-0.5" aria-hidden>
+      {[1, 2, 3].map((n) => (
+        <span
+          key={n}
+          className={`w-1 rounded-sm ${n <= level ? (onWhite ? "bg-[#0b0706]" : "bg-ink") : onWhite ? "bg-black/15" : "bg-white/20"}`}
+          style={{ height: 4 + n * 4 }}
+        />
+      ))}
     </span>
   );
 }

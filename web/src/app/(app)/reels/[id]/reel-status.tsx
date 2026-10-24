@@ -1,6 +1,6 @@
 "use client";
 
-import { Download, PenLine, Stethoscope } from "lucide-react";
+import { ArrowRight, Download, PenLine, Share2, Stethoscope } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -8,7 +8,7 @@ import { ApiError, apiFetch } from "@/lib/api";
 import { fmt, useT } from "@/lib/i18n";
 import { type Reel, STATUS_TONE, languageLabel } from "@/lib/reels";
 import { ErrorState } from "@/components/states";
-import { btnPrimary, btnSmall, card } from "@/components/ui";
+import { RibbonBackground, btn, dataCard, glassCard } from "@/components/ui";
 
 // The worker reports which step it's on (reels.stage); labels are t.reel.steps in the same order.
 const STAGES = ["script", "voice", "video"] as const;
@@ -73,8 +73,9 @@ export default function ReelStatus() {
   const current = reel?.status === "processing" ? STAGES.indexOf(reel.stage ?? "script") : -1;
 
   return (
-    <>
-      <Link href="/reels" className="text-sm font-medium text-brand-700">{t.reel.back}</Link>
+    <div className="relative isolate">
+      <RibbonBackground variant="subtle" className="-z-10 -mx-5 -mt-4 h-72" />
+      <Link href="/reels" className={`${btn.ghost} -ml-3`}>{t.reel.back}</Link>
       <div className="mt-2 flex items-start justify-between gap-2">
         <div className="min-w-0">
           <h1 className="text-3xl font-light tracking-tight text-ink">{reel?.products?.name ?? t.reel.yourReel}</h1>
@@ -86,40 +87,40 @@ export default function ReelStatus() {
           )}
         </div>
         {reel && (
-          <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-bold ${STATUS_TONE[reel.status].tone}`}>
+          <span className={`shrink-0 rounded-full px-3 py-1 text-xs font-medium ${STATUS_TONE[reel.status].tone}`}>
             {t.reels[STATUS_TONE[reel.status].key]}
           </span>
         )}
       </div>
 
       {working && (
-        <section className={`${card} mt-5 overflow-hidden`} aria-live="polite">
-          <div className="bg-gradient-to-r from-brand-600 via-orange-600 to-orange-500 p-4 text-white">
-            <p className="text-lg font-bold">{fmt(t.reel.making, { s: seconds })}</p>
-            <p className="text-sm text-white/85">
+        <section className={`${glassCard} mt-6 overflow-hidden`} aria-live="polite">
+          <div className="border-b border-white/[0.08] p-5">
+            <p className="text-2xl font-light tabular-nums text-ink">{fmt(t.reel.making, { s: seconds })}</p>
+            <p className="mt-1 text-[15px] text-ink-2">
               {reel?.status === "queued" ? t.reel.waitingSlot : t.reel.usuallyReady} {t.reel.canLeave}
             </p>
-            <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-white/25">
-              <div className="h-full rounded-full bg-white/[0.04] transition-all duration-700" style={{ width: `${((current + 1) / (STAGES.length + 1)) * 100}%` }} />
+            <div className="mt-4 h-1 overflow-hidden rounded-full bg-white/10">
+              <div className="h-full rounded-full bg-ember-400 transition-all duration-700" style={{ width: `${((current + 1) / (STAGES.length + 1)) * 100}%` }} />
             </div>
           </div>
           {reel?.status === "queued" && seconds > 45 && (
-            <p className="m-4 mb-0 rounded-xl bg-amber-400/10 p-3 text-sm text-amber-200">{t.reel.offline}</p>
+            <p className="m-5 mb-0 rounded-[16px] bg-white/[0.04] p-3 text-[15px] text-ink-2">{t.reel.offline}</p>
           )}
-          <ol className="flex flex-col gap-3 p-4 text-sm">
+          <ol className="flex flex-col gap-4 p-5 text-[15px]">
             {STAGES.map((stage, i) => {
               const state = i < current ? "done" : i === current ? "active" : "todo";
               return (
                 <li key={stage} className={`flex items-center gap-3 ${state === "todo" ? "text-ink-3" : "text-ink"}`}>
                   <span
                     aria-hidden
-                    className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
-                      state === "done" ? "bg-emerald-500 text-white" : state === "active" ? "animate-pulse bg-brand-600 text-white" : "bg-brand-50"
+                    className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-medium ${
+                      state === "done" ? "bg-white text-[#0b0706]" : state === "active" ? "animate-pulse bg-ember-400 text-[#0b0706]" : "glass text-ink-3"
                     }`}
                   >
                     {state === "done" ? "✓" : i + 1}
                   </span>
-                  <span className={state === "active" ? "font-bold" : ""}>{t.reel.steps[i]}</span>
+                  <span className={state === "active" ? "font-medium" : ""}>{t.reel.steps[i]}</span>
                   <span className="sr-only">{state === "done" ? t.reel.stepDone : state === "active" ? t.reel.stepActive : ""}</span>
                 </li>
               );
@@ -131,15 +132,15 @@ export default function ReelStatus() {
       {reel?.status === "done" && reel.video_url && <DoneReel reel={reel} />}
 
       {reel?.status === "failed" && (
-        <section className="mt-5 rounded-2xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-300" role="alert">
+        <section className={`${glassCard} mt-6 p-5 text-[15px] text-ink`} role="alert">
           <p>{reel.error ?? t.reel.failedDefault}</p>
-          <button onClick={retry} disabled={retrying} className="mt-3 h-11 rounded-xl bg-red-700 px-5 font-bold text-white disabled:opacity-50">
+          <button onClick={retry} disabled={retrying} className={`${btn.light} mt-4`}>
             {retrying ? t.newReel.starting : t.common.tryAgain}
           </button>
-          {retryError && <p className="mt-2">{retryError}</p>}
+          {retryError && <p className="mt-2 text-loss">{retryError}</p>}
         </section>
       )}
-    </>
+    </div>
   );
 }
 
@@ -180,38 +181,45 @@ function DoneReel({ reel }: { reel: Reel }) {
 
   return (
     <>
-      <div className="mx-auto mt-5 w-full max-w-[17rem] rounded-[2rem] bg-gradient-to-br from-brand-600 via-orange-600 to-orange-400 p-1.5 shadow-xl shadow-black/40">
+      <div className="mx-auto mt-6 w-full max-w-[17rem] rounded-[2rem] bg-gradient-to-br from-rust-700 via-rust-500 to-ember-400 p-[3px]">
         <video src={reel.video_url!} controls playsInline preload="metadata" className="aspect-[9/16] w-full rounded-[1.6rem] bg-black" />
       </div>
-      <div className="mt-4 grid grid-cols-2 gap-2">
+      <div className="mt-5 grid grid-cols-2 gap-3">
         {/* Supabase Storage sends the file as a download when ?download= is set. */}
-        <a href={`${reel.video_url}?download=${encodeURIComponent(fileName)}`} className={btnPrimary}>
-          <Download className="h-4 w-4" aria-hidden /> {t.reel.download}
+        <a href={`${reel.video_url}?download=${encodeURIComponent(fileName)}`} className={btn.light}>
+          <Download className="h-4 w-4" strokeWidth={1.5} aria-hidden /> {t.reel.download}
         </a>
         <button
           type="button"
           onClick={share}
           disabled={sharing}
-          className="inline-flex h-12 items-center justify-center rounded-xl bg-[#25D366] px-3 font-semibold text-white shadow-md shadow-emerald-600/25 transition active:scale-[.98] disabled:opacity-60"
+          className={btn.glass}
         >
+          <Share2 className="h-4 w-4" strokeWidth={1.5} aria-hidden />
           {sharing ? t.reel.preparing : t.reel.share}
         </button>
       </div>
-      <p className="mt-2 text-center text-xs text-ink-2">{shareError ? t.reel.shareFailed : t.reel.postHint}</p>
+      <p className="mt-3 text-center text-[13px] text-ink-2">{shareError ? t.reel.shareFailed : t.reel.postHint}</p>
 
-      <section className={`${card} mt-5 p-4`}>
-        <div className="flex items-center justify-between">
-          <h2 className="flex items-center gap-1.5 font-normal text-ink"><PenLine className="h-4 w-4 text-brand-600" aria-hidden /> {t.reel.captionTitle}</h2>
-          <button onClick={copy} className={btnSmall}>
+      <section className={`${dataCard} mt-6 p-5`}>
+        <div className="flex items-center justify-between gap-2">
+          <h2 className="flex items-center gap-1.5 text-xl font-light"><PenLine className="h-4 w-4 text-rust-600" strokeWidth={1.5} aria-hidden /> {t.reel.captionTitle}</h2>
+          <button onClick={copy} className={`${btn.dark} min-h-10 px-4 text-sm`}>
             {copied ? t.common.copied : t.common.copy}
           </button>
         </div>
-        <p className="mt-2 whitespace-pre-wrap rounded-xl bg-brand-50/60 p-3 text-sm">{text}</p>
+        <p className="mt-3 whitespace-pre-wrap border-t border-black/[0.08] pt-3 text-[15px] leading-relaxed text-black/80">{text}</p>
       </section>
 
-      <Link href={`/doctor?reel=${reel.id}`} className="mt-4 block rounded-2xl bg-gradient-to-r from-[#b8321a] to-brand-600 p-4 text-sm text-white shadow-lg shadow-black/40">
-        <span className="flex items-center gap-1.5 font-bold"><Stethoscope className="h-4 w-4" aria-hidden /> {t.reel.checkHow}</span>
-        <span className="block text-white/85">{t.reel.checkHowSub}</span>
+      <Link href={`/doctor?reel=${reel.id}`} className={`${glassCard} mt-4 flex items-center gap-3 p-5`}>
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-ember-400/15 text-ember-300">
+          <Stethoscope className="h-5 w-5" strokeWidth={1.5} aria-hidden />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-[15px] font-medium text-ink">{t.reel.checkHow.replace(" →", "")}</span>
+          <span className="block text-[13px] text-ink-2">{t.reel.checkHowSub}</span>
+        </span>
+        <ArrowRight className="h-5 w-5 shrink-0 text-ink-2" strokeWidth={1.5} aria-hidden />
       </Link>
     </>
   );
