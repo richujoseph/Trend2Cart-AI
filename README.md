@@ -222,8 +222,7 @@ start-local.sh        One-command local run
 Try it in your browser, nothing to install: **[trend2cart.vercel.app](https://trend2cart.vercel.app/)**
 
 Sign in with Google, pick a product, make a Reel and run a Conversion Doctor check-up. Open it on your phone (or
-Chrome DevTools → phone icon) for the mobile layout. The API runs on Render's free plan, so the first request after
-a quiet spell can take about a minute while it wakes up.
+Chrome DevTools → phone icon) for the mobile layout. The web app and the API both run on Vercel.
 
 ## Demo in one command
 
@@ -320,24 +319,28 @@ Razorpay Checkout; `POST /preorders/verify` checks the HMAC signature server-sid
 `founding` (unlimited Reels). Without keys the pricing page says payments aren't switched on yet.
 Test card: see Razorpay's test-mode docs (e.g. UPI `success@razorpay`).
 
-## 7. Free deployment (optional, later)
+## 7. Deployment (live)
 
-The live demo at **[trend2cart.vercel.app](https://trend2cart.vercel.app/)** is deployed exactly this way.
+| Part | Where | Notes |
+|---|---|---|
+| Web | Vercel: **https://trend2cart.vercel.app** | Project `trend2cart`, root `web/`, framework pinned in `web/vercel.json` |
+| API | Vercel Python function: **https://trend2cart-api.vercel.app** | Project `trend2cart-api`, root `api/`; every path is rewritten to `api/api/index.py` (`api/vercel.json`) |
+| Reel worker | Any always-on machine with FFmpeg + libass | Polls the Supabase queue every 2 s; Vercel can't run it |
+| DB / Auth / Storage | Supabase Free | |
 
-| Part | Service (free plan) |
-|---|---|
-| Web | Vercel Hobby: import repo, **Root Directory = `web`**, add the 3 `NEXT_PUBLIC_*` env vars |
-| API + Reel worker | Render free web service from `render.yaml` (Docker; worker runs inside the API container, auto-restarts) |
-| DB / Auth / Storage | Supabase Free |
-| LLM | Gemini free tier via the OpenAI-compatible wrapper `api/core/llm.py` |
-| TTS | Sarvam AI free credits via `api/core/tts.py` (or Google Cloud TTS with `TTS_PROVIDER=google`) |
+Deploy from each folder with `npx vercel deploy --prod` (`web/` and `api/`). Secrets live in the Vercel projects'
+environment variables (the same names as the `.env.example` files); `.vercelignore` keeps local `.env` files out of uploads.
 
-Render: Dashboard → New → Blueprint → this repo, then fill the secret env vars. After the first deploy,
-set `CORS_ORIGINS` to your Vercel URL and set `NEXT_PUBLIC_API_URL` in Vercel to the Render URL.
-In Supabase → Authentication → URL Configuration, add the Vercel URL and `<vercel-url>/auth/callback`.
-
-Free-tier gotchas:
-- Render sleeps after 15 min idle (~1 min cold start). Open the API URL before a demo.
-- Supabase pauses after 7 days without activity; restore it from the dashboard.
-- Phone OTP needs a paid SMS provider: use Supabase test phone numbers for demos, Google sign-in for real users.
+- **API dependencies:** Vercel installs `api/requirements.txt` on Python 3.12. After changing `pyproject.toml`, regenerate it:
+  `cd api && uv export --no-hashes --no-dev --no-emit-project --format requirements-txt -q > requirements.txt`
+- **CORS:** the API's `CORS_ORIGINS` variable must include the web URL.
+- **Sign-in:** in Supabase → Authentication → URL Configuration, set the Site URL to the web URL and add
+  `https://trend2cart.vercel.app/auth/callback` to Redirect URLs, or Google sign-in returns to localhost.
+- **Reel worker on a Mac:** Docker Desktop can break large uploads (`SSL: BAD_RECORD_MAC` / `Broken pipe`), so run it on
+  the host with Homebrew's `ffmpeg-full` (includes libass):
+  ```bash
+  brew install ffmpeg-full
+  cd worker && FFMPEG_PATH=$(brew --prefix ffmpeg-full)/bin/ffmpeg FFPROBE_PATH=$(brew --prefix ffmpeg-full)/bin/ffprobe uv run python main.py
+  ```
+  Reels queued while no worker is running wait and start as soon as one is.
 - Switch LLM provider by changing `LLM_BASE_URL`, `LLM_MODEL`, `LLM_API_KEY` only.

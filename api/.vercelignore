@@ -1,0 +1,13 @@
+# Secrets are set as Vercel environment variables, never uploaded.
+.env
+.env.*
+!.env.example
+.venv/
+__pycache__/
+.pytest_cache/
+tests/
+scripts/
+# Vercel installs from requirements.txt (pyproject pins Python 3.11, which Vercel doesn't offer).
+pyproject.toml
+uv.lock
+.python-version

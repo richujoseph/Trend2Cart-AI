@@ -1,0 +1,4 @@
+# Public config is set as Vercel environment variables.
+.env
+.env.*
+!.env.example
