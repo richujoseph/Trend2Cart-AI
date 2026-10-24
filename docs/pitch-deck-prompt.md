@@ -1,14 +1,15 @@
 # Prompt: 6-slide pitch deck for Trend2Cart AI
 
 Copy everything below the line into your slide tool (Gamma, Claude, ChatGPT, Canva Magic Design, or PowerPoint
-Copilot). Before you paste, fill in the three `[brackets]` on slide 1. To add real visuals, upload the images listed
-under "Visual" from `web/public/landing/`.
+Copilot). Upload the images named under "Visual" so the slides show the real product: they are in
+`web/public/landing/` and `docs/images/`.
 
 ---
 
-You are a senior pitch-deck designer. Create a **6-slide, 16:9 presentation** for **Trend2Cart AI**, a hackathon
-project. The audience is **hackathon judges**: technical and business people who will see about 30 pitches,
-spend about 1 minute per slide, and score on problem clarity, innovation, technical depth, working demo and impact.
+You are a senior pitch-deck designer. Create a **6-slide, 16:9 presentation** for **Trend2Cart AI**, a web app
+for India's Instagram and WhatsApp sellers. The audience is **judges and investors**: technical and business people
+who spend about 1 minute per slide and look for a clear product, real results, technical depth and impact. The deck
+should feel like a premium product launch: confident, visual and minimal.
 
 ## Rules
 
@@ -42,27 +43,13 @@ spend about 1 minute per slide, and score on problem clarity, innovation, techni
 - **Headline:** Sell Without Guesswork
 - **Subhead:** Find products that really make money after COD returns, make Reels in Malayalam, Hindi or English,
   and fix what isn't selling.
-- **Small line:** [Team name] · [Member names] · [Hackathon name, date]
 - **Visual:** a phone frame on the right showing `brush-1_2.webp`, a real Malayalam Reel the app made. Beside it, a
   floating white card: "Real profit per order" with **₹680** in green, and "Electric Hair Straightener Brush" below it.
-- **Speaker notes:** Introduce the team and the one-line idea. Trend2Cart helps first-time Instagram and WhatsApp
+- **Speaker notes:** Open with the one-line idea. Trend2Cart helps first-time Instagram and WhatsApp
   sellers in Kerala and Tamil Nadu pick products that actually make money, sell them with Reels in their own
   language, and learn why a post didn't sell. Everything you'll see is real data and real output from the app.
 
-### Slide 2: The problem
-
-- **Headline:** New sellers lose money they can't see
-- Three cards side by side, each with a short bold title and one line:
-  1. **COD returns eat the margin.** A refused parcel earns nothing and costs shipping twice.
-  2. **Reels are hard in your own language.** A script, voice-over and captions in Malayalam take skill and time.
-  3. **No one says why it didn't sell.** 6,000 views and 12 orders: good or bad? Sellers can't tell.
-- **Highlight in red:** "2 of the 21 real products we checked lose money on every order."
-- **Visual:** none besides the cards; keep it clean.
-- **Speaker notes:** Most orders from small social sellers are cash on delivery. When a buyer refuses the parcel,
-  called RTO or return to origin, the seller pays shipping out and back and earns nothing. Sellers pick products by
-  gut feel, struggle to make video in their own language, and get no feedback on what went wrong.
-
-### Slide 3: The solution, one loop
+### Slide 2: One loop, three tools
 
 - **Headline:** Find → Create → Grow
 - Three columns, numbered 01 / 02 / 03:
@@ -72,13 +59,14 @@ spend about 1 minute per slide, and score on problem clarity, innovation, techni
      Malayalam, Hindi or English, made in about a minute.
   3. **Grow: Conversion Doctor.** Enter views, DMs, orders and returns; see what the Reel really earned, where buyers
      drop off, and get 3 fixes and 3 new hooks in your language.
-- **Visual:** under each column, a small image: `app-product-mobile.webp` (Find), `brush-7.webp` (Create),
-  `app-report.webp` cropped (Grow).
+- **Visual:** under each column, one large number in Fraunces: **₹680** best profit per order (Find), **~10 s**
+  to render a Reel (Create), **3 + 3** fixes and new hooks (Grow). On the right edge, `app-product-mobile.webp` in a
+  phone frame.
 - **Speaker notes:** One app follows the seller's whole loop. Find tells them what to sell, Create gives them the
   Reel to sell it, and Grow tells them what to change next week. The whole app, not just the Reels, works in
   Malayalam, Hindi and English, and every estimate is labelled and editable by the seller.
 
-### Slide 4: Real numbers, not guesses (charcoal background)
+### Slide 3: Real numbers, not guesses (charcoal background)
 
 - **Headline:** Real numbers, not guesses
 - **Formula** in a white card, monospace font:
@@ -93,6 +81,20 @@ spend about 1 minute per slide, and score on problem clarity, innovation, techni
   is the median of comparable Google Shopping listings; shipping and COD come from Shiprocket's published rate card.
   Return rate and ad cost are estimates the seller can edit. The r × 2 × S term is the key insight: returns cost
   shipping twice. Out of 21 real products, 2 look attractive but lose money.
+
+### Slide 4: See it working
+
+- **Headline:** Real output, in the seller's language
+- **Layout:** a row of three phone frames on the left two-thirds, one wide card on the right third.
+  - Phone 1: `reel-malayalam.gif` (or `brush-1_2.webp` if animation isn't supported). Caption: "Pop Card · Malayalam"
+  - Phone 2: `rope-7.webp`. Caption: "Bold Night · Malayalam"
+  - Phone 3: `brush-15.webp`. Caption: "Price end card"
+  - Right card: `app-report.webp` (the Conversion Doctor report). Caption: "What this Reel earned · where buyers drop off"
+- **Three short facts under the phones:** AI script and voice · word-by-word captions · 1080×1920 MP4 in about 10 seconds
+- **Speaker notes:** These are real Reels the app made, not mock-ups. The seller picks a product, an audience and a
+  language; the app writes the script, records the voice in Malayalam, Hindi or English, and renders a vertical
+  video with captions that highlight word by word. After posting, the Conversion Doctor shows what the Reel really
+  earned after returns and ads, and which step lost the buyers.
 
 ### Slide 5: How it's built
 
@@ -124,7 +126,7 @@ spend about 1 minute per slide, and score on problem clarity, innovation, techni
   3. Turn on live payments and public hosting
 - **Closing line, large, in red:** "Sell without guesswork."
 - **Visual:** `app-home-mobile.webp` in a tilted phone frame at the bottom right.
-- **Footer call to action:** "Live demo: next" or [demo link / QR code]
+- **Footer call to action:** "Live demo: next"
 - **Speaker notes:** A seller can start free. The ₹99 founding pre-order tests whether sellers will pay. Our next
   steps are a pilot with real sellers, a larger catalog, and live payments. Then hand over to the live demo: open
   a product, see the real profit, make a Malayalam Reel, and run a Doctor check-up.
