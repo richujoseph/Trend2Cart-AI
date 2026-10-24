@@ -52,9 +52,9 @@ function Checking() {
         {t.search.checking}
       </p>
       <div className="mt-4 grid grid-cols-2 gap-3">
-        {[0, 1, 2, 3].map((i) => <div key={i} className="h-24 animate-pulse rounded-2xl bg-white/[0.04]" />)}
+        {[0, 1, 2, 3].map((i) => <div key={i} className="h-24 animate-pulse rounded-2xl bg-card-muted" />)}
       </div>
-      <div className="mt-4 h-40 animate-pulse rounded-2xl bg-white/[0.04]" />
+      <div className="mt-4 h-40 animate-pulse rounded-2xl bg-card-muted" />
     </div>
   );
 }
@@ -88,7 +88,7 @@ function Results({ d }: { d: Lookup }) {
           </div>
         </div>
         <Stat label={t.search.sellers} value={String(d.sellers)} note={fmt(t.search.sellersValue, { n: d.listings_count })} />
-        <Stat label={t.search.competition} value={comp} note={`${d.competition_score}/100`} tone={d.competition_score >= 60 ? "text-red-400" : d.competition_score >= 30 ? "text-amber-600" : "text-emerald-400"} />
+        <Stat label={t.search.competition} value={comp} note={`${d.competition_score}/100`} tone={d.competition_score >= 60 ? "text-red" : d.competition_score >= 30 ? "text-charcoal" : "text-profit"} />
         <div className={`${card} col-span-2 p-3`}>
           <div className="flex items-center justify-between gap-2">
             <div>
@@ -187,8 +187,8 @@ function Estimator({ d }: { d: Lookup }) {
 
   return (
     <section className={`${card} mt-6 overflow-hidden`}>
-      <div className="bg-gradient-to-r from-brand-50 to-orange-50 p-4">
-        <h2 className="text-xl font-light text-ink">{t.search.estimateTitle}</h2>
+      <div className="bg-card-muted p-5">
+        <h2 className="text-xl font-black text-ink">{t.search.estimateTitle}</h2>
       </div>
       <div className="grid grid-cols-2 gap-3 p-4">
         <label className="col-span-2 flex flex-col gap-1">
@@ -216,17 +216,17 @@ function Estimator({ d }: { d: Lookup }) {
           <input inputMode="decimal" value={ad} onChange={num(setAd, 6)} className={`${input} tabular-nums`} />
         </label>
       </div>
-      <div className={`border-t border-white/[0.07] p-4 ${losing ? "bg-red-500/10" : shown ? "bg-emerald-400/10" : ""}`} aria-live="polite">
+      <div className={`border-t border-sage/30 p-4 ${losing ? "bg-red/10" : shown ? "bg-profit/10" : ""}`} aria-live="polite">
         {!shown && !error && <p className="text-sm text-ink-2">{t.search.enterCost}</p>}
-        {error && <p role="alert" className="text-sm text-red-400">{error}</p>}
+        {error && <p role="alert" className="text-sm text-red">{error}</p>}
         {shown && (
           <>
             <p className="text-xs text-ink-2">{t.search.profitPerOrder}</p>
-            <p className={`text-3xl font-medium tabular-nums ${losing ? "text-red-400" : "text-emerald-400"}`}>{formatRupees(shown.profit_paise)}</p>
+            <p className={`text-3xl font-medium tabular-nums ${losing ? "text-red" : "text-profit"}`}>{formatRupees(shown.profit_paise)}</p>
             <p className="mt-1 text-xs text-ink-2">
               {fmt(t.search.afterAll, { ship: formatRupees(shown.shipping_paise), fee: formatRupees(shown.fees_paise) })}
             </p>
-            {losing && <p className="mt-1 text-xs font-semibold text-red-400">{t.search.losing}</p>}
+            {losing && <p className="mt-1 text-xs font-semibold text-red">{t.search.losing}</p>}
           </>
         )}
       </div>
@@ -263,15 +263,15 @@ function AddToShop({ d, cost, price }: { d: Lookup; cost: number; price: number 
 
   if (added) {
     return (
-      <div className="flex items-center gap-3 border-t border-white/[0.07] bg-brand-50/60 p-4" role="status">
-        <CheckCircle2 className="h-6 w-6 shrink-0 text-emerald-400" aria-hidden />
+      <div className="flex items-center gap-3 border-t border-sage/30 bg-brand-50/60 p-4" role="status">
+        <CheckCircle2 className="h-6 w-6 shrink-0 text-profit" aria-hidden />
         <p className="flex-1 text-sm font-normal text-ink">{t.search.added}</p>
         <Link href={`/products/${added}`} className="text-sm font-bold text-brand-700">{t.search.openProduct}</Link>
       </div>
     );
   }
   return (
-    <div className="border-t border-white/[0.07] p-4">
+    <div className="border-t border-sage/30 p-4">
       <p className="flex items-center gap-1.5 font-normal text-ink">
         <PackagePlus className="h-5 w-5 text-brand-600" aria-hidden /> {t.search.addTitle}
       </p>
@@ -294,7 +294,7 @@ function AddToShop({ d, cost, price }: { d: Lookup; cost: number; price: number 
           </select>
         </label>
       </div>
-      {error && <p role="alert" className="mt-2 rounded-xl bg-red-500/10 p-2 text-sm text-red-400">{error}</p>}
+      {error && <p role="alert" className="mt-2 rounded-xl bg-red/10 p-2 text-sm text-red">{error}</p>}
       <button onClick={add} disabled={busy} className={`${btnPrimary} mt-3 w-full`}>
         <PackagePlus className="h-4 w-4" aria-hidden /> {busy ? t.search.adding : t.search.addButton}
       </button>

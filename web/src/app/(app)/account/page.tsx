@@ -65,14 +65,14 @@ export default function AccountPage() {
   }
 
   const option = (active: boolean) =>
-    `h-12 rounded-xl text-sm font-semibold transition ${active ? "bg-gradient-to-br from-brand-600 to-orange-600 text-white shadow-md shadow-[#dc4a26]/25" : "bg-white/[0.04] ring-1 ring-brand-100"}`;
+    `h-12 rounded-xl text-sm font-semibold transition ${active ? "bg-charcoal text-white" : "bg-card-muted ring-1 ring-brand-100"}`;
 
   return (
     <>
       <PageHero icon={UserRound} title={t.account.title} subtitle={t.account.subtitle}>
         {me && <p className="mt-3 truncate text-sm font-semibold">{me.email || (me.phone ? `+${me.phone}` : "")}</p>}
       </PageHero>
-      {error && <p role="alert" className="mt-4 rounded-xl bg-red-500/10 p-3 text-sm text-red-400">{error}</p>}
+      {error && <p role="alert" className="mt-4 rounded-xl bg-red/10 p-3 text-sm text-red">{error}</p>}
       {!me && !error && <p className="mt-4 text-sm text-ink-2">{t.common.loading}</p>}
       {me && (
         <>
@@ -99,7 +99,7 @@ export default function AccountPage() {
                 </button>
               ))}
             </div>
-            {langError && <p role="alert" className="mt-2 text-xs text-red-400">{langError}</p>}
+            {langError && <p role="alert" className="mt-2 text-xs text-red">{langError}</p>}
           </fieldset>
 
           <fieldset className={`${card} mt-4 p-4`}>
@@ -119,7 +119,7 @@ export default function AccountPage() {
               ))}
             </div>
           </fieldset>
-          {saved && !langError && <p className="mt-2 text-center text-xs font-semibold text-emerald-400">{t.common.saved}</p>}
+          {saved && !langError && <p className="mt-2 text-center text-xs font-semibold text-profit">{t.common.saved}</p>}
         </>
       )}
       {process.env.NODE_ENV === "development" && (

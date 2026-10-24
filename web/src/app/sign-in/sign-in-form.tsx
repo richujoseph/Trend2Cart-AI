@@ -72,7 +72,7 @@ export default function SignInForm() {
       {!codeSent ? (
         <form onSubmit={sendCode} className="flex flex-col gap-3">
           <label htmlFor="phone" className="text-sm font-semibold">{t.signIn.mobile}</label>
-          <div className="flex h-12 items-center rounded-xl border border-white/[0.08] bg-white/[0.04] focus-within:border-brand-500 focus-within:ring-4 focus-within:ring-brand-500/15">
+          <div className="flex h-12 items-center rounded-xl border border-sage/30 bg-card-muted focus-within:border-brand-500 focus-within:ring-4 focus-within:ring-brand-500/15">
             <span className="pl-3 pr-2 text-ink-2">+91</span>
             <input
               id="phone"
@@ -111,7 +111,7 @@ export default function SignInForm() {
         </form>
       )}
 
-      {shownError && <p role="alert" className="rounded-xl bg-red-500/10 p-3 text-sm text-red-400">{shownError}</p>}
+      {shownError && <p role="alert" className="rounded-xl bg-red/10 p-3 text-sm text-red">{shownError}</p>}
     </div>
   );
 }

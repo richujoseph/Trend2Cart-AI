@@ -10,7 +10,7 @@ export default function AppError({ reset }: { error: Error; reset: () => void })
   const { t } = useT();
   return (
     <div role="alert" className="mt-10 flex flex-col items-center text-center">
-      <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-red-500/15 text-red-400">
+      <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-red/10 text-red">
         <CircleAlert className="h-7 w-7" aria-hidden />
       </span>
       <h1 className="mt-4 text-xl font-medium text-brand-900">{t.api.crashTitle}</h1>

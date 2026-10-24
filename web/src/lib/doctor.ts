@@ -46,8 +46,8 @@ export type Checkup = {
 
 // Text is in the i18n dictionary (t.checkup.title*/short*/stage*/msg*).
 export const VERDICT_TONE: Record<Verdict, { tone: string; dot: string }> = {
-  interest: { tone: "bg-ember-400/15 text-ember-300", dot: "bg-ember-300" },
-  conversion: { tone: "bg-ember-400/15 text-ember-300", dot: "bg-ember-400" },
+  interest: { tone: "bg-red/10 text-red", dot: "bg-red" },
+  conversion: { tone: "bg-red/10 text-red", dot: "bg-red" },
   returns: { tone: "bg-loss/15 text-loss", dot: "bg-loss" },
   healthy: { tone: "bg-profit/15 text-profit", dot: "bg-profit" },
 };

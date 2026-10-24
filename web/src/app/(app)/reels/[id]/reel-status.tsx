@@ -78,7 +78,7 @@ export default function ReelStatus() {
       <Link href="/reels" className={`${btn.ghost} -ml-3`}>{t.reel.back}</Link>
       <div className="mt-2 flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <h1 className="text-3xl font-light tracking-tight text-ink">{reel?.products?.name ?? t.reel.yourReel}</h1>
+          <h1 className="text-3xl font-black tracking-tight text-ink">{reel?.products?.name ?? t.reel.yourReel}</h1>
           {reel && (
             <p className="text-sm text-ink-2">
               {languageLabel(reel.language)}
@@ -95,17 +95,17 @@ export default function ReelStatus() {
 
       {working && (
         <section className={`${glassCard} mt-6 overflow-hidden`} aria-live="polite">
-          <div className="border-b border-white/[0.08] p-5">
-            <p className="text-2xl font-light tabular-nums text-ink">{fmt(t.reel.making, { s: seconds })}</p>
+          <div className="border-b border-sage/30 p-5">
+            <p className="text-2xl font-black tabular-nums text-ink">{fmt(t.reel.making, { s: seconds })}</p>
             <p className="mt-1 text-[15px] text-ink-2">
               {reel?.status === "queued" ? t.reel.waitingSlot : t.reel.usuallyReady} {t.reel.canLeave}
             </p>
-            <div className="mt-4 h-1 overflow-hidden rounded-full bg-white/10">
+            <div className="mt-4 h-1 overflow-hidden rounded-full bg-sage/20">
               <div className="h-full rounded-full bg-ember-400 transition-all duration-700" style={{ width: `${((current + 1) / (STAGES.length + 1)) * 100}%` }} />
             </div>
           </div>
           {reel?.status === "queued" && seconds > 45 && (
-            <p className="m-5 mb-0 rounded-[16px] bg-white/[0.04] p-3 text-[15px] text-ink-2">{t.reel.offline}</p>
+            <p className="m-5 mb-0 rounded-[16px] bg-card-muted p-3 text-[15px] text-ink-2">{t.reel.offline}</p>
           )}
           <ol className="flex flex-col gap-4 p-5 text-[15px]">
             {STAGES.map((stage, i) => {
@@ -115,7 +115,7 @@ export default function ReelStatus() {
                   <span
                     aria-hidden
                     className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-medium ${
-                      state === "done" ? "bg-white text-[#0b0706]" : state === "active" ? "animate-pulse bg-ember-400 text-[#0b0706]" : "glass text-ink-3"
+                      state === "done" ? "bg-sage/40 text-charcoal" : state === "active" ? "animate-pulse bg-charcoal text-white" : "glass text-ink-3"
                     }`}
                   >
                     {state === "done" ? "✓" : i + 1}
@@ -181,7 +181,7 @@ function DoneReel({ reel }: { reel: Reel }) {
 
   return (
     <>
-      <div className="mx-auto mt-6 w-full max-w-[17rem] rounded-[2rem] bg-gradient-to-br from-rust-700 via-rust-500 to-ember-400 p-[3px]">
+      <div className="mx-auto mt-6 w-full max-w-[17rem] rounded-[2.5rem] bg-charcoal p-1.5 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.25)]">
         <video src={reel.video_url!} controls playsInline preload="metadata" className="aspect-[9/16] w-full rounded-[1.6rem] bg-black" />
       </div>
       <div className="mt-5 grid grid-cols-2 gap-3">
@@ -203,7 +203,7 @@ function DoneReel({ reel }: { reel: Reel }) {
 
       <section className={`${dataCard} mt-6 p-5`}>
         <div className="flex items-center justify-between gap-2">
-          <h2 className="flex items-center gap-1.5 text-xl font-light"><PenLine className="h-4 w-4 text-rust-600" strokeWidth={1.5} aria-hidden /> {t.reel.captionTitle}</h2>
+          <h2 className="flex items-center gap-1.5 text-xl font-black"><PenLine className="h-4 w-4 text-rust-600" strokeWidth={1.5} aria-hidden /> {t.reel.captionTitle}</h2>
           <button onClick={copy} className={`${btn.dark} min-h-10 px-4 text-sm`}>
             {copied ? t.common.copied : t.common.copy}
           </button>
@@ -212,7 +212,7 @@ function DoneReel({ reel }: { reel: Reel }) {
       </section>
 
       <Link href={`/doctor?reel=${reel.id}`} className={`${glassCard} mt-4 flex items-center gap-3 p-5`}>
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-ember-400/15 text-ember-300">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red/10 text-red">
           <Stethoscope className="h-5 w-5" strokeWidth={1.5} aria-hidden />
         </span>
         <span className="min-w-0 flex-1">

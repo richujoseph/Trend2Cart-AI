@@ -17,6 +17,10 @@ export const en = {
     loss: "loss",
     perOrder: "/order",
     language: "Language",
+    greetMorning: "Good morning",
+    greetAfternoon: "Good afternoon",
+    greetEvening: "Good evening",
+    makeReel: "Make a Reel",
   },
   api: {
     signIn: "Please sign in to continue.",
@@ -66,6 +70,9 @@ export const en = {
     yours: "Yours",
     noMineTitle: "Your shop is empty",
     noMineBody: "Search any product above, check its profit, then tap Add to my shop.",
+    noteCompetition: "Lots of sellers already: stand out with your own photos and a sharp first line.",
+    noteRising: "Searches for this are rising: a good time to post.",
+    noteSteady: "Steady demand with healthy profit after returns.",
   },
   product: {
     allProducts: "← All products",

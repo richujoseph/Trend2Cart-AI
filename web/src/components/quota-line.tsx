@@ -13,7 +13,7 @@ export default function QuotaLine({ me, tone = "dark" }: { me: Me; tone?: "dark"
       : fmt(t.reels.left, { left: me.reels.left ?? 0, limit: me.reels.limit }) +
         (me.reels.resets_at ? fmt(t.reels.resets, { date: date(me.reels.resets_at) }) : "");
   return (
-    <p className={`mt-1 text-sm ${tone === "light" ? "text-white/90" : "text-ink-2"}`}>
+    <p className={`mt-1 text-sm ${tone === "light" ? "text-ink-2" : "text-ink-2"}`}>
       {text}
       {me.profile.plan === "free" && (
         <>

@@ -49,7 +49,7 @@ export type Me = {
 
 export const STATUS_TONE: Record<ReelStatus, { key: "statusQueued" | "statusProcessing" | "statusDone" | "statusFailed"; tone: string }> = {
   queued: { key: "statusQueued", tone: "bg-white/10 text-ink-2" },
-  processing: { key: "statusProcessing", tone: "bg-ember-400/15 text-ember-300" },
+  processing: { key: "statusProcessing", tone: "bg-charcoal/10 text-charcoal" },
   done: { key: "statusDone", tone: "bg-profit/15 text-profit" },
   failed: { key: "statusFailed", tone: "bg-loss/15 text-loss" },
 };

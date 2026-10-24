@@ -132,7 +132,7 @@ export default function Doctor() {
         <span className="glass inline-flex h-10 w-10 items-center justify-center rounded-full">
           <Stethoscope className="h-5 w-5 text-ink" strokeWidth={1.5} aria-hidden />
         </span>
-        <h1 className="mt-4 text-[34px] font-light leading-[1.1] tracking-tight text-ink">{t.doctor.title}</h1>
+        <h1 className="mt-4 text-[34px] font-black leading-[1.1] tracking-tight text-ink">{t.doctor.title}</h1>
         <p className="mt-2 max-w-[34ch] text-[15px] leading-relaxed text-ink-2">{t.doctor.subtitle}</p>
         {history && history.length > 0 ? <HealthSummary history={history} /> : history && <HowItWorks />}
         <a href="#checkup" className={`${btn.light} mt-5`}>
@@ -143,14 +143,14 @@ export default function Doctor() {
       {history && history.length > 0 && <Insights history={history} />}
 
       <section id="checkup" className={`${glassCard} mt-8 scroll-mt-20 overflow-hidden`}>
-        <div className="flex items-center justify-between gap-2 border-b border-white/[0.08] p-5">
-          <h2 className="text-2xl font-light text-ink">{t.doctor.newCheckup}</h2>
+        <div className="flex items-center justify-between gap-2 border-b border-sage/30 p-5">
+          <h2 className="text-2xl font-black text-ink">{t.doctor.newCheckup}</h2>
           <span className="text-[13px] tabular-nums text-ink-2">{fmt(t.doctor.stepOf, { n: step })}</span>
         </div>
         <ol className="grid grid-cols-3 gap-2 px-5 pt-4" aria-label={t.newReel.stepsLabel}>
           {t.doctor.steps.map((label, i) => (
             <li key={label} aria-current={step === i + 1 ? "step" : undefined}>
-              <span className={`block h-1 rounded-full ${i + 1 <= step ? "bg-ember-400" : "bg-white/10"}`} />
+              <span className={`block h-1 rounded-full ${i + 1 <= step ? "bg-ember-400" : "bg-sage/20"}`} />
               <span className={`mt-1.5 block text-xs ${i + 1 === step ? "font-medium text-ink" : "text-ink-2"}`}>{label}</span>
             </li>
           ))}
@@ -169,7 +169,7 @@ export default function Doctor() {
                     className={`glass flex cursor-pointer items-center gap-3 rounded-[20px] p-2.5 transition ${source === r.id ? "ring-2 ring-ember-400" : ""}`}
                   >
                     <input type="radio" name="reel" className="sr-only" checked={source === r.id} onChange={() => setSource(r.id)} />
-                    <span className="relative h-16 w-11 shrink-0 overflow-hidden rounded-[10px] bg-maroon">
+                    <span className="relative h-16 w-11 shrink-0 overflow-hidden rounded-[10px] bg-charcoal">
                       {r.video_url && <video src={`${r.video_url}#t=1.5`} preload="metadata" muted playsInline className="h-full w-full object-cover" aria-hidden />}
                     </span>
                     <span className="min-w-0 flex-1">
@@ -218,7 +218,7 @@ export default function Doctor() {
                   ))}
                 </div>
                 {warning && <p className="mt-3 text-[15px] text-loss">{warning}</p>}
-                <details className="mt-4 rounded-[16px] bg-white/[0.04] p-4 text-[15px]">
+                <details className="mt-4 rounded-[16px] bg-card-muted p-4 text-[15px]">
                   <summary className="cursor-pointer font-medium text-ember-300">{t.doctor.whereFind}</summary>
                   <ul className="mt-2 list-disc space-y-1 pl-5 text-ink-2">
                     <li>{t.doctor.findViews}</li>
@@ -275,7 +275,7 @@ export default function Doctor() {
                   <span className="text-xs leading-snug text-ink-2">{t.doctor.adSpendHint}</span>
                 </label>
               </div>
-              <p className="mt-4 rounded-[16px] bg-white/[0.04] p-4 text-[15px] tabular-nums text-ink">
+              <p className="mt-4 rounded-[16px] bg-card-muted p-4 text-[15px] tabular-nums text-ink">
                 {fmt(t.doctor.summary, { views: n.views.toLocaleString("en-IN"), clicks: n.clicks, orders: n.orders, returns: n.returns })}
               </p>
             </fieldset>
@@ -304,7 +304,7 @@ export default function Doctor() {
 
       {result && (
         <section id="diagnosis" className="mt-6 scroll-mt-20 animate-rise" aria-live="polite">
-          <h2 className="mb-3 text-2xl font-light text-ink">{fmt(t.doctor.results, { name: result.products?.name ?? t.reel.yourReel })}</h2>
+          <h2 className="mb-3 text-2xl font-black text-ink">{fmt(t.doctor.results, { name: result.products?.name ?? t.reel.yourReel })}</h2>
           <CheckupView c={result} previous={previousFor(result, history ?? [])} />
         </section>
       )}
@@ -312,7 +312,7 @@ export default function Doctor() {
       {past.length > 0 && (
         <section className="mt-8">
           <SectionTitle icon={BarChart3} title={t.doctor.past} />
-          <ol className="relative mt-4 flex flex-col gap-3 border-l border-white/[0.12] pl-4">
+          <ol className="relative mt-4 flex flex-col gap-3 border-l border-sage/30 pl-4">
             {past.map((h) => {
               const d = h.diagnoses[0];
               const expanded = open === h.id;
@@ -343,7 +343,7 @@ export default function Doctor() {
                       <ArrowRight aria-hidden strokeWidth={1.5} className={`h-5 w-5 shrink-0 text-ink-2 transition ${expanded ? "rotate-90" : ""}`} />
                     </button>
                     {expanded && (
-                      <div className="border-t border-white/[0.08] p-4">
+                      <div className="border-t border-sage/30 p-4">
                         <CheckupView c={h} previous={previousFor(h, history ?? [])} />
                       </div>
                     )}
@@ -366,7 +366,7 @@ export default function Doctor() {
 
 function ChosenProduct({ p }: { p: ProductListItem }) {
   return (
-    <div className="mb-4 flex items-center gap-3 rounded-[16px] bg-white/[0.04] p-2.5 text-[15px]">
+    <div className="mb-4 flex items-center gap-3 rounded-[16px] bg-card-muted p-2.5 text-[15px]">
       <span className="flex h-10 w-10 shrink-0 rounded-[10px] bg-card-muted p-1">
         <ProductImage src={p.image_urls[0]} name={p.name} className="h-full w-full rounded-[7px]" />
       </span>
@@ -381,7 +381,7 @@ function HowItWorks() {
     <ol className="mt-5 grid grid-cols-3 gap-2 text-center text-[13px]">
       {t.doctor.how.map((s, i) => (
         <li key={s} className="glass rounded-[16px] p-3 leading-snug text-ink">
-          <span className="mx-auto mb-1.5 flex h-7 w-7 items-center justify-center rounded-full bg-white text-xs font-medium text-[#0b0706]">{i + 1}</span>
+          <span className="mx-auto mb-1.5 flex h-7 w-7 items-center justify-center rounded-full bg-white text-xs font-medium text-charcoal">{i + 1}</span>
           {s}
         </li>
       ))}
@@ -441,7 +441,7 @@ function Insights({ history }: { history: Checkup[] }) {
     <section className="mt-6 grid gap-4">
       {recent.length > 1 && (
         <div className={`${dataCard} p-5`}>
-          <p className="flex items-center gap-2 text-xl font-light"><BarChart3 className="h-[18px] w-[18px] text-rust-600" strokeWidth={1.5} aria-hidden /> {t.doctor.profitChart}</p>
+          <p className="flex items-center gap-2 text-xl font-black"><BarChart3 className="h-[18px] w-[18px] text-rust-600" strokeWidth={1.5} aria-hidden /> {t.doctor.profitChart}</p>
           <div className="mt-3 flex h-32 items-end gap-2" role="img" aria-label={t.doctor.profitChart}>
             {recent.map((h) => {
               const p = h.diagnoses[0].money!.profit_paise;
@@ -461,13 +461,13 @@ function Insights({ history }: { history: Checkup[] }) {
       )}
       {leaders.length > 0 && (
         <div className={`${dataCard} p-5`}>
-          <p className="flex items-center gap-2 text-xl font-light"><Trophy className="h-[18px] w-[18px] text-rust-600" strokeWidth={1.5} aria-hidden /> {t.doctor.leaderboard}</p>
+          <p className="flex items-center gap-2 text-xl font-black"><Trophy className="h-[18px] w-[18px] text-rust-600" strokeWidth={1.5} aria-hidden /> {t.doctor.leaderboard}</p>
           <ol className="mt-3 flex flex-col">
             {leaders.map((l, i) => (
               <li key={l.name + i} className="border-t border-black/[0.08] py-3">
                 <div className="flex items-center justify-between gap-2 text-[15px]">
                   <span className="flex min-w-0 items-center gap-2">
-                    <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-medium ${i === 0 ? "bg-[#0b0706] text-white" : "bg-card-muted text-black/70"}`}>{i + 1}</span>
+                    <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-medium ${i === 0 ? "bg-charcoal text-white" : "bg-card-muted text-black/70"}`}>{i + 1}</span>
                     <span className="truncate font-medium">{l.name}</span>
                   </span>
                   <span className={`shrink-0 font-medium tabular-nums ${l.profit >= 0 ? "text-profit-strong" : "text-loss-strong"}`}>{signedWhole(l.profit)}</span>

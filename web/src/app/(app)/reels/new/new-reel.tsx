@@ -126,7 +126,7 @@ export default function NewReel() {
       <RibbonBackground variant="subtle" className="-z-10 -mx-5 -mt-4 h-72" />
       <div>
         <Link href="/reels" className={`${btn.ghost} -ml-3`}>{t.newReel.back}</Link>
-        <h1 className="mt-2 flex items-center gap-2 text-3xl font-light tracking-tight text-ink"><Clapperboard className="h-6 w-6 text-ember-400" strokeWidth={1.5} aria-hidden /> {t.newReel.title}</h1>
+        <h1 className="mt-2 flex items-center gap-2 text-3xl font-black tracking-tight text-ink"><Clapperboard className="h-6 w-6 text-ember-400" strokeWidth={1.5} aria-hidden /> {t.newReel.title}</h1>
         {me && <QuotaLine me={me} />}
       </div>
 
@@ -146,7 +146,7 @@ export default function NewReel() {
               <button type="button" disabled={n >= step} onClick={() => setStep(n)} className="flex w-full min-w-0 items-center gap-1.5 text-left disabled:cursor-default">
                 <span
                   className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
-                    state === "done" ? "bg-white text-[#0b0706]" : state === "current" ? "bg-ember-400 text-[#0b0706]" : "glass text-ink-3"
+                    state === "done" ? "bg-sage/40 text-charcoal" : state === "current" ? "bg-charcoal text-white" : "glass text-ink-3"
                   }`}
                 >
                   {state === "done" ? "✓" : n}
@@ -179,7 +179,7 @@ export default function NewReel() {
         <>
           {/* min-w-0: fieldsets are as wide as their content by default, so long names would overflow the screen. */}
           <fieldset className="min-w-0">
-            <legend className="mb-3 text-2xl font-light text-ink">{t.newReel.whichProduct}</legend>
+            <legend className="mb-3 text-2xl font-black text-ink">{t.newReel.whichProduct}</legend>
             {products ? (
               <div className="flex flex-col gap-2">
                 {products.map((p) => (
@@ -203,7 +203,7 @@ export default function NewReel() {
                     </span>
                     <span
                       aria-hidden
-                      className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs ${productId === p.id ? "bg-ember-400 text-[#0b0706]" : "ring-1 ring-white/20"}`}
+                      className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs ${productId === p.id ? "bg-charcoal text-white" : "ring-1 ring-sage/40"}`}
                     >
                       {productId === p.id ? "✓" : ""}
                     </span>
@@ -238,7 +238,7 @@ export default function NewReel() {
                 </div>
               ))}
               {photos.length < MAX_PHOTOS && (
-                <label className="flex aspect-square cursor-pointer flex-col items-center justify-center rounded-[16px] border border-dashed border-white/25 bg-white/[0.03] text-xs font-medium text-ink-2">
+                <label className="flex aspect-square cursor-pointer flex-col items-center justify-center rounded-[16px] border border-dashed border-sage/60 bg-card-muted text-xs font-medium text-ink-2">
                   <span className="text-2xl leading-none">{uploading ? "…" : "+"}</span>
                   {uploading ? t.newReel.uploading : t.newReel.add}
                   <input
@@ -264,7 +264,7 @@ export default function NewReel() {
       {step === 2 && (
         <>
           <label className="flex flex-col gap-2">
-            <span className="flex items-center gap-1.5 text-2xl font-light text-ink"><Users className="h-5 w-5 text-ember-400" strokeWidth={1.5} aria-hidden /> {t.newReel.whoFor}</span>
+            <span className="flex items-center gap-1.5 text-2xl font-black text-ink"><Users className="h-5 w-5 text-ember-400" strokeWidth={1.5} aria-hidden /> {t.newReel.whoFor}</span>
             <input value={audience} onChange={(e) => setAudience(e.target.value)} maxLength={80} placeholder={t.newReel.audiencePlaceholder} className={`${glassInput} h-14`} />
             <span className="text-[13px] text-ink-2">{t.newReel.audienceHint}</span>
           </label>
@@ -275,7 +275,7 @@ export default function NewReel() {
                 type="button"
                 aria-pressed={audience === idea}
                 onClick={() => setAudience(idea)}
-                className={`min-h-11 rounded-full px-4 text-[13px] transition ${audience === idea ? "bg-white font-medium text-[#0b0706]" : "glass text-ink-2"}`}
+                className={`min-h-11 rounded-full px-4 text-[13px] transition ${audience === idea ? "bg-white font-medium text-charcoal" : "glass text-ink-2"}`}
               >
                 {idea}
               </button>
@@ -313,7 +313,7 @@ export default function NewReel() {
           )}
 
           <fieldset className="flex flex-col gap-2">
-            <legend className="mb-3 flex items-center gap-1.5 text-2xl font-light text-ink"><Languages className="h-5 w-5 text-ember-400" strokeWidth={1.5} aria-hidden /> {t.newReel.language}</legend>
+            <legend className="mb-3 flex items-center gap-1.5 text-2xl font-black text-ink"><Languages className="h-5 w-5 text-ember-400" strokeWidth={1.5} aria-hidden /> {t.newReel.language}</legend>
             <div className="grid grid-cols-3 gap-2">
               {LANGUAGES.map((l) => (
                 <button
@@ -321,7 +321,7 @@ export default function NewReel() {
                   type="button"
                   aria-pressed={lang === l.value}
                   onClick={() => setLanguage(l.value)}
-                  className={`min-h-14 rounded-[16px] text-sm transition ${lang === l.value ? "bg-white text-[#0b0706]" : "glass text-ink"}`}
+                  className={`min-h-14 rounded-[16px] text-sm transition ${lang === l.value ? "bg-charcoal text-white" : "glass text-ink"}`}
                 >
                   <span className="block font-medium">{l.native}</span>
                   {l.native !== l.label && <span className="block text-xs opacity-75">{l.label}</span>}
@@ -331,7 +331,7 @@ export default function NewReel() {
           </fieldset>
 
           <fieldset>
-            <legend className="mb-3 flex items-center gap-1.5 text-2xl font-light text-ink"><Palette className="h-5 w-5 text-ember-400" strokeWidth={1.5} aria-hidden /> {t.newReel.style}</legend>
+            <legend className="mb-3 flex items-center gap-1.5 text-2xl font-black text-ink"><Palette className="h-5 w-5 text-ember-400" strokeWidth={1.5} aria-hidden /> {t.newReel.style}</legend>
             <div className="grid grid-cols-3 gap-2">
               {TEMPLATES.map((tpl) => (
                 <button
@@ -363,8 +363,8 @@ export default function NewReel() {
         </div>
       )}
 
-      {/* Stays above the bottom nav so Next is always in reach on a long product list. */}
-      <div className="sticky bottom-[calc(4rem+env(safe-area-inset-bottom))] z-10 -mx-5 flex gap-3 border-t border-white/[0.06] bg-canvas/80 px-5 py-3 backdrop-blur-xl">
+      {/* Stays above the floating nav (and its raised red button) so Next is always in reach on a long list. */}
+      <div className="sticky bottom-[calc(6.75rem+env(safe-area-inset-bottom))] rounded-[24px] z-10 -mx-5 flex gap-3 border-t border-sage/30 bg-canvas/80 px-5 py-3 backdrop-blur-xl">
         {step > 1 && (
           <button type="button" onClick={() => setStep((s) => s - 1)} className={btn.glass}>
             {t.common.back}

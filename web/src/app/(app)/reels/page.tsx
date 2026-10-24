@@ -65,7 +65,7 @@ export default function ReelsPage() {
           {reels.map((r, i) => (
             <li key={r.id} className="animate-rise" style={{ animationDelay: `${Math.min(i, 8) * 40}ms` }}>
               <Link href={`/reels/${r.id}`} className={`${card} block overflow-hidden transition active:scale-[.98]`}>
-                <div className="relative aspect-[9/14] bg-gradient-to-br from-brand-700 to-orange-600">
+                <div className="relative aspect-[9/14] bg-charcoal">
                   {r.status === "done" && r.video_url ? (
                     <video src={`${r.video_url}#t=1.5`} preload="metadata" muted playsInline className="h-full w-full object-cover" aria-hidden />
                   ) : (

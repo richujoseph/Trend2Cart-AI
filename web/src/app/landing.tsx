@@ -42,7 +42,7 @@ export default function Landing() {
   return (
     <div className="min-h-dvh bg-canvas text-ink">
       {/* Nav */}
-      <header className="sticky top-0 z-30 border-b border-white/[0.06] bg-canvas/70 backdrop-blur-xl">
+      <header className="sticky top-0 z-30 border-b border-sage/30 bg-canvas/85 backdrop-blur-xl">
         <nav className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 md:px-8">
           <Link href="/" className="flex items-center gap-2">
             <Logo size={30} />
@@ -56,7 +56,7 @@ export default function Landing() {
           </div>
           <div className="flex items-center gap-2">
             <LanguageSelect />
-            <Link href={start} className="hidden h-10 items-center rounded-full bg-[#f6f1ed] px-4 text-sm font-medium text-[#140b09] sm:inline-flex">
+            <Link href={start} className="hidden h-10 items-center rounded-full bg-red px-4 text-sm font-extrabold text-white sm:inline-flex">
               {signedIn ? L.openApp : L.signIn}
             </Link>
           </div>
@@ -71,7 +71,7 @@ export default function Landing() {
         <div className="relative mx-auto grid max-w-6xl gap-8 px-4 pb-16 pt-14 md:grid-cols-[1.25fr_1fr] md:px-8 md:pb-24 md:pt-24">
           <div className="animate-rise">
             <p className="text-xs uppercase tracking-[0.18em] text-ink-2">{L.eyebrow}</p>
-            <h1 className="mt-4 text-[44px] font-light leading-[1.02] tracking-tight md:text-7xl">{L.title}</h1>
+            <h1 className="mt-4 text-[44px] font-black leading-[1.02] tracking-tight md:text-7xl">{L.title}</h1>
             <p className="mt-5 max-w-xl text-base leading-relaxed text-ink-2 md:text-lg">{L.sub}</p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link href={start} className={btnPrimary}>
@@ -79,7 +79,7 @@ export default function Landing() {
               </Link>
               <a href="#how" className={btnSecondary}>{L.ctaHow}</a>
             </div>
-            <div className="mt-10 inline-flex items-center gap-3 rounded-full bg-white/[0.05] py-1.5 pl-1.5 pr-4 ring-1 ring-white/10 backdrop-blur">
+            <div className="mt-10 inline-flex items-center gap-3 rounded-full bg-card-muted py-1.5 pl-1.5 pr-4 ring-1 ring-sage/40 backdrop-blur">
               <span className="flex -space-x-2">
                 {(stats?.showcase ?? []).slice(0, 4).map((p) => (
                   // eslint-disable-next-line @next/next/no-img-element
@@ -94,12 +94,12 @@ export default function Landing() {
             <div className={`${card} p-4 animate-rise`} style={{ animationDelay: "120ms" }}>
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="text-lg font-light">{L.topToday}</p>
-                  <span className="mt-2 inline-block rounded-full px-2.5 py-0.5 text-[11px] text-ink-2 ring-1 ring-white/15">Real Profit Score</span>
+                  <p className="text-lg font-black">{L.topToday}</p>
+                  <span className="mt-2 inline-block rounded-full px-2.5 py-0.5 text-[11px] text-ink-2 ring-1 ring-sage/40">Real Profit Score</span>
                   {top ? (
                     <>
                       <p className="mt-3 line-clamp-2 text-sm text-ink">{top.name}</p>
-                      <p className="mt-1 text-2xl font-light tabular-nums text-emerald-300">
+                      <p className="mt-1 text-2xl font-black tabular-nums text-profit">
                         {formatRupees(top.profit_paise)} <span className="text-xs text-ink-2">{L.perOrder}</span>
                       </p>
                     </>
@@ -126,8 +126,8 @@ export default function Landing() {
 
       {/* Statement with floating chips */}
       <section className="relative mx-auto max-w-6xl px-4 py-20 text-center md:px-8 md:py-28">
-        <div className="absolute inset-x-0 top-1/2 -z-0 mx-auto h-64 max-w-3xl -translate-y-1/2 rounded-full bg-[#dc4a26]/15 blur-3xl" aria-hidden />
-        <h2 className="relative mx-auto max-w-3xl text-[38px] font-light leading-[1.05] tracking-tight md:text-6xl">{L.statement}</h2>
+        <div className="absolute inset-x-0 top-1/2 -z-0 mx-auto h-64 max-w-3xl -translate-y-1/2 rounded-full bg-sage/30 blur-3xl" aria-hidden />
+        <h2 className="relative mx-auto max-w-3xl text-[38px] font-black leading-[1.05] tracking-tight md:text-6xl">{L.statement}</h2>
         <div className="relative mt-10 flex flex-wrap justify-center gap-3">
           {[L.chipSupplier, L.chipReels, L.chipCod].map((c, i) => {
             const img = stats?.showcase[i + 1]?.image;
@@ -148,8 +148,8 @@ export default function Landing() {
 
       {/* Comprehensive solution */}
       <section id="features" className="mx-auto max-w-6xl scroll-mt-20 px-4 md:px-8">
-        <h2 className="text-4xl font-light leading-tight tracking-tight md:text-5xl">{L.solutionTitle}</h2>
-        <div className="mt-8 grid gap-8 border-t border-white/[0.08] pt-8 md:grid-cols-2">
+        <h2 className="text-4xl font-black leading-tight tracking-tight md:text-5xl">{L.solutionTitle}</h2>
+        <div className="mt-8 grid gap-8 border-t border-sage/30 pt-8 md:grid-cols-2">
           <p className="text-lg leading-relaxed text-ink-2">{L.solutionBody}</p>
           <div className="grid grid-cols-[auto_1fr] gap-x-8 gap-y-6 text-sm">
             <span className="text-ink-3">{L.featuresLabel}</span>
@@ -162,7 +162,7 @@ export default function Landing() {
         <div className="mt-12 grid gap-4 md:grid-cols-[1.4fr_1fr]">
           <div className={`${card} relative overflow-hidden p-5`}>
             <div className="relative z-10 max-w-[60%]">
-              <p className="text-2xl font-light">{L.reelsTitle}</p>
+              <p className="text-2xl font-black">{L.reelsTitle}</p>
               <p className="mt-2 text-sm leading-relaxed text-ink-2">{L.reelsBody}</p>
               <Link href={start} className={`${btnPrimary} mt-6 min-h-10`}>
                 {L.reelsCta} <ArrowUpRight className="h-4 w-4" aria-hidden />
@@ -170,12 +170,12 @@ export default function Landing() {
             </div>
             <div className="absolute -right-6 top-4 bottom-4 flex w-[45%] rotate-[-6deg] gap-2">
               {(stats?.showcase ?? []).slice(0, 2).map((p) => (
-                <div key={p.name} className="relative aspect-[9/16] flex-1 overflow-hidden rounded-2xl bg-[#140b09] ring-1 ring-white/15">
+                <div key={p.name} className="relative aspect-[9/16] flex-1 overflow-hidden rounded-2xl bg-charcoal ring-1 ring-sage/40">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={p.image} alt="" className="absolute inset-x-2 top-[18%] h-[45%] w-[calc(100%-16px)] rounded-lg bg-white object-cover" />
                   <span className="absolute inset-x-2 bottom-[18%] h-1.5 rounded bg-white/80" />
                   <span className="absolute inset-x-4 bottom-[12%] h-1.5 rounded bg-white/50" />
-                  <span className="absolute left-1/2 top-[7%] -translate-x-1/2 rounded bg-[#f06a3c] px-1.5 text-[9px] font-medium text-white">₹</span>
+                  <span className="absolute left-1/2 top-[7%] -translate-x-1/2 rounded bg-red px-1.5 text-[9px] font-medium text-white">₹</span>
                 </div>
               ))}
             </div>
@@ -199,21 +199,21 @@ export default function Landing() {
 
       {/* Why choose us */}
       <section id="why" className="mx-auto mt-24 max-w-6xl scroll-mt-20 px-4 md:px-8">
-        <div className="overflow-hidden rounded-[32px] bg-black ring-1 ring-white/[0.08]">
+        <div className="overflow-hidden rounded-[40px] bg-white ring-1 ring-sage/30">
           <div className="p-6 md:p-10">
-            <h2 className="text-4xl font-light leading-tight tracking-tight md:text-5xl">{L.whyTitle}</h2>
+            <h2 className="text-4xl font-black leading-tight tracking-tight md:text-5xl">{L.whyTitle}</h2>
           </div>
-          <div className="relative border-t border-white/[0.08] p-4 md:p-8">
+          <div className="relative border-t border-sage/30 p-4 md:p-8">
             <Ribbons seed={2.4} className="absolute inset-0 h-full w-full opacity-90" />
-            <div className="absolute inset-0 bg-black/20" aria-hidden />
+            <div className="absolute inset-0 bg-transparent" aria-hidden />
             <ul className="relative grid gap-3 md:grid-cols-3">
               {L.why.map(([title, body], i) => {
                 const Icon = WHY_ICONS[i];
                 return (
-                  <li key={title} className={`rounded-2xl bg-black/35 p-4 ring-1 ring-white/10 backdrop-blur-xl ${i === 1 ? "md:translate-y-8" : ""} ${i === 4 ? "md:translate-y-8" : ""}`}>
+                  <li key={title} className={`rounded-2xl bg-transparent p-4 ring-1 ring-sage/40 backdrop-blur-xl ${i === 1 ? "md:translate-y-8" : ""} ${i === 4 ? "md:translate-y-8" : ""}`}>
                     <p className="flex items-center gap-2 text-sm font-medium">
-                      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-[#b8321a] to-[#f06a3c]">
-                        <Icon className="h-3.5 w-3.5 text-white" aria-hidden />
+                      <span className="flex h-8 w-8 items-center justify-center rounded-full bg-red/10">
+                        <Icon className="h-4 w-4 text-red" strokeWidth={2.2} aria-hidden />
                       </span>
                       {title}
                     </p>
@@ -228,12 +228,12 @@ export default function Landing() {
 
       {/* How it works */}
       <section id="how" className="mx-auto mt-24 max-w-6xl scroll-mt-20 px-4 md:px-8">
-        <h2 className="text-4xl font-light leading-tight tracking-tight md:text-5xl">{L.howTitle}</h2>
-        <ol className="mt-8 grid gap-4 border-t border-white/[0.08] pt-8 md:grid-cols-3">
+        <h2 className="text-4xl font-black leading-tight tracking-tight md:text-5xl">{L.howTitle}</h2>
+        <ol className="mt-8 grid gap-4 border-t border-sage/30 pt-8 md:grid-cols-3">
           {L.how.map(([title, body], i) => (
             <li key={title} className={`${card} p-5`}>
-              <span className="text-5xl font-extralight tabular-nums text-brand-500/80">0{i + 1}</span>
-              <p className="mt-4 text-lg font-light">{title}</p>
+              <span className="text-5xl font-black tabular-nums text-brand-500/80">0{i + 1}</span>
+              <p className="mt-4 text-lg font-black">{title}</p>
               <p className="mt-1 text-sm text-ink-2">{body}</p>
             </li>
           ))}
@@ -242,19 +242,19 @@ export default function Landing() {
 
       {/* Pricing */}
       <section id="pricing" className="mx-auto mt-24 max-w-6xl scroll-mt-20 px-4 md:px-8">
-        <h2 className="text-4xl font-light leading-tight tracking-tight md:text-5xl">{L.pricingTitle}</h2>
-        <div className="mt-8 grid gap-4 border-t border-white/[0.08] pt-8 md:grid-cols-2">
+        <h2 className="text-4xl font-black leading-tight tracking-tight md:text-5xl">{L.pricingTitle}</h2>
+        <div className="mt-8 grid gap-4 border-t border-sage/30 pt-8 md:grid-cols-2">
           <div className={`${card} p-6`}>
             <p className="text-ink-2">{L.free}</p>
-            <p className="mt-2 text-5xl font-extralight">₹0</p>
+            <p className="mt-2 text-5xl font-black">₹0</p>
             <p className="mt-3 text-sm text-ink-2">{L.freeBody}</p>
           </div>
-          <div className="relative overflow-hidden rounded-2xl p-6 ring-1 ring-white/10">
+          <div className="relative overflow-hidden rounded-2xl p-6 ring-1 ring-sage/40">
             <Ribbons seed={4.1} className="absolute inset-0 h-full w-full" />
-            <div className="absolute inset-0 bg-black/30" aria-hidden />
+            <div className="absolute inset-0 bg-transparent" aria-hidden />
             <div className="relative">
               <p className="text-ink-2">{L.founding}</p>
-              <p className="mt-2 text-5xl font-extralight">₹99</p>
+              <p className="mt-2 text-5xl font-black">₹99</p>
               <p className="mt-3 text-sm text-ink/85">{L.foundingBody}</p>
             </div>
           </div>
@@ -263,18 +263,18 @@ export default function Landing() {
 
       {/* Final CTA */}
       <section className="relative mx-auto mt-24 max-w-6xl px-4 pb-16 md:px-8">
-        <div className="relative overflow-hidden rounded-[32px] px-6 py-16 text-center ring-1 ring-white/10">
+        <div className="relative overflow-hidden rounded-[32px] px-6 py-16 text-center ring-1 ring-sage/40">
           <Ribbons seed={1.2} className="absolute inset-0 h-full w-full" />
-          <div className="absolute inset-0 bg-black/35" aria-hidden />
+          <div className="absolute inset-0 bg-transparent" aria-hidden />
           <div className="relative">
-            <h2 className="mx-auto max-w-2xl text-4xl font-light leading-tight tracking-tight md:text-5xl">{L.finalTitle}</h2>
+            <h2 className="mx-auto max-w-2xl text-4xl font-black leading-tight tracking-tight md:text-5xl">{L.finalTitle}</h2>
             <p className="mt-3 text-ink-2">{L.finalBody}</p>
             <Link href={start} className={`${btnPrimary} mt-8`}>
               {signedIn ? L.openApp : L.cta} <ArrowRight className="h-4 w-4" aria-hidden />
             </Link>
           </div>
         </div>
-        <footer className="mt-10 flex items-center justify-between border-t border-white/[0.08] pt-6 text-xs text-ink-3">
+        <footer className="mt-10 flex items-center justify-between border-t border-sage/30 pt-6 text-xs text-ink-3">
           <span className="flex items-center gap-2"><Logo size={22} /> {L.footer}</span>
           <span className="flex items-center gap-1"><RotateCcw className="h-3 w-3" aria-hidden /> COD · RTO · GST</span>
         </footer>

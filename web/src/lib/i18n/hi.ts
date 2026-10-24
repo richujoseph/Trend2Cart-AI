@@ -18,6 +18,10 @@ export const hi: Messages = {
     loss: "नुकसान",
     perOrder: "/ऑर्डर",
     language: "भाषा",
+    greetMorning: "सुप्रभात",
+    greetAfternoon: "नमस्कार",
+    greetEvening: "शुभ संध्या",
+    makeReel: "रील बनाएँ",
   },
   api: {
     signIn: "आगे बढ़ने के लिए साइन इन करें।",
@@ -67,6 +71,9 @@ export const hi: Messages = {
     yours: "आपका",
     noMineTitle: "आपकी दुकान ख़ाली है",
     noMineBody: "ऊपर कोई भी प्रोडक्ट खोजें, मुनाफ़ा देखें, फिर 'मेरी दुकान में जोड़ें' दबाएँ।",
+    noteCompetition: "बहुत विक्रेता पहले से हैं: अपनी फ़ोटो और दमदार पहली लाइन से अलग दिखें।",
+    noteRising: "इसकी सर्च बढ़ रही है: पोस्ट करने का अच्छा समय।",
+    noteSteady: "स्थिर माँग, रिटर्न के बाद भी अच्छा मुनाफ़ा।",
   },
   product: {
     allProducts: "← सभी प्रोडक्ट",

@@ -28,7 +28,7 @@ export default function CheckupView({ c, previous }: { c: Checkup; previous?: Ch
         <RibbonBackground variant="subtle" className="-z-10" />
         {health !== null && <ScoreRing value={health} size={80} label={t.doctor.healthLabel} />}
         <div className="min-w-0">
-          <p className="text-xl font-light leading-snug text-ink">{t.checkup[`title${verdictKey(d.stage)}`]}</p>
+          <p className="text-xl font-black leading-snug text-ink">{t.checkup[`title${verdictKey(d.stage)}`]}</p>
           <p className="mt-1.5 text-[15px] leading-relaxed text-ink-2">{d.explanation}</p>
         </div>
       </div>
@@ -48,7 +48,7 @@ export default function CheckupView({ c, previous }: { c: Checkup; previous?: Ch
 function CardTitle({ title, icon: Icon, aside, onWhite = false }: { title: string; icon: LucideIcon; aside?: React.ReactNode; onWhite?: boolean }) {
   return (
     <div className="flex items-center justify-between gap-2">
-      <h3 className={`flex items-center gap-2 text-xl font-light ${onWhite ? "text-[#0b0706]" : "text-ink"}`}>
+      <h3 className={`flex items-center gap-2 text-xl font-black ${onWhite ? "text-charcoal" : "text-ink"}`}>
         <Icon className={`h-[18px] w-[18px] shrink-0 ${onWhite ? "text-rust-600" : "text-ember-400"}`} strokeWidth={1.5} aria-hidden /> {title}
       </h3>
       {aside}
@@ -79,15 +79,15 @@ export function FunnelView({ counts, rates, weak, compact = false, onWhite = fal
         const bad = step.stage === weak;
         const ok = s && (s.ratio === null || s.ratio >= 1);
         const chip = bad
-          ? "text-[#0b0706] bg-ember-400"
+          ? "bg-red text-white"
           : ok
             ? onWhite ? "text-profit-strong ring-1 ring-profit-strong/30" : "text-profit ring-1 ring-profit/30"
-            : onWhite ? "text-black/70 ring-1 ring-black/15" : "text-ink-2 ring-1 ring-white/15";
+            : onWhite ? "text-black/70 ring-1 ring-black/15" : "text-ink-2 ring-1 ring-sage/40";
         const bar = bad
-          ? "bg-ember-400 text-[#0b0706]"
+          ? "bg-red text-white"
           : i === 0
-            ? onWhite ? "bg-[#0b0706] text-white" : "bg-white text-[#0b0706]"
-            : onWhite ? "bg-card-muted text-[#0b0706]" : "glass text-ink";
+            ? onWhite ? "bg-charcoal text-white" : "bg-charcoal text-white"
+            : onWhite ? "bg-card-muted text-charcoal" : "glass text-ink";
         return (
           <li key={step.label} className="flex w-full flex-col items-center">
             {i > 0 && (
@@ -233,12 +233,12 @@ function Fixes({ id, fixes }: { id: string; fixes: string[] }) {
         title={t.checkup.tryWeek}
         aside={<span className="text-[13px] font-medium tabular-nums text-ember-300">{fmt(t.checkup.done, { n: done.length, m: fixes.length })}</span>}
       />
-      <div className="mt-3 h-1 rounded-full bg-white/10">
+      <div className="mt-3 h-1 rounded-full bg-sage/20">
         <div className="h-1 rounded-full bg-ember-400 transition-all" style={{ width: `${(done.length / fixes.length) * 100}%` }} />
       </div>
       <ul className="mt-3 flex flex-col">
         {fixes.map((f, i) => (
-          <li key={f} className="border-t border-white/[0.08] first:border-0">
+          <li key={f} className="border-t border-sage/30 first:border-0">
             <label className="flex min-h-11 cursor-pointer gap-3 py-3 text-[15px] leading-relaxed">
               <input type="checkbox" checked={done.includes(i)} onChange={() => toggle(i)} className="mt-1 h-5 w-5 shrink-0 accent-ember-400" />
               <span className={done.includes(i) ? "text-ink-3 line-through" : "text-ink"}>
@@ -278,7 +278,7 @@ function Message({ title, text }: { title: string; text: string }) {
     <section className={`${glassCard} p-5`}>
       <CardTitle icon={MessageCircle} title={t.checkup.readyMessage} />
       <p className="mt-1 text-[13px] text-ink-2">{title}</p>
-      <p className="mt-3 whitespace-pre-wrap rounded-[16px] rounded-tl-sm bg-white/[0.07] p-4 text-[15px] leading-relaxed text-ink">{text}</p>
+      <p className="mt-3 whitespace-pre-wrap rounded-[16px] rounded-tl-sm bg-card-muted p-4 text-[15px] leading-relaxed text-ink">{text}</p>
       <div className="mt-4 flex flex-wrap gap-2">
         <CopyButton text={text} />
         <a href={`https://wa.me/?text=${encodeURIComponent(text)}`} target="_blank" rel="noreferrer" className={`${btn.light} min-h-11 px-5 text-sm`}>
@@ -299,8 +299,8 @@ function Hooks({ c, hooks }: { c: Checkup; hooks: string[] }) {
         {hooks.map((h) => {
           const params = new URLSearchParams({ hook: h, ...(c.product_id && { product: c.product_id }), ...(c.language && { lang: c.language }) });
           return (
-            <li key={h} className="border-t border-white/[0.08] py-4 first:border-0 first:pt-2">
-              <p className="text-[17px] font-light leading-snug text-ink">“{h}”</p>
+            <li key={h} className="border-t border-sage/30 py-4 first:border-0 first:pt-2">
+              <p className="text-[17px] font-black leading-snug text-ink">“{h}”</p>
               <div className="mt-3 flex flex-wrap gap-2">
                 <CopyButton text={h} />
                 <Link href={`/reels/new?${params}`} className={`${btn.light} min-h-11 px-4 text-sm`}>

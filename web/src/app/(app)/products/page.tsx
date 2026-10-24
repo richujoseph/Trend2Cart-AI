@@ -3,18 +3,23 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Clapperboard, Flame, Search, Star, Store, Trophy, TrendingDown, TrendingUp, Users } from "lucide-react";
+import {
+  ChevronRight, Clapperboard, Dumbbell, Flame, House, IndianRupee, Info, LayoutGrid, Percent, Search, Smartphone,
+  Sparkles, Star, Store, Trophy,
+} from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import type { Trending } from "@/lib/discover";
 import { fmt, messagesNow, useT } from "@/lib/i18n";
-import { CATEGORIES, type Category, type ProductListItem, formatRupees } from "@/lib/products";
+import { CATEGORIES, type Category, type ProductListItem, formatRupees, formatRupeesWhole } from "@/lib/products";
 import { createClient } from "@/lib/supabase/client";
-import { EmptyState, ErrorState, LossTrapTag, ProductImage, ScoreBadge } from "@/components/states";
-import { ChangeBadge, PageHero, SectionTitle, Sparkline, card, chip } from "@/components/ui";
+import { EmptyState, ErrorState, LossTrapTag, ProductImage } from "@/components/states";
+import { BentoMetric, ChangeBadge, RibbonBackground, SectionTitle, Sparkline, btn, card } from "@/components/ui";
 
 type Filter = Category | "saved" | "mine" | null;
 const SORTS = ["score", "profit", "trend", "competition"] as const;
 type Sort = (typeof SORTS)[number];
+const CATEGORY_ICON: Record<Category, LucideIcon> = { home_gadgets: House, beauty: Sparkles, phone_accessories: Smartphone, fitness: Dumbbell };
 
 export default function ProductsPage() {
   const { t } = useT();
@@ -23,6 +28,7 @@ export default function ProductsPage() {
   const [attempt, setAttempt] = useState(0);
   // Keyed by what was requested, so switching filters shows the skeleton without resetting state in an effect.
   const [result, setResult] = useState<{ key: string; items?: ProductListItem[]; error?: string } | null>(null);
+  const [counts, setCounts] = useState<{ all: ProductListItem[]; saved: Set<string> } | null>(null);
   const key = `${filter ?? "all"}|${sort}|${attempt}`;
 
   useEffect(() => {
@@ -43,6 +49,13 @@ export default function ProductsPage() {
     };
   }, [filter, sort, key]);
 
+  // Counts for the selector (one extra read; the list above stays the source of what's shown).
+  useEffect(() => {
+    Promise.all([apiFetch<ProductListItem[]>("/products?sort=score"), savedIds()])
+      .then(([all, saved]) => setCounts({ all, saved }))
+      .catch(() => {});
+  }, [attempt]);
+
   const current = result?.key === key ? result : null;
   const items = current?.items ?? null;
   const error = current?.error ?? null;
@@ -50,59 +63,89 @@ export default function ProductsPage() {
   // Spotlight only on the unfiltered "best overall" view, so it's the real number one.
   const spotlight = filter === null && sort === "score" ? items?.find((p) => !p.loss_trap && p.score !== null) : undefined;
   const rest = items?.filter((p) => p !== spotlight) ?? null;
-  const winners = items?.filter((p) => p.profit_paise > 0).length ?? 0;
+  const winners = counts?.all.filter((p) => p.profit_paise > 0).length ?? 0;
+
+  const selector: { value: Filter; label: string; icon: LucideIcon; count?: number }[] = [
+    { value: null, label: t.products.all, icon: LayoutGrid, count: counts?.all.length },
+    { value: "mine", label: t.products.mine, icon: Store, count: counts?.all.filter((p) => p.mine).length },
+    { value: "saved", label: t.products.saved.replace("★ ", ""), icon: Star, count: counts?.saved.size },
+    ...CATEGORIES.map((c) => ({ value: c as Filter, label: t.categories[c], icon: CATEGORY_ICON[c], count: counts?.all.filter((p) => p.category === c).length })),
+  ];
 
   return (
     <>
-      <PageHero title={t.products.title} subtitle={t.products.subtitle}>
-        <SearchBox />
-        {filter === null && items && (
-          <p className="mt-3 flex flex-wrap gap-x-3 gap-y-1 text-xs text-white/85">
-            <span>{fmt(t.products.statChecked, { n: items.length })}</span>
-            <span>· {fmt(t.products.statWinning, { n: winners })}</span>
-            <span>· {t.products.statReal}</span>
-          </p>
-        )}
-      </PageHero>
+      <h1 className="text-[32px] font-black leading-[1.1] text-charcoal">{t.products.title}</h1>
+      <p className="mt-1.5 text-[15px] leading-relaxed text-ink-2">{t.products.subtitle}</p>
+      <SearchBox />
+      {counts && (
+        <p className="mt-3 text-[10px] font-bold uppercase tracking-[0.14em] text-ink-3">
+          {fmt(t.products.statChecked, { n: counts.all.length })} · {fmt(t.products.statWinning, { n: winners })} · {t.products.statReal}
+        </p>
+      )}
 
-      <TrendingStrip />
+      <ul className="-mx-5 mt-5 flex snap-x items-center gap-3 overflow-x-auto px-5 pb-2 [scrollbar-width:none]" aria-label={t.products.catalogTitle}>
+        {selector.map(({ value, label, icon: Icon, count }) => {
+          const active = filter === value;
+          return (
+            <li key={value ?? "all"} className="snap-start">
+              <button
+                type="button"
+                onClick={() => setFilter(value)}
+                aria-pressed={active}
+                aria-label={label}
+                className={
+                  active
+                    ? "flex h-14 w-40 items-center gap-2.5 rounded-full bg-charcoal pl-2 pr-4 text-left text-white transition"
+                    : "flex h-14 w-14 items-center justify-center rounded-[16px] border border-sage/30 bg-white text-charcoal transition hover:border-charcoal"
+                }
+              >
+                {active ? (
+                  <>
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red text-sm font-black tabular-nums">{count ?? "–"}</span>
+                    <span className="line-clamp-2 text-[13px] font-bold leading-tight">{label}</span>
+                  </>
+                ) : (
+                  <Icon className="h-6 w-6" strokeWidth={2} aria-hidden />
+                )}
+              </button>
+            </li>
+          );
+        })}
+      </ul>
 
       {spotlight && <Spotlight p={spotlight} />}
 
-      <div className="mt-7">
-        <SectionTitle icon={Store} title={t.products.catalogTitle} subtitle={t.products.catalogSub} />
+      <TrendingStrip />
+
+      <div className="mt-8">
+        <SectionTitle
+          subtitle={t.products.catalogSub}
+          title={t.products.catalogTitle}
+          aside={
+            <label className="shrink-0">
+              <span className="sr-only">{t.products.sortLabel}</span>
+              <select
+                value={sort}
+                onChange={(e) => setSort(e.target.value as Sort)}
+                className="h-10 rounded-full border border-sage/50 bg-white px-3 text-sm font-bold text-charcoal outline-none"
+              >
+                {SORTS.map((s) => <option key={s} value={s}>{t.products.sorts[s]}</option>)}
+              </select>
+            </label>
+          }
+        />
       </div>
-      <div className="-mx-4 mt-3 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none]">
-        <button onClick={() => setFilter(null)} aria-pressed={filter === null} className={chip(filter === null)}>{t.products.all}</button>
-        <button onClick={() => setFilter("mine")} aria-pressed={filter === "mine"} className={chip(filter === "mine")}>{t.products.mine}</button>
-        <button onClick={() => setFilter("saved")} aria-pressed={filter === "saved"} className={chip(filter === "saved")}>{t.products.saved}</button>
-        {CATEGORIES.map((c) => (
-          <button key={c} onClick={() => setFilter(c)} aria-pressed={filter === c} className={chip(filter === c)}>
-            {t.categories[c]}
-          </button>
-        ))}
-      </div>
-      <label className="mt-3 flex items-center justify-between gap-2 text-sm">
-        <span className="text-ink-2">{t.products.sortLabel}</span>
-        <select
-          value={sort}
-          onChange={(e) => setSort(e.target.value as Sort)}
-          className="h-10 rounded-xl bg-white/[0.04] px-3 text-sm font-semibold text-brand-800 outline-none ring-1 ring-brand-100"
-        >
-          {SORTS.map((s) => <option key={s} value={s}>{t.products.sorts[s]}</option>)}
-        </select>
-      </label>
 
       {error && <ErrorState message={error} onRetry={retry} />}
-      {!items && !error && <GridSkeleton />}
+      {!items && !error && <FeedSkeleton />}
       {items?.length === 0 && filter === "saved" && <EmptyState icon={Star} title={t.products.noSavedTitle} body={t.products.noSavedBody} />}
       {items?.length === 0 && filter === "mine" && <EmptyState icon={Store} title={t.products.noMineTitle} body={t.products.noMineBody} />}
       {items?.length === 0 && filter !== "saved" && filter !== "mine" && <EmptyState title={t.products.noneTitle} body={t.products.noneBody} />}
       {rest && rest.length > 0 && (
-        <ul className="mt-3 grid grid-cols-2 gap-3">
+        <ul className="mt-4 flex flex-col gap-3">
           {rest.map((p, i) => (
-            <li key={p.id} className="animate-rise" style={{ animationDelay: `${Math.min(i, 8) * 35}ms` }}>
-              <ProductCard product={p} />
+            <li key={p.id} className="animate-rise" style={{ animationDelay: `${Math.min(i, 8) * 30}ms` }}>
+              <FeedItem product={p} />
             </li>
           ))}
         </ul>
@@ -122,79 +165,57 @@ function SearchBox() {
         e.preventDefault();
         if (q.trim().length >= 3) router.push(`/products/search?q=${encodeURIComponent(q.trim())}`);
       }}
-      className="mt-4 flex h-12 items-center gap-2 rounded-2xl bg-white/[0.04] p-1.5 pl-3 shadow-lg shadow-black/40"
+      className="mt-5 flex h-14 items-center gap-2 rounded-full border border-sage/40 bg-white p-1.5 pl-4 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.08)]"
     >
-      <Search aria-hidden className="h-5 w-5 shrink-0 text-brand-500" />
+      <Search aria-hidden className="h-5 w-5 shrink-0 text-ink-3" strokeWidth={2.2} />
       <input
         value={q}
         onChange={(e) => setQ(e.target.value)}
         maxLength={60}
         placeholder={t.products.searchPlaceholder}
         aria-label={t.products.searchPlaceholder}
-        className="min-w-0 flex-1 bg-transparent text-sm text-ink outline-none placeholder:text-ink-3"
+        className="min-w-0 flex-1 bg-transparent text-[15px] font-semibold text-charcoal outline-none placeholder:font-normal placeholder:text-ink-3"
       />
-      <button disabled={q.trim().length < 3} className="h-9 shrink-0 rounded-xl bg-gradient-to-r from-brand-600 to-orange-600 px-4 text-sm font-bold text-white disabled:opacity-40">
+      <button disabled={q.trim().length < 3} className="h-11 shrink-0 rounded-full bg-red px-5 text-sm font-extrabold text-white disabled:opacity-40">
         {t.products.search}
       </button>
     </form>
   );
 }
 
+/** Hero feature card: the best product right now, with bento metrics and a plain-language note. */
 function Spotlight({ p }: { p: ProductListItem }) {
   const { t } = useT();
   const margin = Math.round((p.profit_paise / p.selling_price_paise) * 100);
+  const comp = p.competition_score;
+  const note = comp !== null && comp >= 60 ? t.products.noteCompetition : p.trend_score !== null && p.trend_score >= 50 ? t.products.noteRising : t.products.noteSteady;
   return (
-    <section className="mt-6 overflow-hidden rounded-3xl bg-white/[0.04] shadow-lg shadow-black/40 ring-1 ring-white/[0.07] animate-rise">
-      <div className="flex items-center gap-2 bg-gradient-to-r from-amber-400 via-orange-400 to-rose-400 px-4 py-2 text-sm font-bold text-white">
-        <Trophy className="h-4 w-4" aria-hidden /> {t.products.topPick}
-        <span className="ml-auto text-xs font-medium text-white/90">{t.products.topPickWhy}</span>
+    <section className={`${card} relative isolate mt-6 overflow-hidden p-6 animate-rise`}>
+      <RibbonBackground variant="section" className="-z-10" />
+      <div className="flex items-start justify-between gap-3">
+        <span className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-[20px] bg-white p-1.5 shadow-md ring-1 ring-sage/30">
+          <ProductImage src={p.image_urls[0]} name={p.name} className="h-full w-full rounded-[14px]" />
+        </span>
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-charcoal px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.12em] text-white">
+          <Trophy className="h-3.5 w-3.5" strokeWidth={2.2} aria-hidden /> {t.products.topPick}
+        </span>
       </div>
-      <Link href={`/products/${p.id}`} className="flex gap-4 p-4">
-        <ProductImage src={p.image_urls[0]} name={p.name} className="h-28 w-28 shrink-0 rounded-2xl" />
-        <div className="min-w-0 flex-1">
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-brand-500">{t.categories[p.category]}</p>
-          <h2 className="line-clamp-2 text-lg font-medium leading-tight text-brand-900">{p.name}</h2>
-          <p className="mt-1 text-2xl font-medium tabular-nums text-emerald-400">
-            {formatRupees(p.profit_paise)}
-            <span className="ml-1 text-xs font-medium text-ink-2">{t.products.profitPerOrder}</span>
-          </p>
-          <Signals p={p} margin={margin} />
-        </div>
-      </Link>
-      <div className="grid grid-cols-2 gap-2 border-t border-white/[0.07] p-3">
-        <Link href={`/products/${p.id}`} className="flex h-11 items-center justify-center rounded-xl bg-brand-50 text-sm font-bold text-brand-800">
-          {t.products.view}
+      <p className="mt-4 text-[10px] font-bold uppercase tracking-[0.14em] text-ink-3">{t.categories[p.category]} · {t.products.topPickWhy}</p>
+      <h2 className="mt-1 text-xl font-black leading-snug text-charcoal">{p.name}</h2>
+      <div className="mt-4 grid grid-cols-2 gap-2.5">
+        <BentoMetric label={t.products.profitPerOrder} value={formatRupeesWhole(p.profit_paise)} icon={IndianRupee} />
+        <BentoMetric label={t.product.marginLabel} value={`${margin}%`} icon={Percent} />
+      </div>
+      <p className="mt-3 flex items-start gap-2 rounded-[16px] bg-sage/20 p-3 text-[13px] font-semibold leading-snug text-charcoal">
+        <Info className="mt-0.5 h-4 w-4 shrink-0" strokeWidth={2.2} aria-hidden /> {note}
+      </p>
+      <div className="mt-4 grid grid-cols-2 gap-2.5">
+        <Link href={`/reels/new?product=${p.id}`} className={btn.light}>
+          <Clapperboard className="h-4 w-4" strokeWidth={2.2} aria-hidden /> {t.product.makeReel}
         </Link>
-        <Link href={`/reels/new?product=${p.id}`} className="flex h-11 items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-brand-600 to-orange-600 text-sm font-bold text-white">
-          <Clapperboard className="h-4 w-4" aria-hidden /> {t.product.makeReel}
-        </Link>
+        <Link href={`/products/${p.id}`} className={btn.glass}>{t.products.view}</Link>
       </div>
     </section>
-  );
-}
-
-/** Margin, search trend and competition as small readable signals. */
-function Signals({ p, margin }: { p: ProductListItem; margin: number }) {
-  const { t } = useT();
-  const comp = p.competition_score;
-  return (
-    <div className="mt-2 flex flex-wrap gap-1.5 text-[11px] font-semibold">
-      <span className={`rounded-full px-2 py-0.5 ${margin > 0 ? "bg-emerald-400/10 text-emerald-400" : "bg-red-500/10 text-red-400"}`}>
-        {fmt(t.products.margin, { pct: margin })}
-      </span>
-      {p.trend_score !== null && (
-        <span className={`inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 ${p.trend_score >= 50 ? "bg-sky-400/10 text-sky-300" : "bg-white/[0.06] text-ink-2"}`}>
-          {p.trend_score >= 50 ? <TrendingUp className="h-3 w-3" aria-hidden /> : <TrendingDown className="h-3 w-3" aria-hidden />}
-          {t.products.searches} {p.trend_score}
-        </span>
-      )}
-      {comp !== null && (
-        <span className={`inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 ${comp >= 60 ? "bg-red-500/10 text-red-400" : comp >= 30 ? "bg-amber-400/10 text-amber-300" : "bg-emerald-400/10 text-emerald-400"}`}>
-          <Users className="h-3 w-3" aria-hidden />
-          {comp >= 60 ? t.search.compHigh : comp >= 30 ? t.search.compMedium : t.search.compLow}
-        </span>
-      )}
-    </div>
   );
 }
 
@@ -225,33 +246,32 @@ function TrendingStrip() {
   }, []);
 
   return (
-    <section className="mt-6">
-      <SectionTitle icon={Flame} title={t.products.trendingTitle} subtitle={t.products.trendingSub} />
+    <section className="mt-8">
+      <SectionTitle icon={Flame} subtitle={t.products.trendingSub} title={t.products.trendingTitle} />
       {failed && <p className="mt-2 text-sm text-ink-2">{t.products.trendingEmpty}</p>}
       {!failed && !data?.items.length && (
-        <div className="-mx-4 mt-3 flex gap-3 overflow-hidden px-4">
-          {[0, 1, 2].map((i) => <div key={i} className="h-[108px] w-40 shrink-0 animate-pulse rounded-2xl bg-white/[0.04]" />)}
+        <div className="-mx-5 mt-3 flex gap-3 overflow-hidden px-5">
+          {[0, 1].map((i) => <div key={i} className="skeleton-light h-36 w-[78%] shrink-0 rounded-[24px]" />)}
         </div>
       )}
       {!failed && data && !data.items.length && data.refreshing && (
         <p className="mt-2 text-xs text-ink-2">{t.products.trendingLoading}</p>
       )}
       {!!data?.items.length && (
-        <ul className="-mx-4 mt-3 flex snap-x gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:none]">
+        <ul className="-mx-5 mt-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-5 pb-2 [scrollbar-width:none]">
           {data.items.slice(0, 12).map((item, i) => (
-            <li key={item.term} className="snap-start">
+            <li key={item.term} className="w-[78%] shrink-0 snap-start">
               <Link
                 href={`/products/search?q=${encodeURIComponent(item.term)}`}
-                className={`${card} flex h-[108px] w-40 flex-col justify-between p-3 transition active:scale-[.98]`}
+                className="flex h-full flex-col rounded-[24px] border border-sage/30 bg-white p-5 transition hover:border-charcoal"
               >
-                <div>
-                  <p className="flex items-center gap-1 text-[10px] font-bold text-orange-400">#{i + 1}</p>
-                  <p className="line-clamp-1 font-bold capitalize text-brand-900">{item.term}</p>
-                  {item.category && <p className="text-[11px] text-ink-2">{t.categories[item.category]}</p>}
-                </div>
-                <div className="flex items-end justify-between gap-1">
+                <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-ink-3">
+                  #{i + 1}{item.category && ` · ${t.categories[item.category]}`}
+                </p>
+                <p className="mt-1 line-clamp-2 text-xl font-black capitalize leading-snug text-charcoal">{item.term}</p>
+                <div className="mt-auto flex items-end justify-between gap-3 pt-3">
                   <ChangeBadge pct={item.change_pct} />
-                  <Sparkline points={item.weekly} className="h-7 w-16" tone={item.change_pct >= 0 ? "#059669" : "#dc2626"} />
+                  <Sparkline points={item.weekly} className="h-10 w-full max-w-[60%]" tone={item.change_pct >= 0 ? "#1f7a46" : "#ca0013"} />
                 </div>
               </Link>
             </li>
@@ -268,48 +288,43 @@ async function savedIds(): Promise<Set<string>> {
   return new Set(data.map((row) => row.product_id as string));
 }
 
-function ProductCard({ product: p }: { product: ProductListItem }) {
+/** Secondary feed item: 24px white card, 56px image holder, bold name, trailing round button. */
+function FeedItem({ product: p }: { product: ProductListItem }) {
   const { t } = useT();
   const losing = p.profit_paise <= 0;
   const margin = Math.round((p.profit_paise / p.selling_price_paise) * 100);
   return (
-    <Link href={`/products/${p.id}`} className={`${card} flex h-full flex-col overflow-hidden transition active:scale-[.98]`}>
-      <div className="relative">
-        <ProductImage src={p.image_urls[0]} name={p.name} className="aspect-square w-full" />
-        <span className="absolute right-2 top-2"><ScoreBadge score={p.score} /></span>
-        {p.mine && (
-          <span className="absolute left-2 top-2 rounded-full bg-brand-700 px-2 py-0.5 text-[10px] font-bold text-white shadow">{t.products.yours}</span>
+    <Link href={`/products/${p.id}`} className="group flex items-center gap-3 rounded-[24px] border border-sage/30 bg-white p-3 pr-4 transition hover:border-charcoal">
+      <span className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-[16px] bg-sage/10 p-1">
+        <ProductImage src={p.image_urls[0]} name={p.name} className="h-full w-full rounded-[12px]" />
+        {p.score !== null && (
+          <span className="absolute -right-1.5 -top-1.5 flex h-6 min-w-6 items-center justify-center rounded-full border-2 border-white bg-charcoal px-1 text-[10px] font-black tabular-nums text-white">
+            {p.score}
+          </span>
         )}
-      </div>
-      <div className="flex flex-1 flex-col p-2.5">
-        <p className="text-[10px] font-semibold uppercase tracking-wide text-brand-500">{t.categories[p.category]}</p>
-        <h3 className="line-clamp-2 text-sm font-bold leading-snug text-ink">{p.name}</h3>
-        <p className={`mt-auto pt-1 text-lg font-medium tabular-nums ${losing ? "text-red-400" : "text-emerald-400"}`}>
-          {formatRupees(p.profit_paise)}
-          <span className="ml-0.5 text-[10px] font-medium text-ink-2">{t.common.perOrder}</span>
-        </p>
-        <p className="text-[11px] text-ink-2">
-          {fmt(t.products.sellsAt, { price: formatRupees(p.selling_price_paise) })} · {fmt(t.products.margin, { pct: margin })}
-        </p>
-        {p.loss_trap && <span className="mt-1"><LossTrapTag /></span>}
-      </div>
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block text-[10px] font-bold uppercase tracking-[0.14em] text-ink-3">
+          {t.categories[p.category]}{p.mine && ` · ${t.products.yours}`}
+        </span>
+        <span className="block text-lg font-black leading-snug text-charcoal">{p.name}</span>
+        <span className="mt-0.5 block text-[13px] font-semibold text-ink-2">
+          <b className={`font-black tabular-nums ${losing ? "text-red" : "text-profit"}`}>{formatRupeesWhole(p.profit_paise)}</b>
+          {t.common.perOrder} · {fmt(t.products.sellsAt, { price: formatRupees(p.selling_price_paise) })} · {fmt(t.products.margin, { pct: margin })}
+        </span>
+        {p.loss_trap && <span className="mt-1.5 block"><LossTrapTag /></span>}
+      </span>
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-sage/50 text-charcoal transition group-hover:border-red group-hover:bg-red group-hover:text-white" aria-hidden>
+        <ChevronRight className="h-5 w-5" strokeWidth={2.4} />
+      </span>
     </Link>
   );
 }
 
-function GridSkeleton() {
+function FeedSkeleton() {
   return (
-    <ul className="mt-3 grid grid-cols-2 gap-3" aria-busy>
-      {[0, 1, 2, 3].map((i) => (
-        <li key={i} className={`${card} animate-pulse overflow-hidden`}>
-          <div className="aspect-square bg-brand-50" />
-          <div className="space-y-2 p-2.5">
-            <div className="h-3 w-1/3 rounded bg-brand-50" />
-            <div className="h-4 w-3/4 rounded bg-brand-50" />
-            <div className="h-5 w-1/2 rounded bg-brand-50" />
-          </div>
-        </li>
-      ))}
+    <ul className="mt-4 flex flex-col gap-3" aria-busy>
+      {[0, 1, 2, 3].map((i) => <li key={i} className="skeleton-light h-[88px] rounded-[24px]" />)}
     </ul>
   );
 }

@@ -125,7 +125,7 @@ export default function ProductDetail() {
           </span>
           <div className="min-w-0 flex-1">
             <p className="text-xs font-medium uppercase tracking-wide text-ember-300">{t.categories[sim.category]}</p>
-            <h1 className="mt-0.5 text-[22px] font-light leading-snug text-ink">{sim.name}</h1>
+            <h1 className="mt-0.5 text-[22px] font-black leading-snug text-ink">{sim.name}</h1>
             {sim.mine ? (
               <p className="mt-1 text-xs text-ink-2">{t.product.unrated}</p>
             ) : (
@@ -174,7 +174,7 @@ export default function ProductDetail() {
         {sim.mine && <RemoveOwn id={sim.id} />}
 
         <section className={`${glassCard} mt-4 p-5`}>
-          <h2 className="text-2xl font-light text-ink">{t.product.yourNumbers}</h2>
+          <h2 className="text-2xl font-black text-ink">{t.product.yourNumbers}</h2>
           <p className="mt-1 text-[13px] text-ink-2">{t.product.yourNumbersSub}</p>
           <div className="mt-5 flex flex-col gap-6">
             <Field
@@ -215,7 +215,7 @@ export default function ProductDetail() {
             />
           </div>
           {sim.estimates.source && (
-            <details className="mt-5 border-t border-white/[0.08] pt-4 text-[13px] text-ink-2">
+            <details className="mt-5 border-t border-sage/30 pt-4 text-[13px] text-ink-2">
               <summary className="cursor-pointer font-medium text-ember-300">{t.product.sourcesTitle}</summary>
               {sim.selling_price_source && <p className="mt-2">{fmt(t.product.sourcesMarket, { source: sim.selling_price_source })}</p>}
               <p className="mt-2">{t.product.sourcesTrend}</p>
@@ -304,7 +304,7 @@ function Breakdown({ sim }: { sim: Simulation }) {
 
   return (
     <section className={`${dataCard} mt-4 p-5`}>
-      <h2 className="text-2xl font-light">{t.product.breakdownTitle}</h2>
+      <h2 className="text-2xl font-black">{t.product.breakdownTitle}</h2>
       <p className="mt-1 text-[13px] text-black/55">
         {fmt(t.product.breakdownSub, { price: formatRupees(sim.inputs.selling_price_paise), pct: Math.round(sim.estimates.rto_rate * 100) })}
       </p>
@@ -375,7 +375,7 @@ function SaveButton({ productId }: { productId: string }) {
       >
         {saved ? t.product.saved : t.product.save}
       </button>
-      {error && <p role="alert" className="mt-1 text-xs text-red-400">{error}</p>}
+      {error && <p role="alert" className="mt-1 text-xs text-red">{error}</p>}
     </div>
   );
 }
@@ -401,7 +401,7 @@ function RemoveOwn({ id }: { id: string }) {
       <button onClick={remove} disabled={busy} className={`${btn.ghost} w-full text-loss`}>
         <Trash2 className="h-4 w-4" aria-hidden /> {busy ? t.product.removing : t.product.remove}
       </button>
-      {error && <p role="alert" className="mt-2 text-sm text-red-400">{error}</p>}
+      {error && <p role="alert" className="mt-2 text-sm text-red">{error}</p>}
     </div>
   );
 }
