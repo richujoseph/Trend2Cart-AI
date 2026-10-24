@@ -11,15 +11,19 @@ and fix what isn't selling, all in one app built for India's social sellers.
 
 <br/>
 
+<a href="https://trend2cart.vercel.app/"><img src="https://img.shields.io/badge/▶_Live_demo-trend2cart.vercel.app-1F8A5B?style=for-the-badge&logo=vercel&logoColor=white" alt="Live demo: trend2cart.vercel.app" /></a>
+
+<br/>
+
 ![Next.js](https://img.shields.io/badge/Next.js_16-171E19?style=for-the-badge&logo=nextdotjs&logoColor=white) ![React](https://img.shields.io/badge/React_19-171E19?style=for-the-badge&logo=react&logoColor=white) ![TypeScript](https://img.shields.io/badge/TypeScript-171E19?style=for-the-badge&logo=typescript&logoColor=white) ![Tailwind CSS](https://img.shields.io/badge/Tailwind_v4-171E19?style=for-the-badge&logo=tailwindcss&logoColor=white) ![FastAPI](https://img.shields.io/badge/FastAPI-171E19?style=for-the-badge&logo=fastapi&logoColor=white) ![Supabase](https://img.shields.io/badge/Supabase-171E19?style=for-the-badge&logo=supabase&logoColor=white) ![Gemini](https://img.shields.io/badge/Gemini-171E19?style=for-the-badge&logo=googlegemini&logoColor=white) ![FFmpeg](https://img.shields.io/badge/FFmpeg-171E19?style=for-the-badge&logo=ffmpeg&logoColor=white) ![Docker](https://img.shields.io/badge/Docker-171E19?style=for-the-badge&logo=docker&logoColor=white)
 
 <br/>
 
-<img src="docs/images/hero.webp" alt="Trend2Cart landing page: a real Malayalam Reel next to the product's real profit per order" width="100%" />
+<a href="https://trend2cart.vercel.app/"><img src="docs/images/hero.webp" alt="Trend2Cart landing page: a real Malayalam Reel next to the product's real profit per order" width="100%" /></a>
 
 <br/>
 
-**[Overview](#overview)** · **[Features](#features)** · **[Real Profit Score](#the-real-profit-score)** · **[Architecture](#architecture)** · **[Tech stack](#tech-stack)** · **[Getting started](#getting-started)**
+**[Live demo](https://trend2cart.vercel.app/)** · **[Overview](#overview)** · **[Features](#features)** · **[Real Profit Score](#the-real-profit-score)** · **[Architecture](#architecture)** · **[Tech stack](#tech-stack)** · **[Getting started](#getting-started)**
 
 </div>
 
@@ -213,6 +217,14 @@ start-local.sh        One-command local run
 
 # Getting started
 
+## Live demo
+
+Try it in your browser, nothing to install: **[trend2cart.vercel.app](https://trend2cart.vercel.app/)**
+
+Sign in with Google, pick a product, make a Reel and run a Conversion Doctor check-up. Open it on your phone (or
+Chrome DevTools → phone icon) for the mobile layout. The API runs on Render's free plan, so the first request after
+a quiet spell can take about a minute while it wakes up.
+
 ## Demo in one command
 
 Needs: [uv](https://docs.astral.sh/uv/), Node 20+, Docker Desktop (running), and filled-in `api/.env` + `web/.env`
@@ -309,6 +321,8 @@ Razorpay Checkout; `POST /preorders/verify` checks the HMAC signature server-sid
 Test card: see Razorpay's test-mode docs (e.g. UPI `success@razorpay`).
 
 ## 7. Free deployment (optional, later)
+
+The live demo at **[trend2cart.vercel.app](https://trend2cart.vercel.app/)** is deployed exactly this way.
 
 | Part | Service (free plan) |
 |---|---|
