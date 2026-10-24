@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="docs/images/logo.svg" width="84" alt="Trend2Cart logo" />
+<img src="docs/images/logo.png" width="104" alt="Trend2Cart logo" />
 
 # Trend2Cart AI
 

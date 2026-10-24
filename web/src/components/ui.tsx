@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState, useSyncExternalStore } from "react";
 import type { LucideIcon } from "lucide-react";
@@ -56,19 +57,7 @@ export function RibbonBackground({ variant = "section", className = "" }: { vari
 }
 
 export function Logo({ size = 32 }: { size?: number }) {
-  return (
-    <span
-      aria-hidden
-      style={{ width: size, height: size }}
-      className="relative inline-flex shrink-0 items-center justify-center rounded-[30%] bg-charcoal"
-    >
-      <svg viewBox="0 0 24 24" className="h-[58%] w-[58%] text-white" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
-        <path d="M3 4h2l2.4 11.2a2 2 0 002 1.6h7.7a2 2 0 002-1.5L21 8H6.2" />
-        <path d="M11 9.5l2 2 3.5-4" />
-      </svg>
-      <span className="absolute -right-0.5 -top-0.5 h-[28%] w-[28%] rounded-full border-2 border-offwhite bg-red" />
-    </span>
-  );
+  return <Image src="/logo.png" alt="" aria-hidden width={size} height={size} priority className="shrink-0 select-none" draggable={false} />;
 }
 
 const LANG_OPTIONS: { value: Lang; label: string }[] = [
